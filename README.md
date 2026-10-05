@@ -14,6 +14,12 @@
 </p>
 
 <!-- Drag studio.png into this editor here and GitHub will insert the image link for you. -->
+<img width="1470" height="1000" alt="studio" src="https://github.com/user-attachments/assets/3d7255fc-a4cd-4396-8957-9772c820c24a" />
+<img width="1611" height="1024" alt="piano" src="https://github.com/user-attachments/assets/e5cb6e4f-9d7d-46ff-926b-2e163669acca" />
+<img width="1600" height="640" alt="playlist" src="https://github.com/user-attachments/assets/2aea206a-c292-4486-b3a4-17224995ef70" />
+
+
+
 
 ## What it does
 - **Make music your way:** channel rack, patterns, piano roll, playlist and mixer.
