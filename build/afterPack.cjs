@@ -16,6 +16,12 @@ exports.default = async function afterPack(context) {
   // Real signing, when a certificate is configured, does this properly itself.
   if (process.env.CSC_LINK || process.env.CSC_NAME) return;
 
+  // A universal app is built as an Intel half and an Apple Silicon half
+  // ("…-x64-temp", "…-arm64-temp") that are then merged, and the merge needs the
+  // halves to be identical apart from their code. Signing them first would make
+  // them differ, so only the finished app is signed.
+  if (path.basename(context.appOutDir).endsWith("-temp")) return;
+
   if (process.platform !== "darwin") {
     console.warn("  • skipping the ad-hoc signature: it can only be applied on a Mac");
     return;

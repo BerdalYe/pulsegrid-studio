@@ -108,7 +108,8 @@ describe("shortcut table", () => {
   });
 
   it("labels shortcuts for menus", () => {
-    expect(shortcutLabel("save")).toBe("Ctrl+S");
+    // "Ctrl+S", or "⌘S" when the tests happen to run on a Mac.
+    expect(shortcutLabel("save")).toBe(platformText("Ctrl+S"));
     expect(shortcutLabel("showShortcuts")).toBe("F1");
   });
 
