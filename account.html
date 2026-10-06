@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0d0c14" />
+    <meta name="robots" content="noindex" />
+    <title>Your account — PulseGrid Studio</title>
+    <link rel="icon" type="image/png" href="/icon.png" />
+    <link rel="stylesheet" href="/src/site/site.css" />
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="PulseGrid Studio home">
+        <img src="/icon.png" alt="" width="30" height="30" />
+        <span>PulseGrid <strong>Studio</strong></span>
+      </a>
+
+      <div class="header-actions">
+        <a class="button button-outline studio-link" href="/studio.html">
+          <span class="hide-narrow">Open </span>Web Studio
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3h8v8M13 3 3 13" /></svg>
+        </a>
+      </div>
+    </header>
+
+    <main id="main" class="legal account">
+      <header class="legal-head">
+        <p class="eyebrow">Account</p>
+        <h1 id="account-title">One moment…</h1>
+        <p class="lead" id="account-lead"></p>
+      </header>
+
+      <!-- Shown when a password-reset link was followed. -->
+      <form class="account-form" id="reset-form" hidden novalidate>
+        <label>
+          New password
+          <input type="password" id="new-password" autocomplete="new-password" minlength="8" required />
+        </label>
+        <label>
+          Repeat it
+          <input type="password" id="repeat-password" autocomplete="new-password" minlength="8" required />
+        </label>
+        <p class="account-error" id="reset-error" role="alert" hidden></p>
+        <button class="button button-primary" type="submit" id="reset-submit">Save new password</button>
+      </form>
+
+      <p class="account-next" id="account-next" hidden>
+        Open PulseGrid Studio (the Windows app, or the
+        <a href="/studio.html">web studio</a>) and sign in with your email and password.
+      </p>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-bottom">
+        <span>© <span data-year></span> PulseGrid Studio</span>
+        <span><a href="/legal.html#privacy">Privacy</a></span>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/site/site.ts"></script>
+    <script type="module" src="/src/site/account.ts"></script>
+  </body>
+</html>

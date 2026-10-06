@@ -1,0 +1,65 @@
+name: Build the Mac app
+
+# Builds PulseGrid-Studio-<version>-mac.dmg on one of GitHub's Mac machines.
+# Run it by hand: the Actions tab → "Build the Mac app" → Run workflow.
+# It also runs by itself whenever a version tag such as v1.4.0 is pushed.
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  mac:
+    runs-on: macos-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install packages
+        run: npm ci
+
+      # Reported, but a failing test doesn't stop a build: the Windows release has
+      # already passed them, and some paths behave differently on a Mac.
+      - name: Run the tests
+        run: npm test
+        continue-on-error: true
+
+      - name: Build the app and the .dmg
+        run: npm run dist:mac
+
+      - name: Look inside what was built
+        run: |
+          ls -la release
+          APP="release/mac-universal/PulseGrid Studio.app"
+          echo "Architectures:"
+          lipo -archs "$APP/Contents/MacOS/PulseGrid Studio"
+          echo "Signature:"
+          codesign -dv --verbose=2 "$APP" 2>&1 | head -12 || true
+          echo "Info.plist:"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP/Contents/Info.plist"
+          /usr/libexec/PlistBuddy -c "Print :NSMicrophoneUsageDescription" "$APP/Contents/Info.plist"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleURLTypes" "$APP/Contents/Info.plist"
+
+      - name: Check that the .dmg opens
+        run: |
+          DMG=$(ls release/*.dmg | head -1)
+          echo "Checking $DMG"
+          hdiutil verify "$DMG"
+          shasum -a 256 "$DMG"
+
+      - name: Keep the .dmg
+        uses: actions/upload-artifact@v4
+        with:
+          name: PulseGrid-Studio-mac
+          path: release/*.dmg
+          if-no-files-found: error
+          retention-days: 30

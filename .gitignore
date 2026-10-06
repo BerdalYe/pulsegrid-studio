@@ -1,0 +1,10 @@
+# Installed packages and build output
+node_modules/
+dist/
+release/
+*.tsbuildinfo
+
+# Local tooling
+.claude/
+.DS_Store
+*.log

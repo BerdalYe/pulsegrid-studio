@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0d0c14" />
+    <title>PulseGrid Studio — free music production for Windows and the web</title>
+    <meta
+      name="description"
+      content="PulseGrid Studio is a free music studio: step sequencer, piano roll, playlist and mixer, 57 instruments, 14 effects, MIDI keyboard support and optional cloud sync between your PCs. Download for Windows or Mac, or open it in your browser."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="PulseGrid Studio" />
+    <meta property="og:description" content="Free music production for Windows and the web. Version 1.0: sync your projects between PCs." />
+    <meta property="og:image" content="https://pulsegridstudio.netlify.app/site/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="PulseGrid Studio: a free music studio with a step sequencer, piano roll, playlist and mixer" />
+    <meta property="og:url" content="https://pulsegridstudio.netlify.app/" />
+    <link rel="canonical" href="https://pulsegridstudio.netlify.app/" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://pulsegridstudio.netlify.app/site/og.png" />
+    <link rel="icon" type="image/png" href="/icon.png" />
+    <link rel="stylesheet" href="/src/site/site.css" />
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <!-- The 1.0 announcement. Dismissing it is remembered in this browser (see site.ts). -->
+    <div class="announce" id="announce" role="region" aria-label="Announcement">
+      <span class="announce-badge">1.0</span>
+      <p class="announce-text">
+        <strong>PulseGrid Studio 1.0 is here.</strong>
+        <span>Sync your projects between PCs, automatic updates and a guided first start.</span>
+      </p>
+      <a class="announce-link" href="#whats-new">See what's new</a>
+      <button class="announce-close" id="announce-close" type="button" aria-label="Dismiss announcement">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" /></svg>
+      </button>
+    </div>
+
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="PulseGrid Studio home">
+        <img src="/icon.png" alt="" width="30" height="30" />
+        <span>PulseGrid <strong>Studio</strong></span>
+      </a>
+
+      <nav class="site-nav" id="site-nav" aria-label="Main">
+        <a href="#tour">Tour</a>
+        <a href="#sounds">Sounds</a>
+        <a href="#compare">Desktop &amp; web</a>
+        <a href="#whats-new">What's new</a>
+        <a href="#download">Download</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+
+      <div class="header-actions">
+        <a class="button button-outline studio-link" href="/studio.html">
+          <span class="hide-narrow">Open </span>Web Studio
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3h8v8M13 3 3 13" /></svg>
+        </a>
+        <button class="menu-toggle" type="button" aria-controls="site-nav" aria-expanded="false" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- ─────────────────────────────── hero ─────────────────────────────── -->
+      <section class="hero">
+        <div class="hero-copy">
+          <a class="release-pill" href="#whats-new">
+            <span class="pill-tag">New</span>
+            Version %VITE_APP_VERSION%: PulseGrid Studio for Mac
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3l5 5-5 5" /></svg>
+          </a>
+
+          <h1>Make beats <span class="gradient-text">that hit.</span></h1>
+          <p class="lead">
+            A complete music studio — step sequencer, piano roll, playlist and mixer — with 57
+            instruments and 14 effects built in. Free for Windows and Mac, and it runs in your browser too.
+          </p>
+
+          <div class="hero-actions">
+            <a class="button button-primary" href="#download">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v9M4 7l4 4 4-4M2.5 14h11" /></svg>
+              Download for Windows
+            </a>
+            <a class="button button-ghost" href="/studio.html">Try it in your browser</a>
+          </div>
+
+          <ul class="trust-row" aria-label="At a glance">
+            <li>Free</li>
+            <li>No account needed</li>
+            <li>Works offline</li>
+            <li>No ads or tracking</li>
+          </ul>
+        </div>
+
+        <figure class="hero-shot">
+          <div class="window-frame">
+            <div class="window-bar" aria-hidden="true"><i></i><i></i><i></i><span>Neon Drive — PulseGrid Studio</span></div>
+            <img
+              src="/site/studio.png"
+              alt="PulseGrid Studio with a song open: the projects panel, the playlist arrangement and the channel rack"
+              width="1470"
+              height="1000"
+              fetchpriority="high"
+            />
+          </div>
+        </figure>
+      </section>
+
+      <!-- ─────────────────────────────── stats ─────────────────────────────── -->
+      <section class="stats" aria-label="What's included">
+        <div><strong>57</strong><span>instruments</span></div>
+        <div><strong>14</strong><span>effect plugins</span></div>
+        <div><strong>16</strong><span>mixer channels with sends</span></div>
+        <div><strong>WAV &amp; MP3</strong><span>export</span></div>
+      </section>
+
+      <!-- ─────────────────────────────── tour ─────────────────────────────── -->
+      <section class="section" id="tour">
+        <header class="section-head">
+          <p class="eyebrow">A look inside</p>
+          <h2>Everything you need to finish a track.</h2>
+          <p>The workflow producers already know: patterns in the channel rack, melodies in the piano roll, the song in the playlist, and the mix in the mixer.</p>
+        </header>
+
+        <article class="showcase reveal">
+          <div class="showcase-copy">
+            <span class="showcase-step">01</span>
+            <h3>Program drums in seconds</h3>
+            <p>Click or drag across the step grid to lay down a beat. Set velocity per step, add swing, and give every channel its own volume, pan and mixer insert.</p>
+            <ul class="checks">
+              <li>Nine drum voices, from 909 kick to shaker</li>
+              <li>Paint by dragging, right-drag a step for velocity</li>
+              <li>Patterns from one step up to 32 bars</li>
+            </ul>
+          </div>
+          <figure class="showcase-shot">
+            <img src="/site/rack.png" alt="The channel rack with a kick, clap and hi-hat pattern" width="1400" height="792" loading="lazy" />
+          </figure>
+        </article>
+
+        <article class="showcase showcase-flip reveal">
+          <div class="showcase-copy">
+            <span class="showcase-step">02</span>
+            <h3>Write melodies in the piano roll</h3>
+            <p>Draw, paint, erase and select notes, then quantise them to the grid. Scale highlighting keeps you in key; ghost notes show what the other channels play.</p>
+            <ul class="checks">
+              <li>Velocity lane under every note</li>
+              <li>Copy, paste and duplicate with the usual shortcuts</li>
+              <li>Record straight in from a MIDI keyboard</li>
+            </ul>
+          </div>
+          <figure class="showcase-shot">
+            <img src="/site/piano.png" alt="The piano roll with a lead melody and its velocity lane" width="1611" height="1024" loading="lazy" />
+          </figure>
+        </article>
+
+        <article class="showcase reveal">
+          <div class="showcase-copy">
+            <span class="showcase-step">03</span>
+            <h3>Mix with real routing</h3>
+            <p>Sixteen mixer channels, each with its own effect chain. Send them to a shared reverb, group them into buses, and watch peak meters with clip lights.</p>
+            <ul class="checks">
+              <li>14 effects, from EQ and compressor to phaser and bitcrusher</li>
+              <li>Sends and bus routing, with loop protection</li>
+              <li>Master limiter so exports never clip</li>
+            </ul>
+          </div>
+          <figure class="showcase-shot">
+            <img src="/site/mixer.png" alt="The mixer with sixteen channel strips and an effect chain on one insert" width="1669" height="897" loading="lazy" />
+          </figure>
+        </article>
+
+        <article class="showcase showcase-flip reveal">
+          <div class="showcase-copy">
+            <span class="showcase-step">04</span>
+            <h3>See the whole song at a glance</h3>
+            <p>Every clip on the playlist shows what's inside it: drum hits laid out in rows, melodies by pitch, audio as a waveform. Arrange sections, drop in markers and loop the part you're working on.</p>
+            <ul class="checks">
+              <li>Patterns, audio and automation on colour-coded lanes</li>
+              <li>Section markers and loop regions</li>
+              <li>Drag to move, pull an edge to resize</li>
+            </ul>
+          </div>
+          <figure class="showcase-shot">
+            <img src="/site/playlist.png" alt="The playlist with drum and melody clips that show their notes, under section markers" width="1600" height="640" loading="lazy" />
+          </figure>
+        </article>
+
+        <article class="showcase reveal">
+          <div class="showcase-copy">
+            <span class="showcase-step">05</span>
+            <h3>Take your projects anywhere</h3>
+            <p>Sign in with a free account and your projects follow you: the Windows app and the web studio keep them in step, uploading after every save. It's optional, and nothing leaves your device until you sign in.</p>
+            <ul class="checks">
+              <li>Start on one PC, carry on on another</li>
+              <li>Changed on two PCs? Both versions are kept, never overwritten</li>
+              <li>Works offline and catches up when you're back</li>
+            </ul>
+          </div>
+          <figure class="showcase-shot">
+            <img src="/site/cloud.png" alt="The Cloud panel listing synced projects, with the project showing as in the cloud in the menu bar" width="1760" height="1060" loading="lazy" />
+          </figure>
+        </article>
+
+        <div class="feature-grid">
+          <article class="feature reveal">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="3" y="5" width="8" height="4" rx="1" /><rect x="13" y="5" width="8" height="4" rx="1" /><rect x="7" y="11" width="10" height="4" rx="1" /><rect x="3" y="17" width="6" height="3" rx="1" /></svg>
+            </div>
+            <h3>Arrange the song</h3>
+            <p>Place patterns, audio and automation on the playlist. Section markers, loop regions and colour-coded lanes.</p>
+          </article>
+
+          <article class="feature reveal">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2" /><path d="M6 7v6M10 7v6M14 7v6M18 7v6" /></svg>
+            </div>
+            <h3>Plug in a MIDI keyboard</h3>
+            <p>Keys play with velocity, pads hit your drums, knobs control the mix. Works with the Akai MPK Mini and other USB keyboards.</p>
+          </article>
+
+          <article class="feature reveal">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M5 3h11l3 3v15H5z" /><path d="M8 3v5h7V3M8 21v-7h8v7" /></svg>
+            </div>
+            <h3>Never lose work</h3>
+            <p>The desktop app auto-saves every project to your own folder seconds after each change, and keeps backups.</p>
+          </article>
+
+          <article class="feature reveal">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 19h16" /></svg>
+            </div>
+            <h3>Export anywhere</h3>
+            <p>Render the whole song or a single pattern to WAV or MP3, ready to share or send on.</p>
+          </article>
+
+          <article class="feature reveal">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0" /><path d="M12 7v5l3 2" /></svg>
+            </div>
+            <h3>Undo everything</h3>
+            <p>Every edit — notes, steps, knobs, clips — can be undone and redone, grouped the way you made it.</p>
+          </article>
+
+          <article class="feature reveal">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12" /><circle cx="6" cy="18" r="3" /><circle cx="16" cy="16" r="3" /></svg>
+            </div>
+            <h3>Record and sample</h3>
+            <p>Import your own audio or record from a microphone, then play it from a sampler channel or drop it on the playlist.</p>
+          </article>
+
+          <article class="feature reveal">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M7 18h9.5a4 4 0 0 0 .6-7.96A5.5 5.5 0 0 0 6.4 8.6 4.8 4.8 0 0 0 7 18z" /><path d="M12 11v5m-2-2 2 2 2-2" /></svg>
+            </div>
+            <h3>Sync between PCs</h3>
+            <p>A free, optional account keeps your projects in step between the Windows app and the web studio.</p>
+          </article>
+
+          <article class="feature reveal">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.5-5.8" /><path d="M20 4v5h-5" /></svg>
+            </div>
+            <h3>Updates by themselves</h3>
+            <p>The Windows app finds new versions on its own and offers a one-click restart, saving your project first.</p>
+          </article>
+
+          <article class="feature reveal">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M9.5 9.5a2.6 2.6 0 1 1 3.6 2.4c-.7.4-1.1.9-1.1 1.6M12 17h.01" /></svg>
+            </div>
+            <h3>Easy to start</h3>
+            <p>A short tour on first launch, a hint for anything you point at, and demo songs to open and take apart.</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- ─────────────────────────────── sounds ─────────────────────────────── -->
+      <section class="section section-tint" id="sounds">
+        <header class="section-head">
+          <p class="eyebrow">Sound library</p>
+          <h2>57 instruments. 14 effects. Nothing to download.</h2>
+          <p>Every sound is generated inside the studio, so projects open anywhere without missing plugins or sample packs.</p>
+        </header>
+
+        <div class="instrument-columns">
+          <div class="instrument-group reveal">
+            <h3>Drums <span>9</span></h3>
+            <p>Kick · Snare · Clap · Hi-hat · Shaker · Rimshot · Tom · Crash · Cowbell</p>
+          </div>
+          <div class="instrument-group reveal">
+            <h3>Keys <span>8</span></h3>
+            <p>Grand Piano · Electric Piano · FM E-Piano · Drawbar Organ · Pipe Organ · Harpsichord · Clavinet · Accordion</p>
+          </div>
+          <div class="instrument-group reveal">
+            <h3>Strings <span>7</span></h3>
+            <p>String Ensemble · Solo Violin · Cello · Pizzicato · Harp · Nylon Guitar · Steel Guitar</p>
+          </div>
+          <div class="instrument-group reveal">
+            <h3>Winds &amp; voice <span>7</span></h3>
+            <p>Brass Section · Trumpet · Saxophone · Clarinet · Flute · Pan Flute · Choir</p>
+          </div>
+          <div class="instrument-group reveal">
+            <h3>Mallets <span>7</span></h3>
+            <p>Marimba · Vibraphone · Celesta · Music Box · Glass Bell · Kalimba · Steel Drum</p>
+          </div>
+          <div class="instrument-group reveal">
+            <h3>Bass <span>8</span></h3>
+            <p>808 Sub · 808 Boom · Reese · Acid · FM · Wobble · Analog · Upright</p>
+          </div>
+          <div class="instrument-group reveal">
+            <h3>Leads, plucks &amp; pads <span>10</span></h3>
+            <p>Supersaw · Cyber Saw · Square · Chiptune · Synth Brass · Hyper Pluck · Future Pluck · Warm, Bright &amp; Dark Pads</p>
+          </div>
+          <div class="instrument-group reveal">
+            <h3>Sampler <span>1</span></h3>
+            <p>Load any audio file or a microphone recording and play it across the keyboard.</p>
+          </div>
+        </div>
+
+        <div class="effects-row reveal">
+          <h3>Effects</h3>
+          <ul>
+            <li>EQ</li><li>Filter</li><li>Compressor</li><li>Limiter</li><li>Reverb</li><li>Delay</li><li>Chorus</li>
+            <li>Flanger</li><li>Phaser</li><li>Tremolo</li><li>Auto Pan</li><li>Stereo Width</li><li>Distortion</li><li>Bitcrusher</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ─────────────────────────────── compare ─────────────────────────────── -->
+      <section class="section" id="compare">
+        <header class="section-head">
+          <p class="eyebrow">Two ways to use it</p>
+          <h2>Desktop app or web studio.</h2>
+          <p>The same studio either way. Projects move freely between the two as <code>.pulsegrid</code> files, or automatically with cloud sync.</p>
+        </header>
+
+        <div class="compare reveal">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col"><span class="visually-hidden">Feature</span></th>
+                <th scope="col">
+                  Desktop app
+                  <small>Windows 10 &amp; 11</small>
+                </th>
+                <th scope="col">
+                  Web studio
+                  <small>Chrome, Edge or Firefox</small>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">Price</th><td>Free</td><td>Free</td></tr>
+              <tr><th scope="row">Install</th><td>Windows installer</td><td>Nothing to install</td></tr>
+              <tr><th scope="row">Where projects live</th><td>Files in your own folder</td><td>Your browser's storage</td></tr>
+              <tr><th scope="row">Auto-save</th><td class="yes">To the project file, with backups</td><td class="yes">In the browser</td></tr>
+              <tr><th scope="row">Export WAV &amp; MP3</th><td class="yes">Straight to an Exports folder</td><td class="yes">As downloads</td></tr>
+              <tr><th scope="row">MIDI keyboards</th><td class="yes">Connect automatically</td><td class="yes">After allowing access</td></tr>
+              <tr><th scope="row">Cloud sync</th><td class="yes">Free account, optional</td><td class="yes">Free account, optional</td></tr>
+              <tr><th scope="row">Updates</th><td class="yes">Found and installed automatically</td><td class="yes">Always the latest</td></tr>
+              <tr><th scope="row">Works offline</th><td class="yes">Always</td><td>Needs the page to load</td></tr>
+            </tbody>
+          </table>
+          <div class="compare-actions">
+            <a class="button button-primary" href="#download">Download for Windows</a>
+            <a class="button button-ghost" href="/studio.html">Open the web studio</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─────────────────────────────── what's new ─────────────────────────────── -->
+      <section class="section section-tint" id="whats-new">
+        <header class="section-head">
+          <p class="eyebrow">Release notes</p>
+          <h2>What's new</h2>
+        </header>
+
+        <div class="releases">
+          <article class="release reveal">
+            <header>
+              <h3>Version %VITE_APP_VERSION%</h3>
+              <span class="release-badge">Latest</span>
+              <time>%VITE_RELEASE_DATE%</time>
+            </header>
+            <p class="release-lead">PulseGrid Studio now runs on Mac.</p>
+            <ul>
+              <li><strong>A Mac app.</strong> One <em>.dmg</em> download that works on both Intel and Apple Silicon Macs (macOS 12 or newer). Open it, drag PulseGrid Studio into Applications, and right-click → <em>Open</em> the first time: the app isn't signed with an Apple Developer certificate yet, so macOS asks once. The <em>Installing on a Mac</em> steps in the download section cover the rest.</li>
+              <li><strong>Made for the Mac keyboard.</strong> Menus, tooltips and the shortcut list (<em>F1</em>) say <em>⌘</em>, <em>⌥</em> and <em>⇧</em>, and ⌘ works wherever Ctrl does. Text fields copy and paste, ⌘Q quits, and double-clicking a .pulsegrid file or signing in with Discord opens the right app.</li>
+              <li><strong>Updates on the Mac:</strong> the app checks for new versions as usual. When there is one, the menu bar shows <em>Version X is available · Download</em>, which opens the download page.</li>
+              <li>The Windows app is unchanged apart from these shared improvements. It still updates itself.</li>
+            </ul>
+          </article>
+
+          <article class="release reveal">
+            <header>
+              <h3>Version 1.3.1</h3>
+              <time>6 October 2026</time>
+            </header>
+            <p class="release-lead">The wavetable synth is now a plugin you can find.</p>
+            <ul>
+              <li><strong>Add → Plugins → Wavetable Synth.</strong> Choose it from the <em>Add</em> menu (or the channel rack's Add list, then <em>+ Channel</em>) and it creates the synth and opens it straight away. Plugins now have their own group at the top of the list; the thirteen starter sounds moved to <em>Wavetable sounds</em>.</li>
+              <li><strong>A button on every synth channel.</strong> The little wave button at the end of a synth channel's row opens, and closes, its sound editor. No more digging through the channel's settings.</li>
+              <li><strong>F8</strong> opens the sound editor for the selected synth channel, and closes it again. Press <em>F1</em> for the full list of shortcuts.</li>
+              <li>The channel rack makes room for the new button, and the editor's title now says which synth you are editing.</li>
+            </ul>
+          </article>
+
+          <article class="release reveal">
+            <header>
+              <h3>Version 1.3.0</h3>
+              <time>6 October 2026</time>
+            </header>
+            <p class="release-lead">A wavetable synthesizer, a new logo, and a new installer.</p>
+            <ul>
+              <li><strong>A wavetable synth, in the style of Serum.</strong> In a synth channel's <em>Edit sound…</em>, switch the oscillators to <em>Wavetable</em>. Two wavetable oscillators (nine tables, from Basic Shapes and Pulse Width to Vowels, FM Sweep and Digital) with a live picture of the wave: drag across it, or turn <em>Position</em>, to morph the sound. Unison with detune and stereo width, a sub oscillator and noise, a filter with its own envelope and key tracking, and an extra modulation envelope (<em>Env 2</em>) and two LFOs.</li>
+              <li><strong>Drag a source onto a knob.</strong> Take <em>Env 2</em>, <em>LFO 1</em>, <em>LFO 2</em>, <em>Velocity</em> or <em>Key</em> from the bar at the top and drop it on any knob with a small dot, such as the wavetable position, cutoff, resonance, levels or volume. A ring on the knob shows how far it moves, and a list at the bottom lets you set how much, or take a link away. Up to eight links per sound. You can also click a source, then click a knob.</li>
+              <li><strong>Thirteen new wavetable sounds</strong> in a new <em>Wavetable</em> group of the instrument menu: supersaw, reese, wobble bass, vowel lead, FM pluck, glass pad, PWM strings, sync lead, digital bell, organ, brass and more. Open any of them in the editor and change it.</li>
+              <li><strong>A new logo.</strong> A new app icon, installer icon and website icon: a pulse rising to a peak over a faint step grid.</li>
+              <li><strong>A new installer.</strong> PulseGrid Studio now installs from an <em>.msi</em> file, just for you, with no administrator needed. Updates still arrive by themselves: the app downloads the new installer, checks it against a checksum and, when you press <em>Restart to update</em>, installs it and opens the new version. If you installed 1.2 or earlier with the old .exe, remove it under <em>Settings → Apps</em> first and install this one; your projects stay where they are.</li>
+            </ul>
+          </article>
+
+          <article class="release reveal">
+            <header>
+              <h3>Version 1.2.0</h3>
+              <time>6 October 2026</time>
+            </header>
+            <p class="release-lead">Design your own sounds.</p>
+            <ul>
+              <li><strong>A synthesizer for every synth channel.</strong> Open a synth channel's settings and press <em>Edit sound…</em>. Two oscillators with their own waveforms, unison and stereo width, a sub oscillator and noise, a filter with its own envelope and key tracking, a volume envelope you can see, FM, vibrato, tremolo, filter wobble and pitch drop. Start from any of the built-in sounds and change it, or build one from scratch. Your sound is saved inside the project, so it travels with it, cloud sync included. <em>Back to preset</em> undoes it, and every knob move can be undone.</li>
+              <li><strong>Smoother Discord sign-in in the Windows app.</strong> After you approve in Discord, your browser now shows a page that hands you back to PulseGrid Studio, instead of staying stuck on Discord.</li>
+            </ul>
+          </article>
+
+          <article class="release reveal">
+            <header>
+              <h3>Version 1.1.0</h3>
+              <time>6 October 2026</time>
+            </header>
+            <p class="release-lead">Sign in with Discord.</p>
+            <ul>
+              <li><strong>Continue with Discord.</strong> Under <em>Cloud</em>, choose <em>Continue with Discord</em> instead of typing an email and password. In the Windows app it opens your browser and brings you back signed in. If your Discord email matches an account you already made, you land in that same account with your projects. Cloud sync is still optional.</li>
+            </ul>
+          </article>
+
+          <article class="release release-major reveal">
+            <header>
+              <h3>Version 1.0.0</h3>
+              <span class="release-badge release-badge-hot">First full release</span>
+              <time>5 October 2026</time>
+            </header>
+            <p class="release-lead">PulseGrid Studio 1.0 brings your projects with you, keeps itself up to date, and makes the first hour easier.</p>
+            <ul>
+              <li><strong>Cloud sync.</strong> Create a free account under <em>Cloud</em> in the left panel and your projects follow you between the Windows app and the web studio, uploading by themselves after each save. If the same project was changed on two PCs, the other version is kept as its own cloud project instead of being overwritten, and a newer version from another PC is offered in the menu bar. Optional: without an account, nothing is sent anywhere. A usage line shows how much of your 100 projects and 250 MB you have used.</li>
+              <li><strong>Search your projects.</strong> Once you have six or more, a search box appears above the project list, in the desktop app and in the cloud list. Type any part of a name, with words in any order. Capitals and accents don't matter, and <em>Esc</em> clears it.</li>
+              <li><strong>Automatic updates.</strong> The Windows app finds new versions on its own, downloads them in the background and offers <em>Restart to update</em>. Your project is saved first. Check by hand from <em>Help → Check for updates</em>, or turn it off under <em>Options</em>.</li>
+              <li><strong>A guided start.</strong> A short tour on first launch points out the channel rack, patterns, playlist, zooming, windows, cloud sync, export and the keyboard shortcuts. Replay it any time from <em>Help → Take the tour</em>.</li>
+              <li><strong>Clearer icons.</strong> The window buttons in the top bar have their own easy-to-read icons, with names beside them on wider screens: open windows light up and the one in front is brightest. The title-bar buttons, piano roll tools and the track and effect buttons got matching crisp icons too.</li>
+              <li><strong>A cleaner studio.</strong> One slim menu bar and one transport row, grouped the way you work; hints and messages along the bottom; a channel rack whose rows line up; and playlist clips that show their contents.</li>
+              <li><strong>Your music is yours.</strong> A short, plain user agreement: PulseGrid Studio is free, you own everything you make with it, commercial releases included, and no company has any rights to your music.</li>
+              <li><strong>Zoom with the scroll wheel.</strong> In the piano roll and the playlist, the wheel zooms in and out around the spot under your mouse, <em>Shift</em> + wheel scrolls sideways and <em>Alt</em> + wheel scrolls up and down. Prefer a wheel that scrolls? Switch it under <em>Options</em>; <em>Ctrl</em> + wheel always zooms.</li>
+              <li><strong>Many more keyboard shortcuts.</strong> Press <em>F1</em> for the full list: loop, metronome, play from the start, stepping through patterns and channels, mute and solo, zoom, editing tools and more. The keys that play notes are never taken.</li>
+              <li><strong>Report a problem</strong> straight from the <em>Help</em> menu, with the version already filled in.</li>
+              <li>See the <a href="/legal.html#privacy">privacy notice</a> for exactly what cloud sync stores. Passwords can be reset by email.</li>
+            </ul>
+          </article>
+
+          <article class="release reveal">
+            <header>
+              <h3>Version 0.4.7</h3>
+            </header>
+            <ul>
+              <li><strong>Your music is yours.</strong> A new, much shorter user agreement: PulseGrid Studio is free to use, you own everything you make with it, commercial releases included, and no company has any rights to your music. You'll be asked to accept the new terms once after updating.</li>
+              <li>The tour's <em>Play it</em> step now lights up the PAT/SONG switch along with the play buttons it talks about.</li>
+              <li>The tour's <em>Browser</em> step slowly scrolls the panel down to show the demo songs and colour themes, then scrolls back when you move on.</li>
+            </ul>
+          </article>
+
+          <article class="release reveal">
+            <header>
+              <h3>Version 0.4.6</h3>
+            </header>
+            <ul>
+              <li><strong>A quick tour for newcomers.</strong> On first launch, a few short pop-ups point out the channel rack, playlist, patterns, windows and export. Skip it with one click, or see it again from <em>Help → Take the tour</em>.</li>
+              <li><strong>Report a problem.</strong> <em>Help → Report a problem</em> opens a bug report on GitHub with the version already filled in, so you only have to describe what happened. Nothing is sent until you submit it.</li>
+            </ul>
+          </article>
+
+          <article class="release reveal">
+            <header>
+              <h3>Version 0.4.5</h3>
+            </header>
+            <ul>
+              <li><strong>Automatic updates.</strong> The desktop app now finds new versions by itself, downloads them in the background and offers <em>Restart to update</em> in the menu bar. Your project is saved first, and if you'd rather wait, the update installs the next time you close the app.</li>
+              <li>Check by hand from <em>Help → Check for updates</em>, or switch the automatic check off under <em>Options</em>. It's the app's only network request and sends nothing about you or your projects; see the <a href="/legal.html#privacy">privacy notice</a>.</li>
+              <li>The website and app now ship without source maps, so they're smaller.</li>
+              <li><strong>Note:</strong> updating from 0.4.4 or earlier needs one last manual download from this page. From 0.4.5 on, updates arrive by themselves.</li>
+            </ul>
+          </article>
+
+          <article class="release reveal">
+            <header>
+              <h3>Version 0.4.4</h3>
+            </header>
+            <ul>
+              <li><strong>A cleaner top bar.</strong> One slim menu bar with the project name in the middle and undo, save and Export on the right, and one transport row below it, grouped as play controls, the pattern you're editing, then master, swing and the window buttons.</li>
+              <li><strong>Status bar.</strong> Hints and messages now run along the bottom of the window, with the channel your keys play and the version beside them.</li>
+              <li>Master and swing are labeled, the browser panel has its own window button, and pattern renaming happens in place instead of in a second name box.</li>
+              <li>Removed duplicates: the playlist's extra song-mode button and the second snap control. Menus open under the menu you click, and on smaller screens the top bar sheds labels before it hides buttons.</li>
+            </ul>
+          </article>
+
+          <article class="release reveal">
+            <header>
+              <h3>Version 0.4.3</h3>
+            </header>
+            <ul>
+              <li><strong>A steady top bar.</strong> Long hints — like the one on the record button — no longer stretch the hint bar and push the toolbars sideways; they're trimmed to fit instead.</li>
+              <li><strong>Tidier channel rack.</strong> Every row lines up, whether its piano roll button reads "Piano" or "Piano (12)".</li>
+              <li>Icons and letters on the small buttons (M, S, window controls, track and mixer buttons) are centered, and the tempo readout sits in the middle of its panel.</li>
+            </ul>
+          </article>
+
+          <article class="release reveal">
+            <header>
+              <h3>Version 0.4.2</h3>
+            </header>
+            <ul>
+              <li><strong>See your song at a glance.</strong> Pattern clips on the playlist now show what's in them — drum hits in rows and notes by pitch, repeated across the clip — and audio clips show their waveform.</li>
+              <li><strong>Opens full screen.</strong> The studio starts with the playlist filling the window and the channel rack floating over it. Floating windows always stay in front of a maximized one.</li>
+              <li>Taller playlist lanes by default, and a calmer track list: move, clear and delete show up when you point at a lane.</li>
+              <li>The version number is shown in the top bar and the window title, and the hint bar is tidier.</li>
+            </ul>
+          </article>
+
+          <article class="release reveal">
+            <header>
+              <h3>Version 0.4.1</h3>
+            </header>
+            <ul>
+              <li><strong>Fits your screen.</strong> On first launch the windows are sized to fill your display, and the playlist grid runs to the edge of its window.</li>
+              <li><strong>One project format.</strong> The web studio now saves and opens the same <code>.pulsegrid</code> files as the desktop app.</li>
+              <li>The piano roll's tool buttons now sit in one row, and the Projects panel shows when a file was really last saved.</li>
+              <li>The desktop app no longer downloads spellcheck dictionaries in the background, so it stays fully offline.</li>
+            </ul>
+          </article>
+
+          <article class="release reveal">
+            <header>
+              <h3>Version 0.4.0</h3>
+            </header>
+            <ul>
+              <li><strong>Your projects, your folder.</strong> Every project is a <code>.pulsegrid</code> file in <em>Documents\PulseGrid Studio</em> or a folder you choose, auto-saved seconds after each change, with rolling backups and save-on-close.</li>
+              <li><strong>MIDI keyboards.</strong> Velocity, sustain pedal, pitch bend and mod wheel; drum pads play your drum channels; knobs are mapped out of the box, and any on-screen knob can learn a hardware one.</li>
+              <li><strong>Record from MIDI.</strong> Arm recording and play: keys land in the piano roll and pads in the step grid.</li>
+              <li><strong>Open, Save As and Recent</strong> in the File menu, a Projects panel in the sidebar, and exports saved straight to an Exports folder.</li>
+            </ul>
+          </article>
+
+          <article class="release reveal">
+            <header>
+              <h3>Version 0.3.0</h3>
+              <span class="release-badge release-badge-muted">First desktop release</span>
+            </header>
+            <ul>
+              <li><strong>The Windows app.</strong> PulseGrid Studio installs like any other program.</li>
+              <li><strong>36 new instruments</strong> and six new drum voices, with FM, wide stereo unison, sub oscillators and more realistic hi-hats.</li>
+              <li><strong>8 new effects:</strong> chorus, flanger, phaser, tremolo, auto pan, stereo width, bitcrusher and limiter.</li>
+              <li><strong>Mixer routing:</strong> sends, bus outputs and peak meters with clip lights.</li>
+              <li>Playlist markers, lane colours and resizable lanes.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <!-- ─────────────────────────────── download ─────────────────────────────── -->
+      <section class="section" id="download">
+        <div class="download-card reveal">
+          <div class="download-main">
+            <img class="download-icon" src="/icon.png" alt="" width="88" height="88" />
+            <h2>Download PulseGrid Studio</h2>
+            <p class="download-meta">Version %VITE_APP_VERSION% · Windows 10 &amp; 11 (%VITE_INSTALLER_SIZE%) · macOS 12 or newer</p>
+
+            <a class="button button-primary button-large" href="%VITE_DOWNLOAD_URL%" download>
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v9M4 7l4 4 4-4M2.5 14h11" /></svg>
+              Download for Windows
+            </a>
+
+            <a class="button button-outline button-large" href="%VITE_MAC_DOWNLOAD_URL%" download>
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v9M4 7l4 4 4-4M2.5 14h11" /></svg>
+              Download for Mac
+            </a>
+
+            <p class="or-line">
+              Using something else? <a href="/studio.html">Open the web studio</a> — nothing to install.
+            </p>
+
+            <p class="agree-line">
+              By downloading you agree to the <a href="/legal.html#agreement">user agreement</a>. It's short, and
+              it says what you'd hope: PulseGrid is free, and the music you make is yours.
+            </p>
+          </div>
+
+          <div class="download-details">
+            <div class="detail-block">
+              <h3>Installing</h3>
+              <ol class="install-steps">
+                <li><strong>Open the installer</strong> (an .msi file). It installs just for you, with no administrator needed, adds shortcuts to your desktop and Start menu, and starts PulseGrid Studio.</li>
+                <li>
+                  <strong>If Windows shows “Windows protected your PC”</strong>, choose <em>More info</em> → <em>Run anyway</em>.
+                  The installer isn't code-signed yet, so Windows doesn't recognise the publisher.
+                </li>
+                <li>
+                  <strong>If Smart App Control blocks it</strong>, Windows won't offer a way to run it until the app is
+                  code-signed. Use the <a href="/studio.html">web studio</a> in the meantime — it's the same studio.
+                </li>
+                <li><strong>Accept the user agreement</strong> the first time the studio opens.</li>
+                <li>
+                  <strong>Had version 1.2 or earlier, installed with the old .exe?</strong> Remove it first under
+                  <em>Settings → Apps</em>. Your projects stay where they are. After that, updates arrive by themselves.
+                </li>
+              </ol>
+            </div>
+
+            <div class="detail-block">
+              <h3>Installing on a Mac</h3>
+              <ol class="install-steps">
+                <li><strong>Open the .dmg file</strong> and drag <em>PulseGrid Studio</em> onto the <em>Applications</em> folder. One download works on both Intel and Apple Silicon Macs.</li>
+                <li>
+                  <strong>The first time, open it with a right-click.</strong> In <em>Applications</em>, right-click (or Control-click)
+                  PulseGrid Studio, choose <em>Open</em>, then <em>Open</em> again. The app isn't signed with an Apple
+                  Developer certificate yet, so macOS says it can't verify who made it. After that it opens normally.
+                </li>
+                <li>
+                  <strong>If macOS says the app is “damaged”</strong>, open <em>Terminal</em> and run
+                  <code>xattr -cr "/Applications/PulseGrid Studio.app"</code>, then open it again.
+                </li>
+                <li><strong>New versions:</strong> the app tells you when one is out and takes you to this page to download it.</li>
+                <li>On a Mac laptop, the F5–F9 window shortcuts need the <em>Fn</em> key held, or turn on “Use F1, F2, etc. keys as standard function keys” in System Settings → Keyboard.</li>
+              </ol>
+            </div>
+
+            <div class="detail-block">
+              <h3>System requirements</h3>
+              <dl class="requirements">
+                <div><dt>Operating system</dt><dd>Windows 10 or 11 (64-bit), or macOS 12 or newer (Intel or Apple Silicon)</dd></div>
+                <div><dt>Disk space</dt><dd>About 370 MB</dd></div>
+                <div><dt>Memory</dt><dd>4 GB RAM or more</dd></div>
+                <div><dt>Optional</dt><dd>USB MIDI keyboard, microphone</dd></div>
+              </dl>
+            </div>
+
+            <div class="detail-block checksum" data-sha="%VITE_INSTALLER_SHA256%">
+              <h3>Verify your download</h3>
+              <p>SHA-256 of <code>PulseGrid-Studio-Setup-%VITE_APP_VERSION%.msi</code>:</p>
+              <div class="checksum-row">
+                <code class="checksum-value">%VITE_INSTALLER_SHA256%</code>
+                <button type="button" class="copy-button">Copy</button>
+              </div>
+              <p class="small">To check it, run this in PowerShell where you saved the file:<br /><code>Get-FileHash .\PulseGrid-Studio-Setup-%VITE_APP_VERSION%.msi</code></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─────────────────────────────── faq ─────────────────────────────── -->
+      <section class="section section-tint" id="faq">
+        <header class="section-head">
+          <p class="eyebrow">Questions</p>
+          <h2>Frequently asked</h2>
+        </header>
+
+        <div class="faq">
+          <details>
+            <summary>Is PulseGrid Studio really free?</summary>
+            <p>Yes. The desktop app and the web studio are free, with no subscription, ads or in-app purchases, and you never need an account. An account is only for the optional cloud sync.</p>
+          </details>
+          <details>
+            <summary>Who owns the music I make?</summary>
+            <p>
+              You do. Everything you make with PulseGrid Studio is yours, including for commercial releases, and the
+              built-in sounds are free to use in it. PulseGrid claims no rights to your music and you don't need to
+              credit it. <a href="/legal.html#agreement">Read the short user agreement</a> in English or Norwegian.
+            </p>
+          </details>
+          <details>
+            <summary>Where are my projects saved?</summary>
+            <p>
+              In the desktop app, in <em>Documents\PulseGrid Studio</em> by default — change it under
+              <em>File → Change save folder…</em>. In the web studio, in your browser's own storage on your device;
+              use <em>File → Download project</em> to keep a copy as a file. With a free account you can also sync
+              projects to the cloud and open them on any of your PCs.
+            </p>
+          </details>
+          <details>
+            <summary>How does cloud sync work?</summary>
+            <p>
+              Create a free account under <em>Cloud</em> in the left panel of the studio. From then on, each project
+              you save is uploaded automatically, and the same account on another PC lists it under <em>Cloud</em>,
+              ready to open. If the same project was changed on two PCs, neither change is thrown away: the other
+              version is kept as its own project, named “(other version)”. You can remove any project from the
+              cloud, or switch syncing off for a single project. The
+              <a href="/legal.html#privacy">privacy notice</a> says exactly what is stored.
+            </p>
+          </details>
+          <details>
+            <summary>Do I need an account?</summary>
+            <p>
+              No. Everything works without one, including saving, exporting and the web studio. An account is only
+              needed if you want your projects synced between computers. Until you sign in, the studio never contacts
+              the cloud.
+            </p>
+          </details>
+          <details>
+            <summary>How do updates work?</summary>
+            <p>
+              The Windows app checks for a new version shortly after it starts and every few hours while it's open.
+              When there is one, it downloads in the background, is checked against its checksum, and a <em>Restart to update</em> button appears in the
+              menu bar; your project is saved first, then the new version installs itself and opens. You can turn the check off under <em>Options</em>. The web studio
+              is always the latest version.
+            </p>
+          </details>
+          <details>
+            <summary>What keyboard shortcuts are there?</summary>
+            <p>
+              Press <em>F1</em> in the studio (or choose <em>Help → Keyboard shortcuts</em>) for the full list. A few to
+              start with: <em>Space</em> plays and pauses, <em>Enter</em> plays from the beginning, <em>L</em> turns looping
+              on and off, <em>K</em> is the metronome, <em>F5</em>–<em>F9</em> open the windows, and the scroll wheel zooms
+              the piano roll and playlist. The keys that play notes (Z to M and Q to I) are left alone, so shortcuts on
+              those letters use <em>Ctrl</em> or <em>Alt</em>.
+            </p>
+          </details>
+          <details>
+            <summary>Does my MIDI keyboard work?</summary>
+            <p>
+              Any class-compliant USB MIDI keyboard works, including the Akai MPK Mini. Keys play the selected
+              instrument, pads on MIDI channel 10 play your drum channels, and the joystick handles pitch bend and
+              modulation. If a knob doesn't do what you expect, right-click any knob on screen and turn the one on
+              your keyboard to link them.
+            </p>
+          </details>
+          <details>
+            <summary>Why does Windows warn me about the installer?</summary>
+            <p>
+              The installer isn't code-signed yet, so Windows doesn't recognise the publisher. SmartScreen shows a
+              warning you can pass: check that the SHA-256 checksum above matches your download, then choose
+              <em>More info → Run anyway</em>. On Windows 11 PCs with <em>Smart App Control</em> turned on, unsigned
+              apps are blocked with no way to run them — use the <a href="/studio.html">web studio</a> there until
+              a signed release is available.
+            </p>
+          </details>
+          <details>
+            <summary>Does PulseGrid collect any data?</summary>
+            <p>
+              No. There is no analytics, advertising or tracking, and your projects never leave your device unless you
+              send them somewhere. Without an account, the desktop app's only network request is its update check, which
+              you can switch off. If you choose to sign in for cloud sync, your synced projects are stored with
+              Supabase. See the <a href="/legal.html#privacy">privacy notice</a>.
+            </p>
+          </details>
+          <details>
+            <summary>Can I move projects between the web studio and the desktop app?</summary>
+            <p>Yes. Both use <code>.pulsegrid</code> project files: download a project from one and open it in the other.</p>
+          </details>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-brand">
+        <a class="brand" href="/">
+          <img src="/icon.png" alt="" width="28" height="28" />
+          <span>PulseGrid <strong>Studio</strong></span>
+        </a>
+        <p>Free music production for Windows and the web.</p>
+      </div>
+
+      <nav class="footer-columns" aria-label="Footer">
+        <div>
+          <h3>Product</h3>
+          <a href="#download">Download</a>
+          <a href="/studio.html">Web studio</a>
+          <a href="#tour">Tour</a>
+          <a href="#whats-new">What's new</a>
+        </div>
+        <div>
+          <h3>Help</h3>
+          <a href="#faq">FAQ</a>
+          <a href="#download">System requirements</a>
+          <a href="#download">Verify your download</a>
+          <a href="https://github.com/BerdalYe/pulsegrid-studio/issues/new" rel="noopener">Report a problem</a>
+        </div>
+        <div>
+          <h3>Legal</h3>
+          <a href="/legal.html#agreement">User agreement</a>
+          <a href="/legal.html#privacy">Privacy</a>
+        </div>
+      </nav>
+
+      <div class="footer-bottom">
+        <span>© <span data-year></span> PulseGrid Studio</span>
+        <span>Version %VITE_APP_VERSION%</span>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/site/site.ts"></script>
+  </body>
+</html>

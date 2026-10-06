@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0d0c14" />
+    <meta name="robots" content="noindex" />
+    <title>Signed in — PulseGrid Studio</title>
+    <link rel="icon" type="image/png" href="/icon.png" />
+    <link rel="stylesheet" href="/src/site/site.css" />
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="PulseGrid Studio home">
+        <img src="/icon.png" alt="" width="30" height="30" />
+        <span>PulseGrid <strong>Studio</strong></span>
+      </a>
+    </header>
+
+    <main id="main" class="legal account">
+      <header class="legal-head">
+        <p class="eyebrow">Sign in with Discord</p>
+        <h1 id="signed-title">One moment…</h1>
+        <p class="lead" id="signed-lead">Sending you back to PulseGrid Studio.</p>
+      </header>
+
+      <p class="account-next" id="signed-open" hidden>
+        <a class="button button-primary" id="signed-open-link" href="pulsegrid://auth">Open PulseGrid Studio</a>
+      </p>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-bottom">
+        <span>© <span data-year></span> PulseGrid Studio</span>
+        <span><a href="/legal.html#privacy">Privacy</a></span>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/site/site.ts"></script>
+    <script type="module" src="/src/site/signed-in.ts"></script>
+  </body>
+</html>

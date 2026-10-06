@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0d0c14" />
+    <title>User agreement &amp; privacy — PulseGrid Studio</title>
+    <meta name="description" content="The PulseGrid Studio user agreement, in English and Norwegian, and how PulseGrid handles your data." />
+    <link rel="icon" type="image/png" href="/icon.png" />
+    <link rel="stylesheet" href="/src/site/site.css" />
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="PulseGrid Studio home">
+        <img src="/icon.png" alt="" width="30" height="30" />
+        <span>PulseGrid <strong>Studio</strong></span>
+      </a>
+
+      <nav class="site-nav" id="site-nav" aria-label="Main">
+        <a href="/#tour">Tour</a>
+        <a href="/#sounds">Sounds</a>
+        <a href="/#compare">Desktop &amp; web</a>
+        <a href="/#whats-new">What's new</a>
+        <a href="/#download">Download</a>
+        <a href="/#faq">FAQ</a>
+      </nav>
+
+      <div class="header-actions">
+        <a class="button button-outline studio-link" href="/studio.html">
+          <span class="hide-narrow">Open </span>Web Studio
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3h8v8M13 3 3 13" /></svg>
+        </a>
+        <button class="menu-toggle" type="button" aria-controls="site-nav" aria-expanded="false" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </header>
+
+    <main id="main" class="legal">
+      <header class="legal-head">
+        <p class="eyebrow">Legal</p>
+        <h1>User agreement &amp; privacy</h1>
+        <p class="lead">
+          The terms you accept when you first open PulseGrid Studio, and exactly what happens to your data (almost
+          nothing).
+        </p>
+        <nav class="legal-toc" aria-label="On this page">
+          <a href="#agreement">User agreement</a>
+          <a href="#privacy">Privacy</a>
+        </nav>
+      </header>
+
+      <section class="legal-section" id="agreement" aria-labelledby="agreement-title">
+        <div class="legal-section-head">
+          <h2 id="agreement-title">User agreement</h2>
+          <div class="lang-switch" role="group" aria-label="Language / Språk">
+            <button type="button" data-lang="en" aria-pressed="true">English</button>
+            <button type="button" data-lang="no" aria-pressed="false">Norsk</button>
+          </div>
+        </div>
+
+        <!-- Filled in from src/agreement.ts, the same text the studio shows. -->
+        <div class="agreement-doc" data-agreement>
+          <noscript>
+            <p>Turn on JavaScript to read the agreement here, or read it in the studio under Help → User agreement.</p>
+          </noscript>
+        </div>
+      </section>
+
+      <section class="legal-section" id="privacy" aria-labelledby="privacy-title">
+        <div class="legal-section-head">
+          <h2 id="privacy-title">Privacy</h2>
+        </div>
+
+        <div class="agreement-doc">
+          <p class="legal-intro">PulseGrid Studio has no analytics, no advertising and no tracking, and you never need an account. An account is only for the optional cloud sync, described below.</p>
+
+          <h3>Who is responsible</h3>
+          <p>
+            PulseGrid Studio is run by <strong>Mathias Verdal</strong> in <strong>Norway</strong>, who is responsible
+            for any personal data described on this page. For any question about your data, or to ask for it to be
+            corrected or deleted, email
+            <a href="mailto:berdalproductions@gmail.com">berdalproductions@gmail.com</a>.
+          </p>
+
+          <h3>The desktop app</h3>
+          <p>
+            Your projects, exports, backups and settings are stored on your own computer — projects in the save
+            folder you choose, settings in your Windows user profile. Nothing about you or your projects is sent
+            anywhere unless you sign in to cloud sync (see below).
+          </p>
+          <p>
+            Without an account, the app goes online for one thing only: checking for updates. Shortly after it starts, and every few hours
+            while it's open, it downloads a small file from this website that holds the newest version number and the
+            installer's checksum. When there is a newer version, it downloads that installer from GitHub, where
+            PulseGrid's releases are published, and checks it against the checksum. Like any web request, this shows
+            this site and GitHub your IP address; it carries no other information about you, your computer or your
+            projects.
+            You can turn it off under <em>Options → Check for updates automatically</em>, and check by hand from
+            <em>Help → Check for updates</em>. Apart from that, the app only opens a web page in your browser if you
+            click a link.
+          </p>
+
+          <h3>The web studio</h3>
+          <p>
+            The studio runs entirely in your browser. Projects and imported samples are kept in your browser's own
+            storage on your device and are not uploaded unless you sign in to cloud sync (see below). Clearing your
+            browser's site data deletes the local copy, so download a project file for anything you want to keep.
+          </p>
+
+          <h3>This website</h3>
+          <p>
+            The site sets no cookies and loads nothing from other companies — its fonts and images are served from
+            here. The Windows installer itself is downloaded from GitHub, which handles that download under its own
+            privacy statement. Like any web server, the host may keep standard access logs (such as IP address and
+            time of request) to run and protect the site.
+          </p>
+
+          <h3>Cloud sync (optional)</h3>
+          <p>
+            Cloud sync lets you work on the same projects on different computers. It is off until you create an account
+            and sign in. Until then the studio never contacts the cloud, and it works exactly the same without it. If
+            you do sign in:
+          </p>
+          <ul>
+            <li>
+              <strong>Your account.</strong> Your email address and password are used to sign you in. The password is
+              stored only as a hash, never in readable form. The email address is used for nothing except the
+              confirmation and password-reset messages you ask for. If you choose <strong>Continue with Discord</strong>
+              instead, Discord asks you to approve the sign-in and tells us your email address and Discord name; we keep
+              only the email address and use it for nothing else. Discord handles that step under its own terms and
+              privacy policy, and we never see your Discord password.
+            </li>
+            <li>
+              <strong>Your projects.</strong> Each project you sync, with everything in it (including imported or
+              recorded audio), is uploaded, compressed, to private storage that only your account can read. Stored
+              alongside it are its name, size, the time of its last change and the kind of device that made it
+              (the Windows app, or the web studio and which browser).
+            </li>
+            <li>
+              <strong>Who holds it.</strong> This is stored with Supabase (supabase.com), under its own terms and
+              privacy policy. Synced projects are protected by your sign-in and by Supabase's security; they are not
+              end-to-end encrypted and are not shared with anyone.
+            </li>
+            <li>
+              <strong>Limits.</strong> 250&nbsp;MB and 100 projects per account, and 50&nbsp;MB for a single project.
+            </li>
+          </ul>
+          <p>
+            <strong>Removing your data.</strong> Remove a project from the cloud in the studio and it is deleted from
+            storage; the copies on your computers are kept. To delete your whole account and everything stored with
+            it, email <a href="mailto:berdalproductions@gmail.com">berdalproductions@gmail.com</a> from the address you
+            signed up with. You already have your own copy of your work: every synced project is also an ordinary
+            <code>.pulsegrid</code> file on your computers.
+          </p>
+
+          <h3>Microphone and MIDI devices</h3>
+          <p>
+            The microphone is only used while you're recording with <em>Record mic</em>, and the recording stays on
+            your device. MIDI keyboards are only read to play and record notes.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-brand">
+        <a class="brand" href="/">
+          <img src="/icon.png" alt="" width="28" height="28" />
+          <span>PulseGrid <strong>Studio</strong></span>
+        </a>
+        <p>Free music production for Windows and the web.</p>
+      </div>
+
+      <nav class="footer-columns" aria-label="Footer">
+        <div>
+          <h3>Product</h3>
+          <a href="/#download">Download</a>
+          <a href="/studio.html">Web studio</a>
+          <a href="/#tour">Tour</a>
+          <a href="/#whats-new">What's new</a>
+        </div>
+        <div>
+          <h3>Help</h3>
+          <a href="/#faq">FAQ</a>
+          <a href="/#download">System requirements</a>
+          <a href="/#download">Verify your download</a>
+        </div>
+        <div>
+          <h3>Legal</h3>
+          <a href="#agreement">User agreement</a>
+          <a href="#privacy">Privacy</a>
+        </div>
+      </nav>
+
+      <div class="footer-bottom">
+        <span>© <span data-year></span> PulseGrid Studio</span>
+        <span>Version %VITE_APP_VERSION%</span>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/site/site.ts"></script>
+    <script type="module" src="/src/site/legal.ts"></script>
+  </body>
+</html>

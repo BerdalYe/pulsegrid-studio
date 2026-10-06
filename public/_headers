@@ -1,0 +1,20 @@
+# Read by Netlify. Safe defaults for every page; the studio needs the microphone and MIDI.
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: camera=(), geolocation=(), payment=(), microphone=(self), midi=(self)
+
+# Built files have a fingerprint in their name, so they can be kept for a year.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/site/*
+  Cache-Control: public, max-age=86400
+
+/icon.png
+  Cache-Control: public, max-age=86400
+
+# The app asks for this to look for updates: never serve a stale copy.
+/downloads/latest.yml
+  Cache-Control: no-cache

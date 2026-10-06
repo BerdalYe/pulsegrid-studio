@@ -1,0 +1,145 @@
+{
+  "name": "pulsegrid-studio",
+  "private": true,
+  "version": "1.4.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "app": "vite build && electron .",
+    "app:dev": "node scripts/electron-dev.mjs",
+    "icon": "node scripts/make-icon.mjs",
+    "dist:win": "tsc && vite build && electron-builder --win --x64 -c.electronDist=node_modules/electron/dist",
+    "build:site": "tsc && vite build",
+    "release": "npm run dist:win && npm run build:site",
+    "dist:mac": "tsc && vite build && electron-builder --mac"
+  },
+  "devDependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
+    "@supabase/supabase-js": "^2.117.2",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "electron": "^44.4.5",
+    "electron-builder": "^26.15.3",
+    "immer": "^10.0.3",
+    "lamejs": "^1.2.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.5.3",
+    "vite": "^5.3.3",
+    "vitest": "^2.1.9",
+    "zustand": "^4.5.2"
+  },
+  "description": "PulseGrid Studio - a pattern-based music workstation.",
+  "author": "PulseGrid",
+  "main": "electron/main.cjs",
+  "pulsegrid": {
+    "updateUrl": "https://pulsegridstudio.netlify.app/downloads/",
+    "releaseUrl": "https://github.com/BerdalYe/pulsegrid-studio/releases/download/v{version}/",
+    "siteUrl": "https://pulsegridstudio.netlify.app",
+    "supabase": {
+      "url": "https://dyaplnxbextxeyjxcjst.supabase.co",
+      "anonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR5YXBsbnhiZXh0eGV5anhjanN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyMjAyOTIsImV4cCI6MjEwNjc5NjI5Mn0.v14UJRq2UR6gOlSr8LFtD5lRF8JJxsTHFEMdThFdy30"
+    }
+  },
+  "build": {
+    "appId": "studio.pulsegrid.app",
+    "productName": "PulseGrid Studio",
+    "copyright": "PulseGrid Studio",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "!dist/**/*.map",
+      "!dist/downloads/**",
+      "!dist/site/**",
+      "electron/**/*",
+      "build/icon.png",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "msi",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png",
+      "signExecutable": false
+    },
+    "msi": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "PulseGrid Studio",
+      "runAfterFinish": true,
+      "artifactName": "PulseGrid-Studio-Setup-${version}.${ext}"
+    },
+    "fileAssociations": [
+      {
+        "ext": "pulsegrid",
+        "name": "PulseGrid Project",
+        "description": "PulseGrid Studio project",
+        "role": "Editor"
+      }
+    ],
+    "afterPack": "build/afterPack.cjs",
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "icon": "build/icon.icns",
+      "category": "public.app-category.music",
+      "identity": null,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "PulseGrid Studio records from your microphone when you use Record mic."
+      }
+    },
+    "dmg": {
+      "title": "PulseGrid Studio ${version}",
+      "artifactName": "PulseGrid-Studio-${version}-mac.${ext}",
+      "window": {
+        "width": 540,
+        "height": 380
+      },
+      "contents": [
+        {
+          "x": 130,
+          "y": 190,
+          "type": "file"
+        },
+        {
+          "x": 410,
+          "y": 190,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "protocols": [
+      {
+        "name": "PulseGrid Studio sign-in",
+        "schemes": [
+          "pulsegrid"
+        ]
+      }
+    ]
+  }
+}
