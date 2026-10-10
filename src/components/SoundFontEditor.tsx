@@ -123,7 +123,7 @@ export function SoundFontEditor() {
   const removeCurrent = async () => {
     if (ref.fontId === BUILTIN_ID) return;
     const name = entry?.name ?? ref.fontName;
-    if (!(await confirm("Remove this SoundFont?", `${name} will be removed from this computer. Projects that use it play the built-in instruments instead, until you add it again.`, { confirmLabel: "Remove" }))) return;
+    if (!(await confirm("Remove this sound file?", `${name} will be removed from this computer. Projects that use it play the built-in instruments instead, until you add it again.`, { confirmLabel: "Remove" }))) return;
     await removeSoundFont(ref.fontId);
     update(channel.id, { ...ref, fontId: BUILTIN_ID, fontName: BUILTIN_NAME });
   };
@@ -180,7 +180,7 @@ export function SoundFontEditor() {
         }}
       >
         <strong>
-          SoundFont Instrument <span>· {channel.name}</span>
+          Instrument Browser <span>· {channel.name}</span>
         </strong>
         <span className="menu-spacer" />
         <button type="button" onClick={() => play()} title="Play one note">
@@ -207,7 +207,7 @@ export function SoundFontEditor() {
       <div className="sf-body">
         <div className="sf-sidebar">
           <label className="sf-field">
-            SoundFont
+            Sounds
             <select
               value={ref.fontId}
               aria-label="SoundFont"
@@ -216,7 +216,7 @@ export function SoundFontEditor() {
                 change({ fontId: id, fontName: id === BUILTIN_ID ? BUILTIN_NAME : (fonts[id]?.name ?? id) });
               }}
             >
-              {builtinVisible ? <option value={BUILTIN_ID}>{BUILTIN_NAME} (built in)</option> : null}
+              {builtinVisible ? <option value={BUILTIN_ID}>{BUILTIN_NAME}</option> : null}
               {choices.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}

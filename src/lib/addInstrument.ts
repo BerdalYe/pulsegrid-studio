@@ -21,7 +21,7 @@ export function addInstrument(entry: InstrumentMenuEntry): string {
       fontName: BUILTIN_NAME,
       bank: entry.soundfont.bank,
       program: entry.soundfont.program,
-      name: entry.label.replace(/ \(recorded\)$/, "")
+      name: entry.label
     });
     requestFont(BUILTIN_ID);
   }

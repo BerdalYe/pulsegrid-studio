@@ -975,7 +975,7 @@ export const synthPresets: SynthPresetDef[] = [...classicSynthPresets, ...waveta
 
 export const INSTRUMENT_GROUPS = [
   "Plugins",
-  "Recorded instruments",
+  "Instruments",
   "Drums",
   "Keys",
   "Strings",
@@ -1004,11 +1004,11 @@ export interface InstrumentMenuEntry {
   midiOut?: boolean;
 }
 
-/** A recorded instrument: General MIDI program numbers (0 is the first, the piano), or bank 128 for a drum kit. */
+/** A sampled instrument: General MIDI program numbers (0 is the first, the piano), or bank 128 for a drum kit. */
 const recorded = (label: string, program: number, bank = 0): InstrumentMenuEntry => ({
-  label: `${label} (recorded)`,
+  label,
   type: "synth",
-  group: "Recorded instruments",
+  group: "Instruments",
   soundfont: { bank, program }
 });
 
@@ -1023,10 +1023,10 @@ const synth = (label: string, preset: string, group: InstrumentGroup): Instrumen
  * Everything you can add as a channel, mirroring FL's channel-creation menu.
  * Shared by the ADD menu and the channel rack, so the two can never drift.
  */
-export const INSTRUMENT_MENU: InstrumentMenuEntry[] = [
+const MENU_ENTRIES: InstrumentMenuEntry[] = [
   { label: "Wavetable Synth", type: "synth", preset: "wt-init", group: "Plugins", plugin: true },
   // Opens a panel with every instrument in the SoundFont, and lets you add your own SoundFont files.
-  { label: "SoundFont Instrument", type: "synth", group: "Plugins", plugin: true, soundfont: { bank: 0, program: 0 } },
+  { label: "Instrument Browser", type: "synth", group: "Plugins", plugin: true, soundfont: { bank: 0, program: 0 } },
   // For instruments that live in another program (the Akai Studio Instrument Collection, a hardware synth).
   { label: "MIDI Out (external instrument)", type: "synth", group: "Plugins", plugin: true, midiOut: true },
 
@@ -1146,13 +1146,20 @@ export const INSTRUMENT_MENU: InstrumentMenuEntry[] = [
 
   { label: "Sampler", type: "sample", group: "Other" }
 ];
+
+/** A synthesized sound that shares its name with a sampled instrument says so, so no two entries read the same. */
+const sampledNames = new Set(MENU_ENTRIES.filter((entry) => entry.group === "Instruments").map((entry) => entry.label));
+
+export const INSTRUMENT_MENU: InstrumentMenuEntry[] = MENU_ENTRIES.map((entry) =>
+  entry.group !== "Instruments" && !entry.soundfont && sampledNames.has(entry.label) ? { ...entry, label: `${entry.label} (synth)` } : entry
+);
 /**
  * The instruments to offer. Where the built-in recorded set doesn't exist (the web studio),
  * its entries are left out rather than adding silent channels.
  */
 export function availableInstruments(builtinAvailable: boolean | null): InstrumentMenuEntry[] {
   if (builtinAvailable !== false) return INSTRUMENT_MENU;
-  return INSTRUMENT_MENU.filter((entry) => entry.group !== "Recorded instruments");
+  return INSTRUMENT_MENU.filter((entry) => entry.group !== "Instruments");
 }
 
 const synthPresetsById = new Map(synthPresets.map((preset) => [preset.id, preset]));

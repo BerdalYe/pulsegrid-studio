@@ -12,7 +12,7 @@ import { fontStorage } from "./storage";
  */
 
 export const BUILTIN_ID = "generaluser-gs";
-export const BUILTIN_NAME = "GeneralUser GS";
+export const BUILTIN_NAME = "Built-in instruments";
 
 /** A SoundFont this big is refused: it would not fit in memory alongside everything else. */
 const MAX_BYTES = 1024 * 1024 * 1024;

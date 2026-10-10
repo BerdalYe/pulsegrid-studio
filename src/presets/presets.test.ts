@@ -226,7 +226,7 @@ describe("plugins", () => {
 });
 
 describe("recorded instruments", () => {
-  const recorded = INSTRUMENT_MENU.filter((entry) => entry.group === "Recorded instruments");
+  const recorded = INSTRUMENT_MENU.filter((entry) => entry.group === "Instruments");
 
   it("offers a good spread of them, each with a bank and program inside General MIDI's range", () => {
     expect(recorded.length).toBeGreaterThanOrEqual(30);
@@ -235,7 +235,7 @@ describe("recorded instruments", () => {
       expect([0, 128], entry.label).toContain(entry.soundfont!.bank);
       expect(entry.soundfont!.program, entry.label).toBeGreaterThanOrEqual(0);
       expect(entry.soundfont!.program, entry.label).toBeLessThanOrEqual(127);
-      expect(entry.label, entry.label).toMatch(/\(recorded\)$/);
+      expect(entry.label, entry.label).not.toMatch(/recorded|soundfont|generaluser/i);
     }
   });
 
@@ -244,16 +244,16 @@ describe("recorded instruments", () => {
     expect(recorded.some((entry) => entry.soundfont!.bank === 0)).toBe(true);
   });
 
-  it("has a SoundFont Instrument plugin that opens its own picker", () => {
-    const plugin = INSTRUMENT_MENU.find((entry) => entry.label === "SoundFont Instrument");
+  it("has an Instrument Browser plugin that opens its own picker", () => {
+    const plugin = INSTRUMENT_MENU.find((entry) => entry.label === "Instrument Browser");
     expect(plugin).toMatchObject({ group: "Plugins", plugin: true, type: "synth" });
     expect(plugin?.soundfont).toBeDefined();
   });
 
   it("leaves out the recorded ones where the built-in set isn't there, and keeps everything else", () => {
     const without = availableInstruments(false);
-    expect(without.some((entry) => entry.group === "Recorded instruments")).toBe(false);
-    expect(without.some((entry) => entry.label === "SoundFont Instrument")).toBe(true);
+    expect(without.some((entry) => entry.group === "Instruments")).toBe(false);
+    expect(without.some((entry) => entry.label === "Instrument Browser")).toBe(true);
     expect(without.some((entry) => entry.label === "Kick")).toBe(true);
 
     expect(availableInstruments(true)).toHaveLength(INSTRUMENT_MENU.length);

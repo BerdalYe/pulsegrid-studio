@@ -594,11 +594,19 @@ function Studio() {
         }
       });
       const plugins = available.filter((entry) => entry.group === "Plugins").map(entryItem);
-      const families = INSTRUMENT_GROUPS.filter((group) => group !== "Plugins").flatMap((group) => {
+      const family = (group: string): MenuItem[] => {
         const entries = available.filter((entry) => entry.group === group);
-        return entries.length === 0 ? [] : [{ label: group, items: entries.map(entryItem) } as MenuItem];
-      });
-      return [...plugins, { label: "", separator: true }, ...families];
+        return entries.length === 0 ? [] : [{ label: group, items: entries.map(entryItem) }];
+      };
+      // The sampled instruments and the drum machine up front; the synthesized sounds tucked into one flyout.
+      const synths = INSTRUMENT_GROUPS.filter((group) => !["Plugins", "Instruments", "Drums"].includes(group)).flatMap(family);
+      return [
+        ...plugins,
+        { label: "", separator: true },
+        ...family("Instruments"),
+        ...family("Drums"),
+        ...(synths.length > 0 ? [{ label: "Synth sounds", items: synths } as MenuItem] : [])
+      ];
     })(),
     Patterns: [
       { label: "New pattern", run: () => selectPattern(addPattern()) },
