@@ -1,4 +1,6 @@
 import { sanitizeSynthPatch } from "../audio/synthPatch";
+import { sanitizeMidiOutRef } from "../audio/midiOutRef";
+import { sanitizeSoundFontRef } from "../audio/soundfont/ref";
 import {
   SCHEMA_VERSION,
   type AutomationClip,
@@ -234,7 +236,9 @@ function sanitizeChannel(
     reverse: Boolean(source.reverse),
     loop: Boolean(source.loop),
     synthPreset: typeof source.synthPreset === "string" ? source.synthPreset : undefined,
-    synthPatch: sanitizeSynthPatch(source.synthPatch)
+    synthPatch: sanitizeSynthPatch(source.synthPatch),
+    soundfont: type === "synth" ? sanitizeSoundFontRef(source.soundfont) : undefined,
+    midiOut: type === "synth" ? sanitizeMidiOutRef(source.midiOut) : undefined
   };
 }
 

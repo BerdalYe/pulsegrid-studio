@@ -8,7 +8,7 @@
     <title>PulseGrid Studio — free music production for Windows and the web</title>
     <meta
       name="description"
-      content="PulseGrid Studio is a free music studio: step sequencer, piano roll, playlist and mixer, 57 instruments, 14 effects, MIDI keyboard support and optional cloud sync between your PCs. Download for Windows or Mac, or open it in your browser."
+      content="PulseGrid Studio is a free music studio: step sequencer, piano roll, playlist and mixer, over 100 instruments (35 of them recorded), 14 effects, MIDI keyboard support and MIDI out and optional cloud sync between your PCs. Download for Windows or Mac, or open it in your browser."
     />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="PulseGrid Studio" />
@@ -73,13 +73,13 @@
         <div class="hero-copy">
           <a class="release-pill" href="#whats-new">
             <span class="pill-tag">New</span>
-            Version %VITE_APP_VERSION%: PulseGrid Studio for Mac
+            Version %VITE_APP_VERSION%: recorded instruments and MIDI out
             <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3l5 5-5 5" /></svg>
           </a>
 
           <h1>Make beats <span class="gradient-text">that hit.</span></h1>
           <p class="lead">
-            A complete music studio — step sequencer, piano roll, playlist and mixer — with 57
+            A complete music studio — step sequencer, piano roll, playlist and mixer — with over 100
             instruments and 14 effects built in. Free for Windows and Mac, and it runs in your browser too.
           </p>
 
@@ -288,8 +288,8 @@
       <section class="section section-tint" id="sounds">
         <header class="section-head">
           <p class="eyebrow">Sound library</p>
-          <h2>57 instruments. 14 effects. Nothing to download.</h2>
-          <p>Every sound is generated inside the studio, so projects open anywhere without missing plugins or sample packs.</p>
+          <h2>Over 100 instruments. 14 effects. Nothing to download.</h2>
+          <p>Most sounds are generated inside the studio, so projects open anywhere without missing plugins or sample packs. The Windows and Mac apps add 35 recorded instruments on top, and can play any SoundFont file you own.</p>
         </header>
 
         <div class="instrument-columns">
@@ -320,6 +320,14 @@
           <div class="instrument-group reveal">
             <h3>Leads, plucks &amp; pads <span>10</span></h3>
             <p>Supersaw · Cyber Saw · Square · Chiptune · Synth Brass · Hyper Pluck · Future Pluck · Warm, Bright &amp; Dark Pads</p>
+          </div>
+          <div class="instrument-group reveal">
+            <h3>Recorded, in the desktop apps <span>35</span></h3>
+            <p>Grand Piano · Bright Piano · Electric Piano · Church Organ · Nylon &amp; Steel Guitar · Fingered &amp; Slap Bass · Violin · Cello · Harp · Choir · Trumpet · Trombone · French Horn · Sax · Flute · Four drum kits and more. Recorded from real instruments, 287 sounds in the full set.</p>
+          </div>
+          <div class="instrument-group reveal">
+            <h3>Plugins <span>3</span></h3>
+            <p>Wavetable Synth · SoundFont Instrument (browse the whole set, or add your own .sf2 file) · MIDI Out (play instruments that live in another program)</p>
           </div>
           <div class="instrument-group reveal">
             <h3>Sampler <span>1</span></h3>
@@ -366,6 +374,8 @@
               <tr><th scope="row">Auto-save</th><td class="yes">To the project file, with backups</td><td class="yes">In the browser</td></tr>
               <tr><th scope="row">Export WAV &amp; MP3</th><td class="yes">Straight to an Exports folder</td><td class="yes">As downloads</td></tr>
               <tr><th scope="row">MIDI keyboards</th><td class="yes">Connect automatically</td><td class="yes">After allowing access</td></tr>
+              <tr><th scope="row">Recorded instruments</th><td class="yes">35 included, plus your own SoundFonts</td><td>Your own SoundFont files</td></tr>
+              <tr><th scope="row">MIDI out to other programs</th><td class="yes">Yes</td><td class="yes">Yes, after allowing access</td></tr>
               <tr><th scope="row">Cloud sync</th><td class="yes">Free account, optional</td><td class="yes">Free account, optional</td></tr>
               <tr><th scope="row">Updates</th><td class="yes">Found and installed automatically</td><td class="yes">Always the latest</td></tr>
               <tr><th scope="row">Works offline</th><td class="yes">Always</td><td>Needs the page to load</td></tr>
@@ -391,6 +401,22 @@
               <h3>Version %VITE_APP_VERSION%</h3>
               <span class="release-badge">Latest</span>
               <time>%VITE_RELEASE_DATE%</time>
+            </header>
+            <p class="release-lead">Recorded instruments, a MIDI out for your other instruments, and menus that work like a desktop program.</p>
+            <ul>
+              <li><strong>35 recorded instruments in the desktop apps.</strong> <em>Add</em> now has a <em>Recorded instruments</em> group: grand piano, electric piano, organ, guitars, basses, violin, cello, harp, choir, trumpet, trombone, horn, sax, flute, and four drum kits. They are played from a built-in SoundFont (GeneralUser GS), come with the app and work offline, and are saved with your project and included when you export audio.</li>
+              <li><strong>SoundFont Instrument (plugin).</strong> <em>Add → SoundFont Instrument</em> opens a panel with all 287 sounds of the built-in set, searchable, with attack, release, brightness and transpose. <em>Add a SoundFont…</em> brings in any .sf2 file of your own.</li>
+              <li><strong>MIDI Out (plugin).</strong> <em>Add → MIDI Out</em> sends a channel's notes out of a MIDI port instead of playing them here, timed against the audio clock so they land on the beat. Use it to play instruments that live in another program, for example the Akai Studio Instrument Collection that comes with the MPK mini IV, through a virtual MIDI cable such as loopMIDI. Keys, pads, pitch and mod wheel, sustain and the keyboard's knobs go through. The sound comes from the other program, so it is not in PulseGrid's mixer or in an export from PulseGrid.</li>
+              <li><strong>Better MIDI keyboard support.</strong> Keyboards with several ports, like the MPK mini IV, now play without stray notes from their control ports. Choose which port is listened to, change the drum-pad channel, and watch a live MIDI monitor that says what each key, pad and knob sends. Pressure and preset changes are read too.</li>
+              <li><strong>Menus like a desktop program.</strong> Shortcuts sit in their own column, ticks and bullets show what is on, and the long instrument list is now a set of flyouts. Use the arrow keys to move through menus.</li>
+              <li><strong>Stay signed in.</strong> Closing the app no longer signs you out of cloud sync.</li>
+            </ul>
+          </article>
+
+          <article class="release reveal">
+            <header>
+              <h3>Version 1.4.0</h3>
+              <time>6 October 2026</time>
             </header>
             <p class="release-lead">PulseGrid Studio now runs on Mac.</p>
             <ul>

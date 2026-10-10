@@ -53,8 +53,17 @@ export interface UpdateStatus {
   configured?: boolean;
 }
 
+/** SoundFonts a person added, kept as files in the desktop app's own folder. */
+export interface DesktopSoundFonts {
+  list(): Promise<Array<{ id: string; name: string; size: number }>>;
+  read(id: string): Promise<Uint8Array | null>;
+  write(id: string, name: string, bytes: ArrayBuffer): Promise<void>;
+  remove(id: string): Promise<void>;
+}
+
 export interface DesktopBridge {
   platform: string;
+  soundfonts?: DesktopSoundFonts;
   getSettings(): Promise<DesktopSettings>;
   setAutosave(enabled: boolean): Promise<DesktopSettings>;
   chooseSaveFolder(): Promise<DesktopSettings | null>;

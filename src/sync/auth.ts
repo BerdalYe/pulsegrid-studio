@@ -144,7 +144,8 @@ export async function signUp(email: string, password: string): Promise<"signedIn
 
 export async function signOut(): Promise<void> {
   const client = await getClient();
-  await client.auth.signOut();
+  // Only this computer's session: the default would also log out every other PC.
+  await client.auth.signOut({ scope: "local" });
   useAuthStore.setState({ status: "signedOut", userId: null, email: null });
 }
 
@@ -164,6 +165,16 @@ function hasPendingDiscordSignIn(): boolean {
     return localStorage.getItem(`${OAUTH_STORAGE_KEY}-code-verifier`) !== null;
   } catch {
     return false;
+  }
+}
+
+/** Delete what the Discord sign-in left in this browser's storage, without telling the server anything. */
+function forgetDiscordSession(): void {
+  try {
+    localStorage.removeItem(OAUTH_STORAGE_KEY);
+    localStorage.removeItem(`${OAUTH_STORAGE_KEY}-code-verifier`);
+  } catch {
+    /* blocked storage: nothing was kept */
   }
 }
 
@@ -213,7 +224,10 @@ async function finishDiscordSignIn(address: string): Promise<void> {
       access_token: data.session.access_token,
       refresh_token: data.session.refresh_token
     });
-    await oauth.auth.signOut({ scope: "local" });
+    // Forget the Discord client's copy of the session on this computer only. It must
+    // NOT sign out: that tells the server to end the session, and this one session
+    // is now the main client's, so the person would be logged out within the hour.
+    forgetDiscordSession();
     if (handOver) throw handOver;
   } catch (failure) {
     useAuthStore.setState({ notice: friendlyAuthError(failure) });

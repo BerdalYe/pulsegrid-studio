@@ -1,5 +1,6 @@
 import { Scheduler } from "./Scheduler";
 import { midiManager, parseMidiMessage } from "./midi";
+import { midiOutPanic } from "./midiOut";
 import { Sequencer } from "./sequencer";
 import { RenderGraph } from "./graph";
 import { initDefaultSamples } from "./sampleRegistry";
@@ -212,6 +213,7 @@ export function stopTransport(): void {
   }
 
   heldVoices.clear();
+  midiOutPanic();
   stopPlayheadLoop();
   useTransportStore.getState().setPlaying(false);
 
@@ -250,6 +252,7 @@ export function panic(): void {
   // the page is reloaded.
   for (const voice of heldVoices.values()) voice.kill(now);
   heldVoices.clear();
+  midiOutPanic();
 }
 
 /* ────────────────────────────── live playing ────────────────────────────── */

@@ -1,3 +1,5 @@
+import { sanitizeMidiOutRef } from "../audio/midiOutRef";
+import { sanitizeSoundFontRef } from "../audio/soundfont/ref";
 import { sanitizeSynthPatch, type SynthPatch } from "../audio/synthPatch";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
@@ -9,6 +11,8 @@ import {
   type AutomationTargetType,
   type Channel,
   type ChannelType,
+  type MidiOutRef,
+  type SoundFontRef,
   type EffectInstance,
   type EffectType,
   type NoteData,
@@ -103,6 +107,10 @@ export interface ProjectActions {
   updateChannelSynthPreset: (channelId: string, presetId: string) => void;
   /** Set the sound a person built for a synth channel, or pass null to go back to its preset. */
   updateChannelSynthPatch: (channelId: string, patch: SynthPatch | null) => void;
+  /** Set the recorded (SoundFont) instrument a synth channel plays, or pass null to go back to its synth. */
+  updateChannelSoundFont: (channelId: string, ref: SoundFontRef | null) => void;
+  /** Send a synth channel's notes out of a MIDI port, or pass null to stop. */
+  updateChannelMidiOut: (channelId: string, ref: MidiOutRef | null) => void;
 
   setStep: (patternId: string, channelId: string, stepIndex: number, cell: StepCell) => void;
   toggleStep: (patternId: string, channelId: string, stepIndex: number) => void;
@@ -610,6 +618,20 @@ export const useProjectStore = create<ProjectState>()(
           channel.synthPreset = presetId || undefined;
           // Choosing a preset by name means the preset, not an old custom sound.
           channel.synthPatch = undefined;
+        }),
+
+      updateChannelSoundFont: (channelId, ref) =>
+        edit("Instrument", (state) => {
+          const channel = findChannel(state, channelId);
+          if (!channel || channel.type !== "synth") return;
+          channel.soundfont = ref ? (sanitizeSoundFontRef(ref) ?? undefined) : undefined;
+        }),
+
+      updateChannelMidiOut: (channelId, ref) =>
+        edit("MIDI out", (state) => {
+          const channel = findChannel(state, channelId);
+          if (!channel || channel.type !== "synth") return;
+          channel.midiOut = ref ? (sanitizeMidiOutRef(ref) ?? undefined) : undefined;
         }),
 
       updateChannelSynthPatch: (channelId, patch) =>

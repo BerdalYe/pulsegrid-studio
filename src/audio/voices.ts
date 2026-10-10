@@ -1,6 +1,8 @@
 import type { Channel } from "../types";
 import { clamp, isSampleChannel, midiToFreq } from "../lib/utils";
 import { getReversedBuffer, getSample } from "./sampleRegistry";
+import { createMidiOutVoice, joinVoices } from "./midiOut";
+import { createSoundFontChannelVoice } from "./soundfont/channel";
 import { patchToPreset } from "./synthPatch";
 import { buildWavetableStack, connectModulation, reachOf, type Modulation, type WavetableStack } from "./wtVoice";
 import { defaultSynthPreset, getSynthPreset, type SynthPresetDef } from "../presets/presets";
@@ -1061,6 +1063,31 @@ export function triggerChannel(
   destination: AudioNode,
   options: TriggerOptions
 ): Voice | null {
+  // A channel set to MIDI out sends its notes to another program, and is silent here unless asked to play too.
+  const out = channel.type === "synth" ? channel.midiOut : undefined;
+  if (!out) return triggerInternal(context, channel, destination, options);
+
+  const external =
+    options.velocity > 0
+      ? createMidiOutVoice(context, out, {
+          time: options.time,
+          pitch: options.pitch,
+          velocity: clamp(options.velocity, 0, 1),
+          duration: options.duration
+        })
+      : null;
+  if (!out.alsoPlay) return external;
+
+  const own = triggerInternal(context, channel, destination, options);
+  return external && own ? joinVoices(external, own) : (own ?? external);
+}
+
+function triggerInternal(
+  context: BaseAudioContext,
+  channel: Channel,
+  destination: AudioNode,
+  options: TriggerOptions
+): Voice | null {
   const velocity = clamp(options.velocity, 0, 1);
   if (velocity <= 0) return null;
 
@@ -1092,6 +1119,9 @@ export function triggerChannel(
     case "shaker":
       return createShaker(context, destination, time, velocity, tune, (duration ?? 0) > 0.22);
     case "synth": {
+      // A recorded instrument (a SoundFont) takes the place of the synth.
+      if (channel.soundfont) return createSoundFontChannelVoice(context, channel, destination, options);
+
       const preset = channel.synthPatch
         ? patchToPreset(channel.synthPatch)
         : (getSynthPreset(channel.synthPreset) ?? defaultSynthPreset);

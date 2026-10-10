@@ -498,7 +498,8 @@ export function SynthEditor() {
   const [armed, setArmed] = useState<ModSource | null>(null);
   const [dragging, setDragging] = useState(false);
 
-  const open = channel !== undefined && channel.type === "synth";
+  // A channel that plays a recorded instrument has its own panel (SoundFontEditor).
+  const open = channel !== undefined && channel.type === "synth" && !channel.soundfont && !channel.midiOut;
 
   // The channel being edited is the one the keyboard plays.
   useEffect(() => {

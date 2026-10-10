@@ -1,5 +1,5 @@
-import { midiManager, type MidiEvent } from "./midi";
-import { handleControlChange, useMidiStore } from "./midiMap";
+import { describeMidi, midiManager, type MidiEvent } from "./midi";
+import { DEFAULT_PAD_CHANNEL, handleControlChange, useMidiStore } from "./midiMap";
 import {
   getPlayPosition,
   noteOff,
@@ -15,6 +15,7 @@ import { useTransportStore } from "../state/transportStore";
 import { clamp, uid } from "../lib/utils";
 
 import { padTarget } from "./drumMap";
+import { forwardControl } from "./midiOut";
 
 /**
  * What a MIDI keyboard does in the studio.
@@ -29,8 +30,8 @@ import { padTarget } from "./drumMap";
  *    piano roll and pads into the step grid of the selected pattern.
  */
 
-/** MIDI channel 10 is the drum channel by convention. */
-export const DRUM_MIDI_CHANNEL = 10;
+/** MIDI channel 10 is the drum channel by convention; the pad channel can be changed in the MIDI panel. */
+export const DRUM_MIDI_CHANNEL = DEFAULT_PAD_CHANNEL;
 const BEND_RANGE_CENTS = 200;
 
 function keyboardTarget(): string | null {
@@ -41,6 +42,12 @@ function keyboardTarget(): string | null {
   }
   // Nothing selected: the first melodic channel is the sensible guess.
   return (channels.find((entry) => entry.type === "synth") ?? channels[0])?.id ?? null;
+}
+
+/** Where the keyboard's knobs and pressure go when its channel sends to another program. */
+function externalTarget() {
+  const id = keyboardTarget();
+  return id ? useProjectStore.getState().channels.find((entry) => entry.id === id)?.midiOut : undefined;
 }
 
 /* ─────────────────────────────── recording ─────────────────────────────── */
@@ -110,12 +117,35 @@ function releaseKey(note: number): void {
   useTransportStore.getState().noteOff(note);
 }
 
+/** Controllers the studio itself acts on, so they never count as "not linked to anything". */
+const BUILT_IN_CONTROLLERS = new Set([1, 64, 120, 123]);
+
 export function handleMidiEvent(event: MidiEvent, onStatus?: (message: string) => void): void {
-  useMidiStore.getState().markActivity();
+  const midi = useMidiStore.getState();
+  midi.markActivity();
+
+  // The monitor shows what arrived, and for a knob that does nothing yet, what to do about it.
+  const external = externalTarget();
+  const unlinked =
+    event.type === "cc" &&
+    !BUILT_IN_CONTROLLERS.has(event.controller) &&
+    (external ? !external.knobsToStudio : !midi.mappings[event.controller]) &&
+    !midi.learningId;
+  midi.logMessage(
+    describeMidi(event),
+    event.device,
+    unlinked
+      ? external && !external.knobsToStudio
+        ? "Passed on to the instrument this channel plays outside PulseGrid."
+        : "Not linked to anything. Right-click a knob on screen, then turn this one, to link it."
+      : undefined
+  );
+
+  const padChannel = midi.padChannel;
 
   switch (event.type) {
     case "noteon": {
-      if (event.channel === DRUM_MIDI_CHANNEL) {
+      if (event.channel === padChannel) {
         const target = padTarget(event.note, useProjectStore.getState().channels);
         if (!target) return;
 
@@ -159,7 +189,7 @@ export function handleMidiEvent(event: MidiEvent, onStatus?: (message: string) =
     }
 
     case "noteoff": {
-      if (event.channel === DRUM_MIDI_CHANNEL) return;
+      if (event.channel === padChannel) return;
 
       const entry = pending.get(event.note);
       if (entry) {
@@ -202,10 +232,25 @@ export function handleMidiEvent(event: MidiEvent, onStatus?: (message: string) =
         return;
       }
 
+      // On a channel that plays outside PulseGrid the knobs go to that instrument, unless they were kept for the studio.
+      if (external && (!external.knobsToStudio || !midi.mappings[event.controller])) {
+        forwardControl(external, { type: "cc", controller: event.controller, value: event.value });
+        return;
+      }
+
       const message = handleControlChange(event.controller, event.value);
       if (message) onStatus?.(message);
       return;
     }
+
+    case "aftertouch":
+      // Pressure on the whole keyboard goes to the outside instrument; the studio has no use for it.
+      if (external && event.note === null) forwardControl(external, { type: "pressure", value: event.value });
+      return;
+
+    case "program":
+      if (external) forwardControl(external, { type: "program", program: event.program });
+      return;
   }
 }
 

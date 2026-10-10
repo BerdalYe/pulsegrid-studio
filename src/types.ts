@@ -67,6 +67,43 @@ export interface Channel {
   synthPreset?: string;
   /** A sound the person built or changed; it replaces the preset while it is set. */
   synthPatch?: SynthPatch;
+  /** A recorded instrument from a SoundFont, played instead of the synth. */
+  soundfont?: SoundFontRef;
+  /** Sends this channel's notes out of a MIDI port to another program, instead of (or as well as) playing them here. */
+  midiOut?: MidiOutRef;
+}
+
+/** Where a channel's notes go: a MIDI output port (a virtual cable, or a hardware synth) and a MIDI channel on it. */
+export interface MidiOutRef {
+  portId: string;
+  /** The port's name, so the choice survives the port's id changing between sessions. */
+  portName: string;
+  /** 1..16 */
+  channel: number;
+  /** Also play the notes with PulseGrid's own sound. */
+  alsoPlay?: boolean;
+  /** Keep the keyboard's knobs for PulseGrid's own controls (volume, pan, tempo) instead of passing them on. */
+  knobsToStudio?: boolean;
+}
+
+/** Which instrument of which SoundFont a channel plays, and how it is shaped. */
+export interface SoundFontRef {
+  /** Which SoundFont ("generaluser-gs" is the one built in). */
+  fontId: string;
+  fontName: string;
+  /** 0 is the ordinary bank; 128 holds the drum kits. */
+  bank: number;
+  program: number;
+  /** The instrument's name, for showing. */
+  name: string;
+  /** Multiplies the attack time (1 = as recorded). */
+  attack?: number;
+  /** Multiplies the release time. */
+  release?: number;
+  /** 0..1; 1 leaves the sound alone. */
+  brightness?: number;
+  /** Semitones, -24..24. */
+  transpose?: number;
 }
 
 export type ClipType = "pattern" | "audio" | "automation";

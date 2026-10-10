@@ -975,6 +975,7 @@ export const synthPresets: SynthPresetDef[] = [...classicSynthPresets, ...waveta
 
 export const INSTRUMENT_GROUPS = [
   "Plugins",
+  "Recorded instruments",
   "Drums",
   "Keys",
   "Strings",
@@ -997,7 +998,19 @@ export interface InstrumentMenuEntry {
   group: InstrumentGroup;
   /** A synth with its own editor: adding it opens that editor straight away. */
   plugin?: boolean;
+  /** Plays a recorded instrument from the built-in SoundFont instead of the synth. */
+  soundfont?: { bank: number; program: number };
+  /** Sends its notes out of a MIDI port, to another program, instead of making sound here. */
+  midiOut?: boolean;
 }
+
+/** A recorded instrument: General MIDI program numbers (0 is the first, the piano), or bank 128 for a drum kit. */
+const recorded = (label: string, program: number, bank = 0): InstrumentMenuEntry => ({
+  label: `${label} (recorded)`,
+  type: "synth",
+  group: "Recorded instruments",
+  soundfont: { bank, program }
+});
 
 const synth = (label: string, preset: string, group: InstrumentGroup): InstrumentMenuEntry => ({
   label,
@@ -1012,6 +1025,46 @@ const synth = (label: string, preset: string, group: InstrumentGroup): Instrumen
  */
 export const INSTRUMENT_MENU: InstrumentMenuEntry[] = [
   { label: "Wavetable Synth", type: "synth", preset: "wt-init", group: "Plugins", plugin: true },
+  // Opens a panel with every instrument in the SoundFont, and lets you add your own SoundFont files.
+  { label: "SoundFont Instrument", type: "synth", group: "Plugins", plugin: true, soundfont: { bank: 0, program: 0 } },
+  // For instruments that live in another program (the Akai Studio Instrument Collection, a hardware synth).
+  { label: "MIDI Out (external instrument)", type: "synth", group: "Plugins", plugin: true, midiOut: true },
+
+  recorded("Grand Piano", 0),
+  recorded("Bright Piano", 1),
+  recorded("Electric Piano", 4),
+  recorded("Harpsichord", 6),
+  recorded("Vibraphone", 11),
+  recorded("Marimba", 12),
+  recorded("Church Organ", 19),
+  recorded("Accordion", 21),
+  recorded("Nylon Guitar", 24),
+  recorded("Steel Guitar", 25),
+  recorded("Clean Electric Guitar", 27),
+  recorded("Overdriven Guitar", 29),
+  recorded("Fingered Bass", 33),
+  recorded("Slap Bass", 36),
+  recorded("Violin", 40),
+  recorded("Cello", 42),
+  recorded("String Ensemble", 48),
+  recorded("Harp", 46),
+  recorded("Choir Aahs", 52),
+  recorded("Trumpet", 56),
+  recorded("Trombone", 57),
+  recorded("French Horn", 60),
+  recorded("Brass Section", 61),
+  recorded("Alto Sax", 65),
+  recorded("Clarinet", 71),
+  recorded("Flute", 73),
+  recorded("Square Lead", 80),
+  recorded("Saw Lead", 81),
+  recorded("Warm Pad", 89),
+  recorded("Sitar", 104),
+  recorded("Steel Drums", 114),
+  recorded("Drum Kit", 0, 128),
+  recorded("Room Drum Kit", 8, 128),
+  recorded("Power Drum Kit", 16, 128),
+  recorded("Electronic Drum Kit", 24, 128),
 
   { label: "Kick", type: "kick", group: "Drums" },
   { label: "Snare", type: "snare", group: "Drums" },
@@ -1093,6 +1146,15 @@ export const INSTRUMENT_MENU: InstrumentMenuEntry[] = [
 
   { label: "Sampler", type: "sample", group: "Other" }
 ];
+/**
+ * The instruments to offer. Where the built-in recorded set doesn't exist (the web studio),
+ * its entries are left out rather than adding silent channels.
+ */
+export function availableInstruments(builtinAvailable: boolean | null): InstrumentMenuEntry[] {
+  if (builtinAvailable !== false) return INSTRUMENT_MENU;
+  return INSTRUMENT_MENU.filter((entry) => entry.group !== "Recorded instruments");
+}
+
 const synthPresetsById = new Map(synthPresets.map((preset) => [preset.id, preset]));
 
 export function getSynthPreset(id: string | undefined): SynthPresetDef | undefined {

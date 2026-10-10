@@ -34,6 +34,13 @@ contextBridge.exposeInMainWorld("pulsegridDesktop", {
 
   saveExport: (filename, bytes) => ipcRenderer.invoke("export:save", filename, bytes),
 
+  soundfonts: {
+    list: () => ipcRenderer.invoke("soundfont:list"),
+    read: (id) => ipcRenderer.invoke("soundfont:read", id),
+    write: (id, name, bytes) => ipcRenderer.invoke("soundfont:write", id, name, bytes),
+    remove: (id) => ipcRenderer.invoke("soundfont:remove", id)
+  },
+
   setTitle: (title) => ipcRenderer.send("window:title", title),
   askSaveChanges: (name) => ipcRenderer.invoke("window:ask-save", name),
   closeNow: () => ipcRenderer.send("window:close-now"),

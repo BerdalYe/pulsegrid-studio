@@ -8,7 +8,9 @@ import { Knob } from "./controls";
 import { Waveform } from "./Waveform";
 import { useSamples, useSelectedPattern, useUnmount } from "../hooks/useStudio";
 import { previewChannel } from "../audio/engine";
-import { INSTRUMENT_GROUPS, INSTRUMENT_MENU, synthPresets } from "../presets/presets";
+import { INSTRUMENT_GROUPS, availableInstruments, synthPresets } from "../presets/presets";
+import { addInstrument } from "../lib/addInstrument";
+import { useSoundFontStore } from "../audio/soundfont/registry";
 import { IconSynth } from "./icons";
 import { useSynthEditor } from "./SynthEditor";
 
@@ -45,6 +47,7 @@ export function ChannelRack() {
   // Indexes INSTRUMENT_MENU rather than holding a bare ChannelType, so the
   // rack can offer the same named instruments the ADD menu does.
   const [newIndex, setNewIndex] = useState(0);
+  const instruments = availableInstruments(useSoundFontStore((state) => state.builtinAvailable));
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   if (!pattern) return <div className="empty-note">No pattern selected.</div>;
@@ -60,17 +63,19 @@ export function ChannelRack() {
             title="Instrument to add"
             onChange={(event) => setNewIndex(Number(event.target.value))}
           >
-            {INSTRUMENT_GROUPS.map((group) => (
-              <optgroup key={group} label={group}>
-                {INSTRUMENT_MENU.map((entry, index) =>
-                  entry.group === group ? (
-                    <option key={entry.label} value={index}>
-                      {entry.label}
-                    </option>
-                  ) : null
-                )}
-              </optgroup>
-            ))}
+            {INSTRUMENT_GROUPS.map((group) =>
+              instruments.some((entry) => entry.group === group) ? (
+                <optgroup key={group} label={group}>
+                  {instruments.map((entry, index) =>
+                    entry.group === group ? (
+                      <option key={entry.label} value={index}>
+                        {entry.label}
+                      </option>
+                    ) : null
+                  )}
+                </optgroup>
+              ) : null
+            )}
           </select>
         </label>
 
@@ -78,10 +83,7 @@ export function ChannelRack() {
           className="secondary-action"
           title="Add the selected instrument as a new channel"
           onClick={() => {
-            const entry = INSTRUMENT_MENU[newIndex] ?? INSTRUMENT_MENU[0];
-            const id = addChannel(entry.type, entry.label, undefined, entry.preset);
-            selectChannel(id);
-            if (entry.plugin) useSynthEditor.getState().open(id);
+            addInstrument(instruments[newIndex] ?? instruments[0]);
           }}
         >
           + Channel
@@ -400,7 +402,7 @@ const ChannelRow = memo(function ChannelRow({
                 if (editingSound) useSynthEditor.getState().close();
                 else useSynthEditor.getState().open(channel.id);
               }}
-              title={`Open the ${channel.synthPatch?.wt ? "Wavetable Synth" : "sound editor"} for this channel (F8)`}
+              title={`Open ${channel.midiOut ? "the MIDI out settings" : channel.soundfont ? "the instrument picker" : channel.synthPatch?.wt ? "the Wavetable Synth" : "the sound editor"} for this channel (F8)`}
             >
               <IconSynth />
             </button>

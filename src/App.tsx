@@ -28,13 +28,18 @@ import { CloudToast } from "./components/CloudToast";
 import { IconClose, IconMaximise, IconMinimise, IconRestore } from "./components/icons";
 import { ShortcutsDialog } from "./components/ShortcutsDialog";
 import { SynthEditor, useSynthEditor } from "./components/SynthEditor";
-import { matchShortcut, platformText, shortcutLabel } from "./lib/hotkeys";
+import { SoundFontEditor } from "./components/SoundFontEditor";
+import { MenuPanel, prepareItems, type MenuItem } from "./components/MenuPanel";
+import { MidiOutEditor } from "./components/MidiOutEditor";
+import { matchShortcut, platformText, shortcutLabel, type ShortcutId } from "./lib/hotkeys";
 import { PIANO_KEYS } from "./lib/pianoKeys";
 import { markTourSeen, tourSeen } from "./lib/tour";
 import { reportProblemUrl } from "./lib/reportProblem";
 import { readAcceptance, type AgreementAcceptance } from "./agreement";
 import { initDefaultSamples } from "./audio/sampleRegistry";
-import { INSTRUMENT_GROUPS, INSTRUMENT_MENU } from "./presets/presets";
+import { INSTRUMENT_GROUPS, availableInstruments } from "./presets/presets";
+import { addInstrument } from "./lib/addInstrument";
+import { probeBuiltinSoundFont, refreshSavedFonts, useSoundFontStore, watchProjectFonts } from "./audio/soundfont/registry";
 import { isDesktop, useFileStore } from "./files/desktop";
 import { startMidi } from "./audio/midiController";
 import { useMidiStore } from "./audio/midiMap";
@@ -77,6 +82,13 @@ const windowTitles: Record<WindowId, string> = {
   rack: "Channel Rack",
   piano: "Piano Roll",
   mixer: "Mixer"
+};
+
+const windowShortcut: Record<WindowId, ShortcutId> = {
+  playlist: "windowPlaylist",
+  rack: "windowRack",
+  piano: "windowPiano",
+  mixer: "windowMixer"
 };
 
 const THEMES = [
@@ -220,6 +232,18 @@ function Studio() {
 
   // Desktop only: mirror the background update check.
   useEffect(() => initUpdates(), []);
+
+  // Recorded instruments: is the built-in set here, which SoundFonts has this person added, and
+  // read whatever the open project needs as soon as it is open.
+  const builtinSounds = useSoundFontStore((state) => state.builtinAvailable);
+  useEffect(() => {
+    void probeBuiltinSoundFont();
+    void refreshSavedFonts();
+    return watchProjectFonts(
+      () => useProjectStore.getState().channels,
+      (listener) => useProjectStore.subscribe((state, previous) => (state.channels !== previous.channels ? listener() : undefined))
+    );
+  }, []);
   const updatesConfigured = useUpdateStore((state) => state.configured);
   const updateChecksOn = useUpdateStore((state) => state.enabled);
 
@@ -502,10 +526,7 @@ function Studio() {
 
   const desktop = isDesktop();
 
-  const menus: Record<
-    string,
-    Array<{ label: string; run: () => void; disabled?: boolean; heading?: boolean }>
-  > = {
+  const menus: Record<string, MenuItem[]> = {
     File: desktop
       ? [
           {
@@ -523,20 +544,17 @@ function Studio() {
                 }))
               ]
             : []),
-          { label: "Project", run: () => undefined, heading: true },
+          { label: "", separator: true },
           { label: "Save   Ctrl+S", run: () => runFileAction(saveProject) },
           { label: "Save as…   Ctrl+Shift+S", run: () => runFileAction(saveProjectAs) },
-          {
-            label: `${autosaveOn ? "✓" : "  "} Auto-save`,
-            run: () => runFileAction(toggleAutosave)
-          },
+          { label: "Auto-save", checked: autosaveOn, run: () => runFileAction(toggleAutosave) },
           { label: "Show in File Explorer", run: () => runFileAction(revealCurrentProject) },
-          { label: "Folders", run: () => undefined, heading: true },
+          { label: "", separator: true },
           { label: "Open save folder", run: () => runFileAction(() => openSaveFolder("projects")) },
           { label: "Open exports folder", run: () => runFileAction(() => openSaveFolder("exports")) },
           { label: "Change save folder…", run: () => runFileAction(chooseSaveFolder) },
-          { label: "Audio", run: () => undefined, heading: true },
-          { label: "Export audio…", run: () => setExportOpen(true) }
+          { label: "", separator: true },
+          { label: `Export audio…   ${shortcutLabel("exportAudio")}`, run: () => setExportOpen(true) }
         ]
       : [
           {
@@ -562,22 +580,26 @@ function Studio() {
           }
         ],
     Edit: [
-      { label: "Undo", run: undo },
-      { label: "Redo", run: redo }
+      { label: `Undo   ${shortcutLabel("undo")}`, run: undo },
+      { label: `Redo   ${shortcutLabel("redo")}`, run: redo }
     ],
-    // Grouped under headings: sixty instruments in one flat list is a wall.
-    Add: INSTRUMENT_GROUPS.flatMap((group) => [
-      { label: group, run: () => undefined, heading: true },
-      ...INSTRUMENT_MENU.filter((entry) => entry.group === group).map((entry) => ({
+    // The plugins first, then each family of instruments in a flyout, as in FL's own menus.
+    Add: (() => {
+      const available = availableInstruments(builtinSounds);
+      const entryItem = (entry: (typeof available)[number]): MenuItem => ({
         label: entry.label,
         run: () => {
-          const id = addChannel(entry.type, entry.label, undefined, entry.preset);
-          selectChannel(id);
-          if (entry.plugin) useSynthEditor.getState().open(id);
+          addInstrument(entry);
           setStatus(`Added ${entry.label}.`);
         }
-      }))
-    ]),
+      });
+      const plugins = available.filter((entry) => entry.group === "Plugins").map(entryItem);
+      const families = INSTRUMENT_GROUPS.filter((group) => group !== "Plugins").flatMap((group) => {
+        const entries = available.filter((entry) => entry.group === group);
+        return entries.length === 0 ? [] : [{ label: group, items: entries.map(entryItem) } as MenuItem];
+      });
+      return [...plugins, { label: "", separator: true }, ...families];
+    })(),
     Patterns: [
       { label: "New pattern", run: () => selectPattern(addPattern()) },
       {
@@ -610,19 +632,24 @@ function Studio() {
       { label: "Open all windows", run: openAllWindows },
       { label: "Reset window layout", run: resetLayout },
       { label: showTools ? "Hide browser" : "Show browser", run: () => setShowTools((v) => !v) },
+      { label: "", separator: true },
       ...(Object.keys(windowTitles) as WindowId[]).map((id) => ({
-        label: windowTitles[id],
+        label: `${windowTitles[id]}   ${shortcutLabel(windowShortcut[id])}`,
         run: () => focusWindow(id)
       }))
     ],
     Options: [
       ...THEMES.map((entry) => ({
-        label: (theme === entry.id ? '• ' : ' ') + entry.name,
+        label: entry.name,
+        checked: theme === entry.id,
+        radio: true,
         run: () => setTheme(entry.id)
       })),
-      { label: showTools ? 'Hide browser panel' : 'Show browser panel', run: () => setShowTools((value) => !value) },
+      { label: "", separator: true },
+      { label: "Browser panel   Ctrl+B", checked: showTools, run: () => setShowTools((value) => !value) },
       {
-        label: `${wheelZoom ? "✓" : "  "} Scroll wheel zooms the piano roll and playlist`,
+        label: "Scroll wheel zooms the piano roll and playlist",
+        checked: wheelZoom,
         run: () => {
           toggleWheelZoom();
           setStatus(
@@ -635,14 +662,15 @@ function Studio() {
       ...(updatesConfigured
         ? [
             {
-              label: `${updateChecksOn ? "✓" : "  "} Check for updates automatically`,
+              label: "Check for updates automatically",
+              checked: updateChecksOn,
               run: () => runFileAction(toggleUpdateChecks)
             }
           ]
         : [])
     ],
     Tools: [
-      { label: "Stop all sound (Esc)", run: () => { stopTransport(); panic(); } },
+      { label: "Stop all sound   Esc", run: () => { stopTransport(); panic(); } },
       { label: `Export audio…   ${shortcutLabel("exportAudio")}`, run: () => setExportOpen(true) }
     ],
     Help: [
@@ -706,32 +734,23 @@ function Studio() {
       ) : null}
 
       <SynthEditor />
+      <SoundFontEditor />
+      <MidiOutEditor />
       {shortcutsOpen ? <ShortcutsDialog onClose={() => setShortcutsOpen(false)} /> : null}
 
       {openMenu ? (
-        <div
-          className={`menu-panel${openMenu === "Add" ? " menu-panel-wide" : ""}`}
-          style={{ left: menuLeft }}
-        >
-          {menus[openMenu].map((entry) => ({ ...entry, label: platformText(entry.label) })).map((item) =>
-            item.heading ? (
-              <div key={`heading-${item.label}`} className="menu-heading">
-                {item.label}
-              </div>
-            ) : (
-              <button
-                key={item.label}
-                disabled={item.disabled}
-                onClick={() => {
-                  item.run();
-                  setOpenMenu(null);
-                }}
-              >
-                {item.label}
-              </button>
-            )
-          )}
-        </div>
+        <MenuPanel
+          items={prepareItems(menus[openMenu])}
+          left={menuLeft}
+          onClose={() => setOpenMenu(null)}
+          onSwitch={(direction) => {
+            const names = Object.keys(menus);
+            const next = names[(names.indexOf(openMenu) + direction + names.length) % names.length];
+            const button = [...document.querySelectorAll<HTMLElement>(".fl-menus button")].find((entry) => entry.textContent === next);
+            if (button) setMenuLeft(button.getBoundingClientRect().left);
+            setOpenMenu(next);
+          }}
+        />
       ) : null}
 
       <main className="floating-studio">

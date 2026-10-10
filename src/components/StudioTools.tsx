@@ -48,7 +48,7 @@ export function StudioTools({ onStatus }: StudioToolsProps) {
   const samples = useSamples();
 
   const [midiDevices, setMidiDevices] = useState<MidiDevice[]>([]);
-  const [selectedMidi, setSelectedMidi] = useState("");
+  const [selectedMidi, setSelectedMidi] = useState<string>(() => midiManager.getInputChoice());
   const [midiReady, setMidiReady] = useState(false);
   const fileInput = useRef<HTMLInputElement | null>(null);
 
@@ -64,6 +64,10 @@ export function StudioTools({ onStatus }: StudioToolsProps) {
   );
 
   const resetMappings = useMidiStore((state) => state.resetMappings);
+  const padChannel = useMidiStore((state) => state.padChannel);
+  const setPadChannel = useMidiStore((state) => state.setPadChannel);
+  const monitor = useMidiStore((state) => state.recent);
+  const clearMonitor = useMidiStore((state) => state.clearMonitor);
 
   useEffect(() => audioRecorder.onLevel(setRecordLevel), [setRecordLevel]);
 
@@ -257,25 +261,63 @@ export function StudioTools({ onStatus }: StudioToolsProps) {
         <select
           value={selectedMidi}
           disabled={!midiReady}
+          aria-label="MIDI input to listen to"
+          title="Which MIDI port to listen to"
           onChange={(event) => {
             setSelectedMidi(event.target.value);
-            midiManager.selectDevice(event.target.value || null);
+            midiManager.setInputChoice(event.target.value);
           }}
         >
-          <option value="">All inputs</option>
+          <option value="auto">Automatic (the ports you play on)</option>
+          <option value="all">Every port</option>
           {midiDevices.map((device) => (
             <option key={device.id} value={device.id}>
               {device.name}
+              {device.control ? " (control port)" : ""}
             </option>
           ))}
         </select>
         {midiReady ? (
           <>
             <span className="small-note">
-              Keys play the keyboard target. Pads (MIDI ch. 10) hit your drum channels. Knobs K1–K7
-              control volume, pan, insert, master, swing and tempo — right-click any knob on screen to
-              link it to a knob on your controller.
+              Keys play the keyboard target. Pads (MIDI channel {padChannel}) hit your drum channels. Knobs
+              1–7 control volume, pan, insert, master, swing and tempo. Right-click any knob on screen to
+              link it to a knob on your controller. A keyboard with several ports (like the Akai MPK mini IV)
+              is listened to on the port you play on, and its DAW, plugin and control ports are ignored.
             </span>
+            <label className="midi-pad-channel">
+              Pads send on channel
+              <select
+                value={padChannel}
+                onChange={(event) => setPadChannel(Number(event.target.value))}
+                title="The MIDI channel your drum pads send on (10 on most controllers)"
+              >
+                {Array.from({ length: 16 }, (_, index) => index + 1).map((channel) => (
+                  <option key={channel} value={channel}>
+                    {channel}
+                    {channel === 10 ? " (usual)" : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="midi-monitor" aria-label="MIDI monitor">
+              <div className="midi-monitor-head">
+                <span>MIDI monitor</span>
+                <button type="button" className="link-button" onClick={clearMonitor} disabled={monitor.length === 0}>
+                  Clear
+                </button>
+              </div>
+              {monitor.length === 0 ? (
+                <span className="small-note">Press a key, pad or knob and what it sends shows up here.</span>
+              ) : (
+                monitor.map((line) => (
+                  <div key={line.id} className="midi-monitor-line" title={line.device}>
+                    {line.text}
+                    {line.hint ? <em>{line.hint}</em> : null}
+                  </div>
+                ))
+              )}
+            </div>
             <button onClick={() => { resetMappings(); onStatus("MIDI knob mappings reset to defaults."); }}>
               Reset knob mappings
             </button>

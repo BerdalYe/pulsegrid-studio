@@ -20,6 +20,7 @@ const {
   setLaunchFile
 } = require("./files.cjs");
 const { registerUpdates } = require("./updates.cjs");
+const { registerSoundFontHandlers } = require("./soundfonts.cjs");
 const { authUrlFromArgs, deliverAuthUrl, registerAuthHandlers, registerProtocol, setLaunchAuthUrl } = require("./auth.cjs");
 
 // A MIDI keyboard should make sound the moment it's played, before any click
@@ -32,6 +33,8 @@ if (process.env.PULSEGRID_USER_DATA) app.setPath("userData", process.env.PULSEGR
 const SCHEME = "app";
 const HOST = "pulsegrid";
 const DIST = path.join(__dirname, "..", "dist");
+/** Files that ship with the app but are too big to belong in the website's build (the built-in SoundFont). */
+const ASSETS = path.join(__dirname, "..", "assets");
 
 /** Set by `npm run app:dev` to load the Vite dev server instead of the build. */
 const DEV_URL = process.env.PULSEGRID_DEV_URL;
@@ -63,6 +66,15 @@ function serveBuild() {
     const url = new URL(request.url);
     let relative = decodeURIComponent(url.pathname);
     if (relative === "/" || relative === "") relative = "/index.html";
+
+    // The built-in instruments: /soundfonts/<name>.sf2, from the app's own assets folder.
+    const soundfont = /^\/soundfonts\/([A-Za-z0-9._-]+\.sf2)$/.exec(relative);
+    if (soundfont) {
+      const sf2 = path.join(ASSETS, "soundfonts", soundfont[1]);
+      if (!fs.existsSync(sf2)) return new Response("Not found", { status: 404 });
+      const stream = await net.fetch(pathToFileURL(sf2).toString());
+      return new Response(stream.body, { status: 200, headers: { "content-type": "application/octet-stream" } });
+    }
 
     const file = path.normalize(path.join(DIST, relative));
 
@@ -272,6 +284,7 @@ if (!app.requestSingleInstanceLock()) {
     grantStudioPermissions();
     registerFileHandlers(() => mainWindow);
     registerAuthHandlers();
+    registerSoundFontHandlers();
     registerUpdates({
       getWindow: () => mainWindow,
       getSettings: loadSettings,
@@ -281,6 +294,16 @@ if (!app.requestSingleInstanceLock()) {
       }
     });
     createWindow();
+  });
+
+  // The page keeps the cloud login in its storage, which is normally written out
+  // a moment after each change. Make sure the latest of it is on disk before quitting.
+  app.on("before-quit", () => {
+    try {
+      session.defaultSession.flushStorageData();
+    } catch {
+      /* nothing to flush */
+    }
   });
 
   app.on("window-all-closed", () => app.quit());

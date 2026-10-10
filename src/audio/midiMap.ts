@@ -61,6 +61,34 @@ function saveMappings(mappings: Record<number, string>): void {
   }
 }
 
+const PAD_CHANNEL_KEY = "pulsegrid:midi-pad-channel";
+
+/** MIDI channel 10 is the drum channel by convention, and what pads send by default. */
+export const DEFAULT_PAD_CHANNEL = 10;
+
+function loadPadChannel(): number {
+  try {
+    const stored = Number(localStorage.getItem(PAD_CHANNEL_KEY));
+    if (Number.isInteger(stored) && stored >= 1 && stored <= 16) return stored;
+  } catch {
+    /* storage blocked */
+  }
+  return DEFAULT_PAD_CHANNEL;
+}
+
+/** One line of the MIDI monitor. */
+export interface MonitorLine {
+  id: number;
+  text: string;
+  /** Which input it came from. */
+  device: string;
+  /** Said when the message does nothing yet, and what to do about it. */
+  hint?: string;
+}
+
+const MONITOR_LINES = 8;
+let monitorId = 0;
+
 interface MidiState {
   /** The on-screen control waiting for a hardware knob, if any. */
   learningId: string | null;
@@ -69,7 +97,14 @@ interface MidiState {
   recordArmed: boolean;
   /** Time of the last incoming message, for the activity light. */
   lastActivity: number;
+  /** The MIDI channel the drum pads send on (1–16). Notes on it hit drum channels. */
+  padChannel: number;
+  /** The latest messages received, newest first, for the monitor. */
+  recent: MonitorLine[];
 
+  setPadChannel(channel: number): void;
+  logMessage(text: string, device: string, hint?: string): void;
+  clearMonitor(): void;
   startLearning(id: string | null): void;
   mapController(cc: number, id: string): void;
   unmapTarget(id: string): void;
@@ -83,6 +118,28 @@ export const useMidiStore = create<MidiState>()((set, get) => ({
   mappings: loadMappings(),
   recordArmed: false,
   lastActivity: 0,
+  padChannel: loadPadChannel(),
+  recent: [],
+
+  setPadChannel: (channel) => {
+    const padChannel = Math.min(16, Math.max(1, Math.round(channel)));
+    try {
+      localStorage.setItem(PAD_CHANNEL_KEY, String(padChannel));
+    } catch {
+      /* it still holds until the app closes */
+    }
+    set({ padChannel });
+  },
+
+  logMessage: (text, device, hint) => {
+    const previous = get().recent[0];
+    // A knob turn sends a stream of nearly identical lines: keep one, not eight.
+    const sameControl = previous && previous.device === device && previous.text.split(" = ")[0] === text.split(" = ")[0] && text.includes(" = ");
+    const line: MonitorLine = { id: ++monitorId, text, device, hint };
+    set({ recent: [line, ...get().recent.slice(sameControl ? 1 : 0)].slice(0, MONITOR_LINES) });
+  },
+
+  clearMonitor: () => set({ recent: [] }),
 
   startLearning: (id) => set({ learningId: id }),
 

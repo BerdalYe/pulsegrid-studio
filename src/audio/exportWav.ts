@@ -1,3 +1,4 @@
+import { ensureFontsFor } from "./soundfont/registry";
 import type { ProjectData } from "../types";
 
 import { deliverExport } from "../files/desktop";
@@ -48,6 +49,9 @@ export async function renderProject(
   options: ExportOptions,
   onProgress?: ExportProgressCallback
 ): Promise<AudioBuffer> {
+  // Recorded instruments must be in memory before anything is rendered with them.
+  await ensureFontsFor(project.channels);
+
   const mode = options.range === "pattern" ? "pattern" : "song";
   const stepDuration = secondsPerStep(project.bpm);
   const totalSteps = getPlaybackLengthSteps(project, mode, options.selectedPatternId);
