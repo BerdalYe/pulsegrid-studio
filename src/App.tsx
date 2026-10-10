@@ -30,6 +30,7 @@ import { ShortcutsDialog } from "./components/ShortcutsDialog";
 import { SynthEditor, useSynthEditor } from "./components/SynthEditor";
 import { SoundFontEditor } from "./components/SoundFontEditor";
 import { MenuPanel, prepareItems, type MenuItem } from "./components/MenuPanel";
+import { EDGE_CURSOR, moveRect, resizeRect, type Edge, type Rect } from "./lib/windowGeometry";
 import { MidiOutEditor } from "./components/MidiOutEditor";
 import { matchShortcut, platformText, shortcutLabel, type ShortcutId } from "./lib/hotkeys";
 import { PIANO_KEYS } from "./lib/pianoKeys";
@@ -157,6 +158,17 @@ function Studio() {
     if (!area || area.clientWidth === 0 || area.clientHeight === 0) return;
     useSessionStore.getState().fitLayoutToArea(area.clientWidth, area.clientHeight);
   }, [layoutFitted]);
+
+  // The windows follow the work area: they keep their share of it as the app window is resized, and never leave it.
+  useLayoutEffect(() => {
+    const area = windowArea.current;
+    if (!area) return;
+    const apply = () => useSessionStore.getState().setArea(area.clientWidth, area.clientHeight);
+    apply();
+    const observer = new ResizeObserver(apply);
+    observer.observe(area);
+    return () => observer.disconnect();
+  }, []);
 
   const showStatus = useCallback((message: string) => setStatus(message), []);
 
@@ -918,60 +930,71 @@ interface StudioWindowProps {
   children: ReactNode;
 }
 
+const EDGES: Edge[] = ["n", "s", "e", "w", "ne", "nw", "se", "sw"];
+
 function StudioWindow({ id, title, onFocus, onClose, children }: StudioWindowProps) {
   const layout = useSessionStore((state) => state.windows[id]);
-  const moveWindow = useSessionStore((state) => state.moveWindow);
-  const resizeWindow = useSessionStore((state) => state.resizeWindow);
+  const active = useSessionStore((state) => state.view === id);
+  const setWindowRect = useSessionStore((state) => state.setWindowRect);
   const setWindowFlag = useSessionStore((state) => state.setWindowFlag);
 
-  const drag = useRef<
-    | { mode: "move" | "resize"; pointerX: number; pointerY: number; x: number; y: number; w: number; h: number }
-    | null
-  >(null);
+  // One gesture at a time: moving by the title bar, or resizing by an edge or corner. While it lasts the
+  // window listens to the pointer everywhere, so the drag keeps working when it leaves the window.
+  const gesture = useRef<{ kind: "move" | Edge; pointerX: number; pointerY: number; rect: Rect } | null>(null);
+  const stopListening = useRef<(() => void) | null>(null);
 
-  useEffect(() => {
-    const onMove = (event: PointerEvent) => {
-      const state = drag.current;
-      if (!state) return;
+  useEffect(() => () => stopListening.current?.(), []);
 
-      const dx = event.clientX - state.pointerX;
-      const dy = event.clientY - state.pointerY;
-
-      if (state.mode === "move") moveWindow(id, state.x + dx, state.y + dy);
-      else resizeWindow(id, state.w + dx, state.h + dy);
-    };
-
-    const onUp = () => {
-      drag.current = null;
-    };
-
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onUp);
-
-    return () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onUp);
-    };
-  }, [id, moveWindow, resizeWindow]);
-
-  const startDrag = (mode: "move" | "resize") => (event: ReactPointerEvent<HTMLElement>) => {
-    if (event.button !== 0) return;
-    if (layout.maximized) return;
+  const begin = (kind: "move" | Edge) => (event: ReactPointerEvent<HTMLElement>) => {
+    if (event.button !== 0 || layout.maximized) return;
 
     event.preventDefault();
     onFocus();
+    stopListening.current?.();
 
-    drag.current = {
-      mode,
+    gesture.current = {
+      kind,
       pointerX: event.clientX,
       pointerY: event.clientY,
-      x: layout.x,
-      y: layout.y,
-      w: layout.width,
-      h: layout.height
+      rect: { x: layout.x, y: layout.y, width: layout.width, height: layout.height }
     };
+
+    const track = (move: PointerEvent) => {
+      const current = gesture.current;
+      if (!current) return;
+
+      const area = useSessionStore.getState().area;
+      const dx = move.clientX - current.pointerX;
+      const dy = move.clientY - current.pointerY;
+
+      setWindowRect(
+        id,
+        current.kind === "move" ? moveRect(current.rect, dx, dy, area) : resizeRect(current.rect, current.kind, dx, dy, area)
+      );
+    };
+
+    const finish = () => {
+      gesture.current = null;
+      window.removeEventListener("pointermove", track);
+      window.removeEventListener("pointerup", finish);
+      window.removeEventListener("pointercancel", finish);
+      window.removeEventListener("blur", finish);
+      document.body.style.cursor = "";
+      stopListening.current = null;
+    };
+
+    window.addEventListener("pointermove", track);
+    window.addEventListener("pointerup", finish);
+    window.addEventListener("pointercancel", finish);
+    window.addEventListener("blur", finish);
+    // The pointer keeps the shape of the handle being dragged, even when it strays off it.
+    document.body.style.cursor = kind === "move" ? "move" : EDGE_CURSOR[kind];
+    stopListening.current = finish;
+  };
+
+  const toggleMaximised = () => {
+    setWindowFlag(id, "maximized", !layout.maximized);
+    setWindowFlag(id, "minimized", false);
   };
 
   return (
@@ -995,8 +1018,15 @@ function StudioWindow({ id, title, onFocus, onClose, children }: StudioWindowPro
       }}
       onPointerDown={onFocus}
     >
-      <div className="window-titlebar" onPointerDown={startDrag("move")}>
-        <span className="window-led" />
+      <div
+        className="window-titlebar"
+        onPointerDown={begin("move")}
+        onDoubleClick={(event) => {
+          if (!(event.target as HTMLElement).closest("button")) toggleMaximised();
+        }}
+        title="Drag to move · double-click to maximise"
+      >
+        <span className={`window-led${active ? " active" : ""}`} />
         <span className="window-title">{title}</span>
         <span className="window-spacer" />
 
@@ -1013,10 +1043,7 @@ function StudioWindow({ id, title, onFocus, onClose, children }: StudioWindowPro
           className="window-button"
           title={layout.maximized ? "Restore" : "Maximise"}
           onPointerDown={(event) => event.stopPropagation()}
-          onClick={() => {
-            setWindowFlag(id, "maximized", !layout.maximized);
-            setWindowFlag(id, "minimized", false);
-          }}
+          onClick={toggleMaximised}
         >
           {layout.maximized ? <IconRestore /> : <IconMaximise />}
         </button>
@@ -1034,13 +1061,15 @@ function StudioWindow({ id, title, onFocus, onClose, children }: StudioWindowPro
 
       {layout.minimized ? null : <div className="window-body">{children}</div>}
 
-      {layout.minimized || layout.maximized ? null : (
-        <span
-          className="window-resize"
-          title="Drag to resize"
-          onPointerDown={startDrag("resize")}
-        />
-      )}
+      {layout.minimized || layout.maximized
+        ? null
+        : EDGES.map((edge) => (
+            <span
+              key={edge}
+              className={`window-edge edge-${edge}`}
+              onPointerDown={begin(edge)}
+            />
+          ))}
     </section>
   );
 }

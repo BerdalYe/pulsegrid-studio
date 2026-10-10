@@ -1325,52 +1325,260 @@ kbd {
   min-height: 0;
 }
 
-.window-resize {
+/* Eight handles, one on each edge and corner. They sit just inside the border and above the content. */
+.window-edge {
   position: absolute;
+  z-index: 5;
+}
+
+.edge-n,
+.edge-s {
+  left: 8px;
+  right: 8px;
+  height: 5px;
+  cursor: ns-resize;
+}
+
+.edge-e,
+.edge-w {
+  top: 8px;
+  bottom: 8px;
+  width: 5px;
+  cursor: ew-resize;
+}
+
+.edge-n { top: 0; }
+.edge-s { bottom: 0; }
+.edge-e { right: 0; }
+.edge-w { left: 0; }
+
+.edge-ne,
+.edge-nw,
+.edge-se,
+.edge-sw {
+  width: 12px;
+  height: 12px;
+}
+
+.edge-ne { top: 0; right: 0; cursor: nesw-resize; }
+.edge-sw { bottom: 0; left: 0; cursor: nesw-resize; }
+.edge-nw { top: 0; left: 0; cursor: nwse-resize; }
+.edge-se {
   right: 0;
   bottom: 0;
-  width: 14px;
-  height: 14px;
-  background: linear-gradient(135deg, transparent 50%, var(--line) 50%, var(--line) 60%, transparent 60%, transparent 75%, var(--line) 75%);
   cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 52%, var(--line) 52%, var(--line) 62%, transparent 62%, transparent 76%, var(--line) 76%);
+}
+
+/* The window you are working in stands out: a lit title bar and a brighter outline. */
+.window-led {
+  opacity: 0.45;
+  transition: opacity 0.12s;
+}
+
+.window-led.active {
+  opacity: 1;
+}
+
+.studio-window:has(.window-led.active) {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
 }
 
 /* ───────────────────────── browser (studio tools) ───────────────────────── */
 
 .studio-tools {
+  position: relative;
   display: flex;
-  overflow-y: auto;
-  width: 262px;
-  flex: 0 0 262px;
-  flex-direction: column;
-  gap: 10px;
-  padding: 10px;
+  min-width: 0;
+  flex: 0 0 auto;
   border-right: 1px solid #0d0d10;
   background: var(--panel);
 }
 
-.studio-tools .tool-group {
+.tools-scroll {
   display: flex;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  flex: 1;
   flex-direction: column;
-  gap: 5px;
-  padding: 8px;
+  gap: 6px;
+  padding: 8px 8px 12px;
+}
+
+/* A thin handle on the right edge: drag it to set the width, double-click to reset. */
+.tools-resizer {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  bottom: 0;
+  z-index: 4;
+  width: 7px;
+  cursor: ew-resize;
+}
+
+.tools-resizer::after {
+  position: absolute;
+  top: 0;
+  right: 3px;
+  bottom: 0;
+  width: 1px;
+  background: transparent;
+  content: "";
+  transition: background 0.12s;
+}
+
+.tools-resizer:hover::after {
+  background: var(--accent);
+}
+
+/* ── collapsible sections ── */
+
+.tool-section {
+  flex: none;
   border: 1px solid var(--line-soft);
   border-radius: var(--radius);
   background: var(--chrome-2);
 }
 
-.studio-tools .tool-group strong {
-  color: var(--muted);
-  font-size: 9px;
+.tool-section-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-right: 6px;
+}
+
+.tool-section-toggle {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 8px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.tool-section-toggle:hover {
+  background: transparent;
+}
+
+.tool-chevron {
+  width: 0;
+  height: 0;
+  flex: none;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-left: 5px solid var(--muted);
+  transition: transform 0.12s;
+}
+
+.tool-section.open .tool-chevron {
+  transform: rotate(90deg);
+}
+
+.tool-section-title {
+  flex: none;
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-.studio-tools .tool-group button em {
+.tool-section-summary {
+  overflow: hidden;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tool-section-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+}
+
+.tool-section-body {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  padding: 2px 8px 8px;
+}
+
+.mini-button {
+  height: 20px;
+  padding: 0 7px;
+  font-size: 10px;
+}
+
+.tool-field {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+  text-align: left;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.tool-field select {
+  width: 100%;
+  min-width: 0;
+}
+
+.tool-line {
+  overflow: hidden;
+  text-align: left;
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tool-details summary {
+  cursor: pointer;
+  color: var(--accent-2);
+  font-size: 11px;
+}
+
+.tool-details[open] summary {
+  margin-bottom: 4px;
+}
+
+.demo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.demo-list button {
+  text-align: left;
+}
+
+.studio-tools button em {
   display: block;
+  overflow: hidden;
   color: var(--muted);
   font-size: 9px;
   font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The projects and cloud panels sit inside their section; no box of their own. */
+.projects-panel,
+.cloud-panel {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .record-meter {
@@ -1388,7 +1596,7 @@ kbd {
 
 .sample-list {
   display: flex;
-  max-height: 240px;
+  max-height: 280px;
   overflow-y: auto;
   flex-direction: column;
   gap: 3px;
@@ -1397,22 +1605,39 @@ kbd {
 .sample-item {
   display: grid;
   align-items: center;
-  gap: 3px;
-  grid-template-columns: 1fr auto auto;
+  gap: 3px 4px;
+  grid-template-columns: 1fr auto;
   padding: 3px;
   border-radius: var(--radius);
   background: var(--panel-2);
 }
 
 .sample-item .sample-name {
+  display: flex;
   grid-column: 1 / -1;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
   border: 0;
   background: transparent;
   text-align: left;
 }
 
+.sample-item .sample-name em {
+  display: inline;
+  flex: none;
+}
+
 .sample-item .waveform-canvas {
+  width: 100%;
+  min-width: 0;
+  height: 22px;
   grid-column: 1;
+}
+
+.sample-buttons {
+  display: flex;
+  gap: 2px;
 }
 
 /* ──────────────────────────── channel rack ──────────────────────────── */
@@ -1425,8 +1650,9 @@ kbd {
 
 .toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 6px 8px;
   padding: 6px 8px;
   border-bottom: 1px solid var(--line-soft);
   background: var(--chrome-2);
@@ -1594,8 +1820,9 @@ kbd {
 }
 
 .step {
-  width: 22px;
-  height: 22px;
+  width: 100%;
+  min-width: 0;
+  height: 24px;
   padding: 0;
   border: 1px solid var(--line-soft);
   border-radius: 2px;

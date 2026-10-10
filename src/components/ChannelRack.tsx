@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 
 import { useProjectStore } from "../state/projectStore";
 import { useSessionStore } from "../state/sessionStore";
@@ -31,6 +31,8 @@ import type { Channel, ChannelType, Pattern, StepCell } from "../types";
 const STEP_SIZE = 22;
 const STEP_GAP = 2;
 const STEP_PITCH = STEP_SIZE + STEP_GAP;
+/** Steps grow with the window, up to this size. */
+const MAX_STEP_PITCH = 52;
 /** Width of the fixed channel header column; the playhead lines up against it. */
 const HEAD_WIDTH = 392;
 
@@ -50,7 +52,25 @@ export function ChannelRack() {
   const instruments = availableInstruments(useSoundFontStore((state) => state.builtinAvailable));
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // The steps stretch to use the width of the window: wider window, bigger steps (down to the usual size, where it scrolls).
+  const scroller = useRef<HTMLDivElement | null>(null);
+  const [viewWidth, setViewWidth] = useState(0);
+  useEffect(() => {
+    const element = scroller.current;
+    if (!element) return;
+    const apply = () => setViewWidth(element.clientWidth);
+    apply();
+    const observer = new ResizeObserver(apply);
+    observer.observe(element);
+    return () => observer.disconnect();
+  });
+
   if (!pattern) return <div className="empty-note">No pattern selected.</div>;
+
+  const stepPitch = Math.max(
+    STEP_PITCH,
+    Math.min(MAX_STEP_PITCH, Math.floor((viewWidth - HEAD_WIDTH - 12) / Math.max(1, pattern.length)))
+  );
 
   return (
     <section className="channel-rack">
@@ -98,8 +118,16 @@ export function ChannelRack() {
         </span>
       </div>
 
-      <div className="rack-scroll">
-        <div className="rack-body" style={{ minWidth: HEAD_WIDTH + pattern.length * STEP_PITCH }}>
+      <div className="rack-scroll" ref={scroller}>
+        <div
+          className="rack-body"
+          style={
+            {
+              "--step-pitch": `${stepPitch}px`,
+              minWidth: HEAD_WIDTH + pattern.length * stepPitch
+            } as CSSProperties
+          }
+        >
           <RackPlayhead patternLength={pattern.length} />
 
           {channels.map((channel) => (
@@ -143,7 +171,10 @@ const RackPlayhead = memo(function RackPlayhead({ patternLength }: { patternLeng
   return (
     <div
       className="rack-playhead"
-      style={{ left: HEAD_WIDTH + step * STEP_PITCH, width: STEP_SIZE }}
+      style={{
+        left: `calc(${HEAD_WIDTH}px + ${step} * var(--step-pitch, ${STEP_PITCH}px))`,
+        width: `calc(var(--step-pitch, ${STEP_PITCH}px) - ${STEP_GAP}px)`
+      }}
       aria-hidden="true"
     />
   );
@@ -417,7 +448,10 @@ const ChannelRow = memo(function ChannelRow({
       {showSteps ? (
         <div
           className="steps"
-          style={{ gridTemplateColumns: `repeat(${pattern.length}, ${STEP_SIZE}px)`, gap: STEP_GAP }}
+          style={{
+            gridTemplateColumns: `repeat(${pattern.length}, calc(var(--step-pitch, ${STEP_PITCH}px) - ${STEP_GAP}px))`,
+            gap: STEP_GAP
+          }}
           onContextMenu={(event) => event.preventDefault()}
         >
           {steps.map((cell, index) => {

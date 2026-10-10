@@ -2,6 +2,7 @@ import { create } from "zustand";
 
 import type { PlaybackMode, SessionData, ViewName } from "../types";
 import { STEPS_PER_BAR, clamp } from "../lib/utils";
+import { clampRect, scaleRect, type Rect, type Size } from "../lib/windowGeometry";
 
 export interface WindowLayout {
   open: boolean;
@@ -72,6 +73,11 @@ interface SessionState extends SessionData {
   openAllWindows: () => void;
   moveWindow: (id: WindowId, x: number, y: number) => void;
   resizeWindow: (id: WindowId, width: number, height: number) => void;
+  /** Place a window (moved and resized in one go); it is kept inside the work area. */
+  setWindowRect: (id: WindowId, rect: Rect) => void;
+  /** The size of the area the windows float in, as measured. Windows follow it as it changes. */
+  area: Size;
+  setArea: (width: number, height: number) => void;
   setWindowFlag: (id: WindowId, flag: "maximized" | "minimized", value: boolean) => void;
   resetLayout: () => void;
   /** False until the windows have been sized to the screen they opened on. */
@@ -160,6 +166,13 @@ export function fitLayout(
   return restackWindows({ ...layout, playlist: { ...layout.playlist, z: 0 } });
 }
 
+function sanitizeArea(raw: unknown): Size {
+  const source = (raw ?? {}) as Record<string, unknown>;
+  const width = typeof source.width === "number" && Number.isFinite(source.width) ? source.width : 0;
+  const height = typeof source.height === "number" && Number.isFinite(source.height) ? source.height : 0;
+  return width >= 200 && height >= 150 ? { width, height } : { width: 0, height: 0 };
+}
+
 function loadPersisted(): Partial<SessionState> {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -178,6 +191,7 @@ function loadPersisted(): Partial<SessionState> {
     return {
       ...parsed,
       windows: restackWindows(windows),
+      area: sanitizeArea((parsed as { layoutArea?: unknown }).layoutArea),
       // An older default layout is replaced once by the current one.
       layoutFitted: parsed.layoutFitted === true && parsed.layoutVersion === LAYOUT_VERSION
     };
@@ -196,6 +210,7 @@ export const useSessionStore = create<SessionState>()((set, get) => ({
   snapSteps: STEPS_PER_BAR,
   pianoSnapSteps: 1,
   windows: defaultWindows,
+  area: { width: 0, height: 0 },
   metronome: false,
   countIn: false,
   loopPlayback: true,
@@ -262,30 +277,39 @@ export const useSessionStore = create<SessionState>()((set, get) => ({
       return { windows };
     }),
 
-  moveWindow: (id, x, y) =>
-    set((state) => ({
-      windows: {
-        ...state.windows,
-        [id]: {
-          ...state.windows[id],
-          // Keep at least a sliver of the title bar reachable.
-          x: clamp(x, -state.windows[id].width + 140, window.innerWidth - 80),
-          y: clamp(y, 0, window.innerHeight - 40)
-        }
-      }
-    })),
+  moveWindow: (id, x, y) => get().setWindowRect(id, { ...get().windows[id], x, y }),
 
-  resizeWindow: (id, width, height) =>
-    set((state) => ({
-      windows: {
-        ...state.windows,
-        [id]: {
-          ...state.windows[id],
-          width: clamp(width, 280, 3000),
-          height: clamp(height, 120, 2000)
-        }
+  resizeWindow: (id, width, height) => get().setWindowRect(id, { ...get().windows[id], width, height }),
+
+  setWindowRect: (id, rect) =>
+    set((state) => {
+      const fitted = clampRect(rect, state.area);
+      const current = state.windows[id];
+      if (
+        fitted.x === current.x &&
+        fitted.y === current.y &&
+        fitted.width === current.width &&
+        fitted.height === current.height
+      ) {
+        return state;
       }
-    })),
+      return { windows: { ...state.windows, [id]: { ...current, ...fitted } } };
+    }),
+
+  setArea: (width, height) =>
+    set((state) => {
+      const next = { width: Math.round(width), height: Math.round(height) };
+      if (next.width <= 0 || next.height <= 0) return state;
+      if (next.width === state.area.width && next.height === state.area.height) return state;
+
+      // The windows keep their share of the area as it grows and shrinks, and always stay inside it.
+      const windows = { ...state.windows };
+      for (const id of Object.keys(windows) as WindowId[]) {
+        const { x, y, width: w, height: h } = windows[id];
+        windows[id] = { ...windows[id], ...scaleRect({ x, y, width: w, height: h }, state.area, next) };
+      }
+      return { area: next, windows };
+    }),
 
   setWindowFlag: (id, flag, value) =>
     set((state) => ({
@@ -296,7 +320,11 @@ export const useSessionStore = create<SessionState>()((set, get) => ({
 
   layoutFitted: false,
   fitLayoutToArea: (width, height) =>
-    set((state) => ({ windows: fitLayout(width, height, state.windows), layoutFitted: true })),
+    set((state) => ({
+      area: { width: Math.round(width), height: Math.round(height) },
+      windows: fitLayout(width, height, state.windows),
+      layoutFitted: true
+    })),
 
   applySession: (session) =>
     set((state) => ({
@@ -342,6 +370,7 @@ useSessionStore.subscribe((state) => {
           ...state.toSessionData(),
           windows: state.windows,
           layoutFitted: state.layoutFitted,
+          layoutArea: state.area,
           wheelZoom: state.wheelZoom,
           layoutVersion: LAYOUT_VERSION
         })

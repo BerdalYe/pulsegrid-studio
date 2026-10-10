@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { getDesktop, useFileStore, type DesktopProjectEntry } from "../files/desktop";
 import { filterByName } from "../lib/search";
 import { ListSearch } from "./ListSearch";
+import { ToolSection } from "./ToolSection";
 import {
   chooseSaveFolder,
   openProjectAt,
@@ -90,9 +91,8 @@ export function ProjectsPanel({ onStatus }: { onStatus: (message: string) => voi
               : "Not saved yet";
 
   return (
-    <div className="tool-group projects-panel">
-      <strong>Projects</strong>
-
+    <ToolSection id="projects" title="Projects" summary={path ? path.split(/[\\/]/).pop()?.replace(/\.pulsegrid$/i, "") : status}>
+      <div className="projects-panel">
       <div
         className={`save-status save-${!path && saveState === "saved" ? "new" : saveState}`}
         title={path ?? "Saved to the save folder on your first edit"}
@@ -159,6 +159,7 @@ export function ProjectsPanel({ onStatus }: { onStatus: (message: string) => voi
         <span className="small-note">{settings?.saveFolder ?? "…"}</span>
         <button onClick={() => run(chooseSaveFolder)}>Change…</button>
       </div>
-    </div>
+      </div>
+    </ToolSection>
   );
 }

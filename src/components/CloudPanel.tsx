@@ -25,6 +25,7 @@ import type { CloudRow } from "../sync/types";
 import { filterByName } from "../lib/search";
 import { useConfirm } from "./ConfirmDialog";
 import { ListSearch } from "./ListSearch";
+import { ToolSection } from "./ToolSection";
 import { timeAgo } from "./ProjectsPanel";
 
 type Mode = "signIn" | "signUp" | "reset";
@@ -38,10 +39,16 @@ export function CloudPanel({ onStatus }: { onStatus: (message: string) => void }
   if (!syncConfigured || status === "unknown") return null;
 
   return (
-    <div className="tool-group cloud-panel">
-      <strong>Cloud</strong>
-      {status === "signedIn" ? <SignedIn onStatus={onStatus} /> : <SignedOut onStatus={onStatus} />}
-    </div>
+    <ToolSection
+      id="cloud"
+      title="Cloud sync"
+      defaultOpen={status === "signedIn"}
+      summary={status === "signedIn" ? "Signed in" : "Optional · sign in"}
+    >
+      <div className="cloud-panel">
+        {status === "signedIn" ? <SignedIn onStatus={onStatus} /> : <SignedOut onStatus={onStatus} />}
+      </div>
+    </ToolSection>
   );
 }
 
