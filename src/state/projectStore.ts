@@ -142,6 +142,7 @@ export interface ProjectActions {
     updates: { trackIndex?: number; startStep?: number; lengthSteps?: number }
   ) => void;
   duplicatePlaylistClip: (clipId: string) => string | null;
+  toggleClipMute: (clipId: string) => void;
   clearPlaylistTrack: (trackIndex: number) => void;
   toggleTrackMute: (trackIndex: number) => void;
   toggleTrackSolo: (trackIndex: number) => void;
@@ -794,6 +795,14 @@ export const useProjectStore = create<ProjectState>()(
           const next = state.playlist.clips.filter((clip) => clip.id !== clipId);
           if (next.length === state.playlist.clips.length) return;
           state.playlist.clips = next;
+        }),
+
+      toggleClipMute: (clipId) =>
+        edit("Mute clip", (state) => {
+          const clip = state.playlist.clips.find((entry) => entry.id === clipId);
+          if (!clip) return;
+          if (clip.muted) delete clip.muted;
+          else clip.muted = true;
         }),
 
       updatePlaylistClip: (clipId, updates) =>

@@ -12,6 +12,7 @@ import {
   synthPresets,
   type SynthPresetDef
 } from "./presets";
+import { DRUM_KITS, KIT_PIECES } from "../lib/drumKits";
 
 /** A4 = 440, so the lowest and highest notes the piano roll offers. */
 const lowestFundamental = 440 * Math.pow(2, (24 - 69) / 12); // MIDI 24, ~32.7 Hz
@@ -238,10 +239,26 @@ describe("plugins", () => {
 describe("the instrument families", () => {
   it("sorts instruments by what they are: every family has some, and none is a dumping ground", () => {
     for (const group of INSTRUMENT_GROUPS) {
-      const count = INSTRUMENT_MENU.filter((entry) => entry.group === group).length;
-      expect(count, group).toBeGreaterThanOrEqual(4);
-      expect(count, group).toBeLessThanOrEqual(24);
+      const entries = INSTRUMENT_MENU.filter((entry) => entry.group === group);
+      expect(entries.length, group).toBeGreaterThanOrEqual(4);
+      // A folder inside a family (a drum kit) counts once: it is opened on its own.
+      const loose = entries.filter((entry) => !entry.folder).length + new Set(entries.flatMap((entry) => (entry.folder ? [entry.folder] : []))).size;
+      expect(loose, group).toBeLessThanOrEqual(24);
     }
+  });
+
+  it("gives every drum kit a folder: a drum set, the full kit, and its drums one by one", () => {
+    for (const kit of DRUM_KITS) {
+      const inFolder = INSTRUMENT_MENU.filter((entry) => entry.folder === kit.name);
+      expect(inFolder.filter((entry) => entry.drumSet), kit.name).toHaveLength(1);
+      expect(inFolder.filter((entry) => !entry.drumSet && entry.soundfont?.drumNote === undefined), kit.name).toHaveLength(1);
+      const drums = inFolder.filter((entry) => entry.soundfont?.drumNote !== undefined);
+      expect(drums.map((entry) => entry.soundfont!.drumNote).sort(), kit.name).toEqual(KIT_PIECES.map((piece) => piece.note).sort());
+      for (const entry of inFolder) expect(entry.soundfont, entry.label).toMatchObject({ bank: 128, program: kit.program });
+    }
+    // Labels are how a dragged instrument is found again, so none may repeat.
+    const labels = INSTRUMENT_MENU.map((entry) => entry.label);
+    expect(new Set(labels).size).toBe(labels.length);
   });
 
   it("keeps only real instruments where a recording exists: no synthesized piano, strings or brass", () => {
@@ -285,20 +302,21 @@ describe("recorded instruments", () => {
     expect(recorded.some((entry) => entry.soundfont!.bank === 0)).toBe(true);
   });
 
-  it("has an Instrument Browser plugin that opens its own picker", () => {
-    const plugin = INSTRUMENT_MENU.find((entry) => entry.label === "Instrument Browser");
-    expect(plugin).toMatchObject({ group: "Plugins", plugin: true, type: "synth" });
-    expect(plugin?.soundfont).toBeDefined();
+  it("offers a SoundFont Player for files of your own only where there is no built-in set", () => {
+    const player = INSTRUMENT_MENU.find((entry) => entry.label === "SoundFont Player");
+    expect(player).toMatchObject({ group: "Plugins", plugin: true, type: "synth" });
+    expect(availableInstruments(false).some((entry) => entry.label === "SoundFont Player")).toBe(true);
+    expect(availableInstruments(true).some((entry) => entry.label === "SoundFont Player")).toBe(false);
+    expect(availableInstruments(null).some((entry) => entry.label === "SoundFont Player")).toBe(false);
   });
 
   it("leaves out the recorded ones where the built-in set isn't there, and keeps everything else", () => {
     const without = availableInstruments(false);
     expect(without.some((entry) => entry.soundfont && !entry.plugin)).toBe(false);
-    expect(without.some((entry) => entry.label === "Instrument Browser")).toBe(true);
     expect(without.some((entry) => entry.label === "Kick")).toBe(true);
 
-    expect(availableInstruments(true)).toHaveLength(INSTRUMENT_MENU.length);
-    // Not known yet: offer everything.
-    expect(availableInstruments(null)).toHaveLength(INSTRUMENT_MENU.length);
+    // With the set (or not known yet), everything but the player.
+    expect(availableInstruments(true)).toHaveLength(INSTRUMENT_MENU.length - 1);
+    expect(availableInstruments(null)).toHaveLength(INSTRUMENT_MENU.length - 1);
   });
 });

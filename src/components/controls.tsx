@@ -157,6 +157,10 @@ export interface KnobProps {
   max: number;
   step: number;
   display?: string;
+  /** The text under the knob, when it should differ from `display` (which the tooltip and screen readers get). */
+  readout?: string;
+  /** False leaves out the caption under the knob, where the strip makes it obvious. */
+  showLabel?: boolean;
   defaultValue?: number;
   size?: number;
   color?: string;
@@ -174,6 +178,8 @@ export function Knob({
   max,
   step,
   display,
+  readout,
+  showLabel = true,
   defaultValue,
   size = 34,
   color,
@@ -251,8 +257,8 @@ export function Knob({
           />
         </svg>
       </div>
-      <span className="knob-label">{label}</span>
-      <span className="knob-readout">{display ?? value}</span>
+      {showLabel ? <span className="knob-label">{label}</span> : null}
+      <span className="knob-readout">{(readout ?? display ?? String(value)) || " "}</span>
     </div>
   );
 }

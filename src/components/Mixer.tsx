@@ -186,11 +186,10 @@ const MixerStrip = memo(function MixerStrip({
         max={1}
         step={0.01}
         defaultValue={0}
-        display={
-          Math.abs(track.pan) < 0.005
-            ? "C"
-            : `${track.pan < 0 ? "L" : "R"}${Math.round(Math.abs(track.pan) * 100)}`
-        }
+        display={panText(track.pan)}
+        // Like FL, a centred knob says nothing; only a pan to one side is written out.
+        readout={Math.abs(track.pan) < 0.005 ? "" : panText(track.pan)}
+        showLabel={false}
         learnId={`insert:${track.id}:pan`}
         onChange={(value) => setMixerTrackPan(track.id, value)}
         onCommitStart={() => beginEdit("Insert pan")}
@@ -519,4 +518,10 @@ function EffectSlot({
       </div>
     </div>
   );
+}
+
+/** "Centre", or which side and how far: "L20", "R35". */
+function panText(pan: number): string {
+  if (Math.abs(pan) < 0.005) return "Centre";
+  return `${pan < 0 ? "L" : "R"}${Math.round(Math.abs(pan) * 100)}`;
 }

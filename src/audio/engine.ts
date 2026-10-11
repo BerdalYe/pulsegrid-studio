@@ -553,6 +553,10 @@ if (import.meta.env.DEV) {
       const event = parseMidiMessage(bytes, "dev");
       if (event) midiManager.dispatch(event);
     },
-    getSession: () => useSessionStore.getState().toSessionData()
+    getSession: () => useSessionStore.getState().toSessionData(),
+    getTransport: () => {
+      const { playheadStep, startStep, isPlaying, activeMidiNotes } = useTransportStore.getState();
+      return { playheadStep, startStep, isPlaying, activeMidiNotes };
+    }
   };
 }

@@ -321,7 +321,14 @@ function sanitizeMixer(raw: unknown, channelCount: number): MixerState {
 const AUTOMATION_TARGETS: AutomationTargetType[] = ["channel", "mixer", "master"];
 const AUTOMATION_PARAMS: AutomationParam[] = ["volume", "pan"];
 
-function sanitizeClip(
+/** A clip from a file, made safe; a muted one stays muted. */
+function sanitizeClip(raw: unknown, patterns: Record<string, Pattern>, trackCount: number): PlaylistClip | null {
+  const clip = sanitizeClipContent(raw, patterns, trackCount);
+  if (clip && (raw as Record<string, unknown> | null)?.muted === true) clip.muted = true;
+  return clip;
+}
+
+function sanitizeClipContent(
   raw: unknown,
   patterns: Record<string, Pattern>,
   trackCount: number

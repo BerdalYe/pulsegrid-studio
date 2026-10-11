@@ -324,3 +324,54 @@ export function IconCaret(props: IconProps) {
     </Icon>
   );
 }
+
+/* ───────────────────────────── the playlist ───────────────────────────── */
+
+/** The mute tool: a speaker with a cross. */
+export function IconMute(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 9.5h3.2L12 5.5v13l-4.8-4H4z" />
+      <path d="M16 9.5l5 5M21 9.5l-5 5" />
+    </Icon>
+  );
+}
+
+/** A marker: a flag on a pole. */
+export function IconFlag(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M6 21V4" />
+      <path className="tint" d="M6 4.5h11l-2.5 4 2.5 4H6z" />
+    </Icon>
+  );
+}
+
+/** Fit the song in the window: arrows out to two walls. */
+export function IconFit(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M3.5 5v14M20.5 5v14" />
+      <path d="M7 12h10M9.5 9l-2.8 3 2.8 3M14.5 9l2.8 3-2.8 3" />
+    </Icon>
+  );
+}
+
+/** A new lane: a bar with a plus beside it. */
+export function IconAddLane(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="3" y="8.5" width="11" height="7" rx="1.5" />
+      <path d="M19 8.5v7M15.5 12h7" />
+    </Icon>
+  );
+}
+
+/** More options: three dots. */
+export function IconMore(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M6 12h.01M12 12h.01M18 12h.01" strokeWidth="3.2" />
+    </Icon>
+  );
+}

@@ -119,7 +119,7 @@ export function InstrumentTree({ onStatus }: InstrumentTreeProps) {
         <input
           type="search"
           value={query}
-          placeholder={`Search ${everything.length} instruments…`}
+          placeholder="Search instruments…"
           aria-label="Search the instruments"
           spellCheck={false}
           autoComplete="off"

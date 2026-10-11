@@ -11,6 +11,8 @@ import {
   useSoundFontStore
 } from "../audio/soundfont/registry";
 import { useGesture } from "../hooks/useStudio";
+import { DRUM_KITS, KIT_PADS, KIT_PIECES, drumName, kitPieceColor } from "../lib/drumKits";
+import { INSTRUMENT_GROUPS, INSTRUMENT_MENU } from "../presets/presets";
 import type { SoundFontRef } from "../types";
 import { useProjectStore } from "../state/projectStore";
 import { useSessionStore } from "../state/sessionStore";
@@ -26,8 +28,25 @@ function bankTitle(bank: number): string {
   return `Variations (bank ${bank})`;
 }
 
-/** The pitch to try an instrument at: middle C, or the kick for a drum kit. */
-const demoPitch = (bank: number) => (bank === 128 ? 36 : 60);
+/** The pitch to try an instrument at: middle C, the kick for a whole drum kit, or a single drum as it is. */
+const demoPitch = (ref: Pick<SoundFontRef, "bank" | "drumNote">) => (ref.bank === 128 && ref.drumNote === undefined ? 36 : 60);
+
+/**
+ * The built-in instruments worth offering, by family: the same ones the browser lists, so this panel never shows
+ * the General MIDI set's sound effects (gunshots, helicopters, seashore) or its imitations of what's already here.
+ */
+const CURATED: Array<[string, Array<{ label: string; bank: number; program: number }>]> = INSTRUMENT_GROUPS.flatMap((group) => {
+  const items = INSTRUMENT_MENU.filter(
+    (entry) => entry.group === group && entry.soundfont && !entry.plugin && !entry.drumSet && entry.soundfont.bank !== 128
+  ).map((entry) => ({ label: entry.label, bank: entry.soundfont!.bank, program: entry.soundfont!.program }));
+  return items.length > 0 ? [[group, items] as [string, typeof items]] : [];
+});
+
+/** The kits a drum channel can switch between. */
+const KITS: Array<{ name: string; program: number; mapped: boolean }> = [
+  ...DRUM_KITS.map((kit) => ({ name: kit.name, program: kit.program, mapped: true })),
+  { name: "Orchestral Percussion", program: 48, mapped: false }
+];
 
 /**
  * The panel for a channel that plays a recorded instrument: pick any instrument
@@ -39,6 +58,8 @@ export function SoundFontEditor() {
   const close = useSynthEditor((state) => state.close);
   const channel = useProjectStore((state) => state.channels.find((entry) => entry.id === channelId));
   const update = useProjectStore((state) => state.updateChannelSoundFont);
+  const renameChannel = useProjectStore((state) => state.updateChannelName);
+  const setColor = useProjectStore((state) => state.setChannelColor);
   const selectChannel = useSessionStore((state) => state.selectChannel);
   const fonts = useSoundFontStore((state) => state.fonts);
   const builtinAvailable = useSoundFontStore((state) => state.builtinAvailable);
@@ -95,13 +116,54 @@ export function SoundFontEditor() {
   if (!open || !channel || !ref) return null;
 
   const change = (changes: Partial<SoundFontRef>) => update(channel.id, { ...ref, ...changes });
-  const play = (pitch = demoPitch(ref.bank)) => previewChannel(channel.id, pitch, 0.85, 1.2);
+  const play = (pitch = demoPitch(ref)) => previewChannel(channel.id, pitch, 0.85, 1.2);
+  const builtin = ref.fontId === BUILTIN_ID;
+  const isKit = ref.bank === 128;
+  const single = isKit && ref.drumNote !== undefined;
+
+  // A channel still called what it plays is renamed along with the sound; one the person named keeps its name.
+  const renameTo = (name: string) => {
+    if (channel.name === ref.name) renameChannel(channel.id, name);
+  };
 
   const choose = (bank: number, program: number, name: string) => {
-    update(channel.id, { ...ref, bank, program, name });
+    // Another kit for a single drum keeps the drum; anything else is a whole instrument.
+    const keepDrum = bank === 128 && ref.bank === 128 && ref.drumNote !== undefined;
+    const kit = DRUM_KITS.find((candidate) => candidate.program === program);
+    const piece = KIT_PIECES.find((candidate) => candidate.note === ref.drumNote);
+    const label = keepDrum ? `${kit?.short ?? name} ${piece?.name ?? drumName(ref.drumNote!) ?? "Drum"}` : name;
+    const next: SoundFontRef = { ...ref, bank, program, name: label };
+    if (!keepDrum) delete next.drumNote;
+    renameTo(label);
+    update(channel.id, next);
     // Heard straight away: a kick for a drum kit, middle C for the rest.
-    window.setTimeout(() => previewChannel(channel.id, demoPitch(bank), 0.85, 1.2), 0);
+    window.setTimeout(() => previewChannel(channel.id, demoPitch(next), 0.85, 1.2), 0);
   };
+
+  // A pad plays its drum; on a channel of one drum it also makes that the drum the channel plays.
+  const hitPad = (note: number) => {
+    if (!single) {
+      previewChannel(channel.id, note, 0.9, 0.6);
+      return;
+    }
+    if (note !== ref.drumNote) {
+      const kit = DRUM_KITS.find((candidate) => candidate.program === ref.program);
+      const label = `${kit?.short ?? "Kit"} ${drumName(note) ?? "Drum"}`;
+      renameTo(label);
+      // The colour follows the drum too, unless the person picked one of their own.
+      if (channel.color === kitPieceColor(ref.drumNote!)) {
+        const color = kitPieceColor(note);
+        if (color) setColor(channel.id, color);
+      }
+      update(channel.id, { ...ref, drumNote: note, name: label });
+    }
+    window.setTimeout(() => previewChannel(channel.id, 60, 0.9, 0.6), 0);
+  };
+
+  const needle = query.trim().toLowerCase();
+  const curated = needle
+    ? CURATED.map(([group, items]) => [group, items.filter((item) => item.label.toLowerCase().includes(needle))] as const).filter(([, items]) => items.length > 0)
+    : CURATED;
 
   const addFile = async (file: File | undefined) => {
     if (!file) return;
@@ -180,12 +242,13 @@ export function SoundFontEditor() {
         }}
       >
         <strong>
-          Instrument Browser <span>· {channel.name}</span>
+          {channel.name} <span>· {single ? "Drum" : isKit ? "Drum kit" : "Instrument"}</span>
         </strong>
         <span className="menu-spacer" />
-        <button type="button" onClick={() => play()} title="Play one note">
-          Play note
+        <button type="button" onClick={() => play()} title={single ? "Play the drum" : "Play one note"}>
+          {single ? "Play" : "Play note"}
         </button>
+        {single ? null : (
         <button
           type="button"
           onClick={() => {
@@ -199,6 +262,7 @@ export function SoundFontEditor() {
         >
           {ref.bank === 128 ? "Play beat" : "Play chord"}
         </button>
+        )}
         <button type="button" className="synth-close" onClick={close} aria-label="Close the instrument panel" title="Close">
           ×
         </button>
@@ -263,42 +327,120 @@ export function SoundFontEditor() {
         </div>
 
         <div className="sf-list-wrap">
-          <input
-            type="search"
-            className="sf-search"
-            value={query}
-            placeholder={`Search ${presets.length || ""} instruments…`}
-            aria-label="Search instruments"
-            onChange={(event) => setQuery(event.target.value)}
-          />
-          <div className="sf-list" role="listbox" aria-label="Instruments">
-            {shown.length === 0 ? <p className="sf-note">{font ? "Nothing matches." : "The instruments appear here once they are loaded."}</p> : null}
-            {shown.map(([bank, items]) => (
-              <div key={bank} className="sf-group">
-                <h4>{bankTitle(bank)}</h4>
-                {items.map((preset) => {
-                  const chosen = preset.bank === ref.bank && preset.program === ref.program;
+          {isKit ? (
+            <div className="sf-pads-wrap">
+              <span className="sf-caption">{single ? "Click a pad to change the drum this channel plays" : "Click the pads to hear the kit"}</span>
+              <div className="sf-pads" role="group" aria-label="Drum pads">
+                {/* Top row first on screen, the kick bottom-left, as on a pad controller. */}
+                {[12, 8, 4, 0].flatMap((row) =>
+                  KIT_PADS.slice(row, row + 4).map((note) => (
+                    <button
+                      key={note}
+                      type="button"
+                      className={`sf-pad${single && note === ref.drumNote ? " active" : ""}`}
+                      onPointerDown={(event) => {
+                        if (event.button !== 0) return;
+                        hitPad(note);
+                      }}
+                      title={single ? `Play ${drumName(note)} on this channel` : `${drumName(note)} (key ${note})`}
+                    >
+                      {drumName(note)}
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+          ) : (
+            <input
+              type="search"
+              className="sf-search"
+              value={query}
+              placeholder="Search instruments…"
+              aria-label="Search instruments"
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          )}
+          <div className="sf-list" role="listbox" aria-label={isKit ? "Kits" : "Instruments"}>
+            {builtin && isKit ? (
+              <div className="sf-group">
+                <h4>Kits</h4>
+                {KITS.filter((kit) => !single || kit.mapped).map((kit) => {
+                  const chosen = kit.program === ref.program;
                   return (
                     <button
-                      key={`${preset.bank}:${preset.program}`}
+                      key={kit.program}
                       type="button"
                       role="option"
                       aria-selected={chosen}
                       className={chosen ? "active" : ""}
-                      onClick={() => choose(preset.bank, preset.program, preset.name)}
+                      onClick={() => choose(128, kit.program, kit.name)}
                     >
-                      <span className="sf-number">{preset.bank === 0 || preset.bank === 128 ? preset.program + 1 : ""}</span>
-                      {preset.name}
+                      {kit.name}
                     </button>
                   );
                 })}
               </div>
-            ))}
+            ) : builtin ? (
+              <>
+                {curated.length === 0 ? <p className="sf-note">{font ? "Nothing matches." : "The instruments appear here once they are loaded."}</p> : null}
+                {curated.map(([group, items]) => (
+                  <div key={group} className="sf-group">
+                    <h4>{group}</h4>
+                    {items.map((item) => {
+                      const chosen = item.bank === ref.bank && item.program === ref.program;
+                      return (
+                        <button
+                          key={`${item.bank}:${item.program}:${item.label}`}
+                          type="button"
+                          role="option"
+                          aria-selected={chosen}
+                          className={chosen ? "active" : ""}
+                          onClick={() => choose(item.bank, item.program, item.label)}
+                        >
+                          {item.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))}
+              </>
+            ) : (
+              <>
+                {shown.length === 0 ? <p className="sf-note">{font ? "Nothing matches." : "The instruments appear here once they are loaded."}</p> : null}
+                {shown.map(([bank, items]) => (
+                  <div key={bank} className="sf-group">
+                    <h4>{bankTitle(bank)}</h4>
+                    {items.map((preset) => {
+                      const chosen = preset.bank === ref.bank && preset.program === ref.program;
+                      return (
+                        <button
+                          key={`${preset.bank}:${preset.program}`}
+                          type="button"
+                          role="option"
+                          aria-selected={chosen}
+                          className={chosen ? "active" : ""}
+                          onClick={() => choose(preset.bank, preset.program, preset.name)}
+                        >
+                          <span className="sf-number">{preset.bank === 0 || preset.bank === 128 ? preset.program + 1 : ""}</span>
+                          {preset.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))}
+              </>
+            )}
           </div>
         </div>
       </div>
 
-      <footer className="synth-editor-foot">Pick an instrument to hear it, then play the keyboard. Notes you write in the piano roll use it too.</footer>
+      <footer className="synth-editor-foot">
+        {single
+          ? "One drum on its own channel: click its steps in the channel rack. In the piano roll, C4 (middle C) plays it as recorded and other notes tune it."
+          : isKit
+            ? "The whole kit on one channel: every key is a different drum, named in the piano roll. On the computer keyboard Z is the kick."
+            : "Pick an instrument to hear it, then play the keyboard. Notes you write in the piano roll use it too."}
+      </footer>
     </div>
   );
 }

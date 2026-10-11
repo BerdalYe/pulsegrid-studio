@@ -2123,11 +2123,58 @@ kbd {
   align-items: flex-start;
 }
 
-.piano-keys {
+.piano-keys-col {
   position: sticky;
   left: 0;
   z-index: 2;
+  flex: none;
+}
+
+.piano-keys {
+  display: block;
   cursor: pointer;
+  touch-action: none;
+}
+
+/* Keys light up in the channel's colour while their notes play, and the key of the row under the pointer shows faintly. */
+.piano-key-lights {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.piano-key-lit,
+.piano-key-hover {
+  position: absolute;
+  left: 0;
+}
+
+.piano-key-lit {
+  background: color-mix(in srgb, var(--lit-color, var(--accent)) 78%, transparent);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.35),
+    0 0 8px color-mix(in srgb, var(--lit-color, var(--accent)) 70%, transparent);
+}
+
+.piano-key-hover {
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.piano-row-hover {
+  position: absolute;
+  left: 0;
+  background: rgba(255, 255, 255, 0.045);
+  pointer-events: none;
+}
+
+.piano-note-playing {
+  position: absolute;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.28);
+  box-shadow:
+    0 0 0 1px #fff,
+    0 0 10px var(--lit-color, var(--accent));
+  pointer-events: none;
 }
 
 .piano-grid-wrap {
@@ -4787,6 +4834,51 @@ svg.ui-icon .ghost {
   color: #fff;
 }
 
+/* A drum kit's pads, laid out like a pad controller's 4 × 4. */
+.sf-pads-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sf-caption {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.sf-pads {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.sf-pad {
+  height: 46px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: linear-gradient(var(--panel-3), var(--panel-2));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.15;
+  white-space: normal;
+}
+
+.sf-pad:hover {
+  border-color: var(--accent);
+}
+
+.sf-pad:active {
+  background: color-mix(in srgb, var(--accent) 45%, var(--panel-2));
+}
+
+.sf-pad.active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 30%, var(--panel-2));
+}
+
 /* ─────────────── the MIDI out panel ─────────────── */
 
 .midiout-editor {
@@ -5429,4 +5521,299 @@ svg.ui-icon .ghost {
   .fl-menu-bar .fl-clock-value {
     font-size: 18px;
   }
+}
+
+/* ───────────────────────── playlist (1.5): FL-style toolbar, overview, track headers ───────────────────────── */
+
+.playlist-toolbar {
+  gap: 6px;
+  padding: 4px 6px;
+  background: linear-gradient(var(--chrome-2), var(--chrome));
+  flex-wrap: wrap;
+}
+
+.pl-group {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding: 1px;
+  border: 1px solid var(--line-soft);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.pl-group > button {
+  height: 24px;
+  border-color: transparent;
+  border-radius: 3px;
+  background: transparent;
+}
+
+.pl-group > button:hover:not(:disabled) {
+  background: var(--panel-3);
+}
+
+.pl-group > button.active {
+  background: var(--accent);
+  color: #0b0b0f;
+}
+
+.pl-icon-button {
+  display: inline-grid;
+  width: 28px;
+  padding: 0;
+  place-items: center;
+}
+
+.pl-icon-button svg.ui-icon,
+.pl-text-button svg.ui-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.pl-text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 8px;
+  font-size: 11px;
+}
+
+.placement-tools button,
+.placement-tools button:first-child,
+.placement-tools button:last-child {
+  padding: 0 9px;
+  border-radius: 3px;
+  font-size: 11px;
+}
+
+.pl-field {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pl-field select,
+.pl-field input,
+.pl-sample-select {
+  height: 26px;
+  font-size: 11px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.pl-field .song-length-input {
+  width: 52px;
+}
+
+.pl-unit {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.playlist-toolbar .zoom-controls {
+  gap: 1px;
+}
+
+.playlist-toolbar .zoom-controls > button {
+  min-width: 24px;
+  padding: 0 6px;
+}
+
+.pl-zoom-readout {
+  min-width: 46px;
+  color: var(--accent-2);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The lanes take the delete and mute tools' look while they are chosen. */
+.playlist-scroll.tool-erase .playlist-lane,
+.playlist-scroll.tool-erase .playlist-clip {
+  cursor: not-allowed;
+}
+
+.playlist-scroll.tool-mute .playlist-clip {
+  cursor: pointer;
+}
+
+.playlist-main {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.playlist-main .playlist-scroll {
+  min-height: 0;
+}
+
+/* The whole song at a glance, with the part on screen boxed. */
+.playlist-overview {
+  position: relative;
+  height: 24px;
+  flex: none;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+  background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 6px), var(--chrome);
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+
+.overview-clip {
+  position: absolute;
+  min-width: 2px;
+  border-radius: 1px;
+  opacity: 0.8;
+}
+
+.overview-clip.muted {
+  opacity: 0.25;
+}
+
+.overview-playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--accent-2);
+}
+
+.overview-view {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  min-width: 6px;
+  border: 1px solid color-mix(in srgb, var(--text) 70%, transparent);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45);
+  cursor: grab;
+}
+
+/* Beat ticks along the foot of the ruler, once a beat is wide enough to tell apart. */
+.playlist-ruler.beats {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--line) 0 1px,
+    transparent 1px var(--beat)
+  );
+  background-position: left bottom;
+  background-repeat: repeat-x;
+  background-size: 100% 5px;
+}
+
+.ruler-bar {
+  font-weight: 600;
+}
+
+/* The playhead's head sits on the ruler, like FL's. */
+.playlist-playhead::before {
+  position: absolute;
+  top: 18px;
+  left: -5px;
+  border-top: 7px solid currentColor;
+  border-right: 6px solid transparent;
+  border-left: 6px solid transparent;
+  color: var(--muted);
+  content: "";
+}
+
+.playlist-playhead.playing::before {
+  color: var(--accent-2);
+}
+
+/* Track headers: the name, then solo, the mute light and a menu, on one line. */
+.track-header {
+  justify-content: flex-start;
+  padding: 6px 5px 4px 10px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--track-color, var(--accent)) 9%, var(--panel-2)), var(--panel-2) 60%);
+}
+
+.track-header.compact {
+  justify-content: center;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.track-header.muted .track-name-input {
+  color: var(--muted);
+}
+
+.track-header .track-top {
+  flex: 0 0 auto;
+}
+
+.track-header .track-name-input {
+  min-width: 0;
+  flex: 1;
+  font-weight: 600;
+}
+
+.track-solo,
+.track-more {
+  display: inline-grid;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  place-items: center;
+}
+
+.track-solo:hover,
+.track-more:hover {
+  border-color: var(--line);
+  color: var(--text);
+}
+
+.track-solo.active {
+  border-color: var(--accent-2);
+  background: color-mix(in srgb, var(--accent-2) 35%, transparent);
+  color: var(--text);
+}
+
+.track-more svg.ui-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.track-led {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  background: #2d3a2d;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.track-led.on {
+  background: radial-gradient(circle at 35% 35%, #c6ff9a, #57d23c 60%, #2f8f22);
+  box-shadow: 0 0 6px rgba(110, 230, 80, 0.7);
+}
+
+.track-led:hover {
+  border-color: var(--text);
+}
+
+/* A muted clip stays where it is, greyed and struck through. */
+.playlist-clip.muted {
+  --clip-color: #6b6b74;
+  opacity: 0.55;
+  background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0 4px, transparent 4px 9px);
+}
+
+.pattern-picker-item[draggable="true"] {
+  cursor: grab;
 }

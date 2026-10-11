@@ -9,6 +9,7 @@ import { clamp, isPitchedChannel, isStepActive } from "../lib/utils";
 import { getSample } from "./sampleRegistry";
 import { triggerChannel, type Voice } from "./voices";
 import type { RenderGraph } from "./graph";
+import { stepPitchOf } from "../lib/drumKits";
 
 export interface SequencerContext {
   mode: PlaybackMode;
@@ -136,7 +137,8 @@ export class Sequencer {
         triggerChannel(this.graph.context, channel, destination, {
           time,
           velocity: cell as number,
-          pitch: 60,
+          // A whole drum kit plays its kick on the steps, rather than whatever drum sits on middle C.
+          pitch: stepPitchOf(channel),
           duration: stepDuration
         }),
         time + stepDuration + 2,
@@ -156,6 +158,7 @@ export class Sequencer {
     const anyTrackSolo = project.playlist.tracks.some((track) => track.solo);
 
     for (const clip of project.playlist.clips) {
+      if (clip.muted) continue;
       const track = project.playlist.tracks[clip.trackIndex];
       if (!track || track.mute) continue;
       if (anyTrackSolo && !track.solo) continue;
@@ -259,7 +262,7 @@ export class Sequencer {
     const stillActive = new Set<string>();
 
     for (const clip of project.playlist.clips) {
-      if (clip.type !== "automation") continue;
+      if (clip.type !== "automation" || clip.muted) continue;
 
       const target = this.resolveAutomationTarget(clip);
       if (!target) continue;

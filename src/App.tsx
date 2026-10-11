@@ -34,6 +34,7 @@ import { ShortcutsDialog } from "./components/ShortcutsDialog";
 import { SynthEditor, useSynthEditor } from "./components/SynthEditor";
 import { SoundFontEditor } from "./components/SoundFontEditor";
 import { MenuPanel, prepareItems, type MenuItem } from "./components/MenuPanel";
+import { isFullKit } from "./lib/drumKits";
 import { WindowMenuButton } from "./components/WindowMenu";
 import { EDGE_CURSOR, moveRect, resizeRect, type Edge, type Rect } from "./lib/windowGeometry";
 import { MidiOutEditor } from "./components/MidiOutEditor";
@@ -148,7 +149,7 @@ function Studio() {
   const recent = useFileStore((state) => state.settings?.recent ?? NO_RECENT);
   const autosaveOn = useFileStore((state) => state.settings?.autosave !== false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
-  const [menuLeft, setMenuLeft] = useState(6);
+  const [menuPlace, setMenuPlace] = useState({ left: 6, top: 30 });
   const [status, setStatus] = useState("");
   const fileInput = useRef<HTMLInputElement | null>(null);
   const windowArea = useRef<HTMLDivElement | null>(null);
@@ -733,13 +734,14 @@ function Studio() {
                 aria-expanded={openMenu === label}
                 onClick={(event) => {
                   const box = event.currentTarget.getBoundingClientRect();
-                  setMenuLeft(box.left);
+                  setMenuPlace({ left: box.left, top: box.bottom + 1 });
                   setOpenMenu((current) => (current === label ? null : label));
                 }}
                 onPointerEnter={(event) => {
                   // Once a menu is open, sliding along the bar switches menus.
                   if (!openMenu || openMenu === label) return;
-                  setMenuLeft(event.currentTarget.getBoundingClientRect().left);
+                  const box = event.currentTarget.getBoundingClientRect();
+                  setMenuPlace({ left: box.left, top: box.bottom + 1 });
                   setOpenMenu(label);
                 }}
               >
@@ -801,13 +803,18 @@ function Studio() {
       {openMenu ? (
         <MenuPanel
           items={prepareItems(menus[openMenu])}
-          left={menuLeft}
+          // Hangs from the bottom of its button: the menu bar is taller than the buttons now that it holds the transport.
+          left={menuPlace.left}
+          top={menuPlace.top}
           onClose={() => setOpenMenu(null)}
           onSwitch={(direction) => {
             const names = Object.keys(menus);
             const next = names[(names.indexOf(openMenu) + direction + names.length) % names.length];
             const button = [...document.querySelectorAll<HTMLElement>(".fl-menus button")].find((entry) => entry.textContent === next);
-            if (button) setMenuLeft(button.getBoundingClientRect().left);
+            if (button) {
+              const box = button.getBoundingClientRect();
+              setMenuPlace({ left: box.left, top: box.bottom + 1 });
+            }
             setOpenMenu(next);
           }}
         />
@@ -915,7 +922,9 @@ function useComputerKeyboard(): void {
       event.preventDefault();
       ensureAudio();
 
-      const pitch = Math.min(127, (octave + 1) * 12 + offset);
+      // A whole drum kit sits two octaves lower, so Z is the kick and the keys above it are the rest of the kit.
+      const kit = isFullKit(useProjectStore.getState().channels.find((entry) => entry.id === channelId));
+      const pitch = Math.max(0, Math.min(127, (octave + (kit ? -1 : 1)) * 12 + offset));
       held.current.set(event.code, { pitch, channelId });
       useTransportStore.getState().noteOn(pitch);
       noteOn(channelId, pitch, currentSettings().keyboardVelocity);

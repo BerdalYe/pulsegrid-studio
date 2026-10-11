@@ -34,5 +34,6 @@ export function sanitizeSoundFontRef(raw: unknown): SoundFontRef | undefined {
   if (source.release !== undefined) ref.release = number(source.release, 1, 0.05, 8);
   if (source.brightness !== undefined) ref.brightness = number(source.brightness, 1, 0, 1);
   if (source.transpose !== undefined) ref.transpose = Math.round(number(source.transpose, 0, -24, 24));
+  if (source.drumNote !== undefined) ref.drumNote = Math.round(number(source.drumNote, 36, 0, 127));
   return ref;
 }

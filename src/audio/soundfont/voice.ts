@@ -19,6 +19,8 @@ export interface SoundFontTweaks {
   brightness?: number;
   /** Semitones. */
   transpose?: number;
+  /** Always sound this key's recording, pitched up or down by how far the note is from middle C (a single drum of a kit). */
+  fixedKey?: number;
 }
 
 /** The most recordings one note may start; thick layered instruments are cut off here. */
@@ -86,7 +88,10 @@ export function createSoundFontVoice(
   /** Who is playing, so a closed hi-hat only chokes this channel's open one. */
   owner = ""
 ): Voice | null {
-  const key = clamp(Math.round(pitch + (tweaks.transpose ?? 0)), 0, 127);
+  const fixed = tweaks.fixedKey !== undefined;
+  const key = fixed ? clamp(Math.round(tweaks.fixedKey!), 0, 127) : clamp(Math.round(pitch + (tweaks.transpose ?? 0)), 0, 127);
+  // A single drum played on another key is the same drum, tuned up or down.
+  const shiftCents = fixed ? (pitch - 60 + (tweaks.transpose ?? 0)) * 100 : 0;
   const zones = zonesFor(font, preset, key, Math.max(1, Math.round(clamp(velocity, 0, 1) * 127))).slice(0, MAX_LAYERS);
   if (zones.length === 0) return null;
 
@@ -118,7 +123,7 @@ export function createSoundFontVoice(
 
     const source = context.createBufferSource();
     source.buffer = buffer;
-    const cents = (key - zone.rootKey) * zone.scaleTuning + zone.tuneCents;
+    const cents = (key - zone.rootKey) * zone.scaleTuning + zone.tuneCents + shiftCents;
     source.playbackRate.value = Math.pow(2, cents / 1200);
 
     if (zone.loop) {

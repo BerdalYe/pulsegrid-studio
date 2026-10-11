@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, type RefObject } from "react";
 
 import {
+  PINCH_THRESHOLD,
   clampIndex,
+  looksLikeTouchpad,
   scrollToKeep,
   unitUnderPointer,
   wheelIntent,
@@ -42,6 +44,10 @@ export function useWheelZoom({
   live.current = { index, levels, gutter, setIndex };
 
   const carried = useRef(0);
+  /** When the last touchpad movement came, so the rest of the same gesture is read as a touchpad too. */
+  const touchpadAt = useRef(-Infinity);
+  /** The last zoom movement: when, and from which kind of device. */
+  const lastZoom = useRef({ at: -Infinity, touchpad: false });
   const anchor = useRef<{ unit: number; pointerX: number } | null>(null);
 
   const zoomTo = useCallback(
@@ -71,7 +77,13 @@ export function useWheelZoom({
     if (!element || !active) return;
 
     const onWheel = (event: WheelEvent) => {
-      const intent = wheelIntent(event, useSessionStore.getState().wheelZoom);
+      // A gesture's fast flicks can look like a mouse notch on their own, so one touchpad-like
+      // movement marks everything that follows closely as the touchpad too.
+      const now = event.timeStamp;
+      if (looksLikeTouchpad(event as WheelEvent & { wheelDeltaX?: number; wheelDeltaY?: number })) touchpadAt.current = now;
+      const touchpad = now - touchpadAt.current < 400;
+
+      const intent = wheelIntent(event, useSessionStore.getState().wheelZoom, touchpad);
       if (intent === "native") return;
 
       // Stop the page itself from zooming or scrolling as well.
@@ -88,7 +100,11 @@ export function useWheelZoom({
         return;
       }
 
-      const { steps, carried: rest } = zoomSteps(pixels, carried.current);
+      // What was left over from an earlier gesture, or from the other device, mustn't eat into this one.
+      if (now - lastZoom.current.at > 300 || lastZoom.current.touchpad !== touchpad) carried.current = 0;
+      lastZoom.current = { at: now, touchpad };
+
+      const { steps, carried: rest } = zoomSteps(pixels, carried.current, touchpad ? PINCH_THRESHOLD : undefined);
       carried.current = rest;
       if (steps === 0) return;
 

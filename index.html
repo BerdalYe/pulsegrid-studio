@@ -295,7 +295,7 @@
         <div class="instrument-columns">
           <div class="instrument-group reveal">
             <h3>Drums <span>19</span></h3>
-            <p>Standard, Room, Power, Electronic, 808/909, Dance, Jazz and Brush kits · Orchestral percussion · Taiko · nine drum-machine voices</p>
+            <p>Standard, Room, Power, Electronic, 808/909, Dance, Jazz and Brush kits, each as a drum set (one channel per drum), a full kit, or any of its drums on its own · Orchestral percussion · Taiko · nine drum-machine voices</p>
           </div>
           <div class="instrument-group reveal">
             <h3>Keys <span>14</span></h3>
@@ -338,8 +338,8 @@
             <p>Noise riser · Downlifter · Impact · Sub drop · Reverse crash · White noise sweep · Reverse cymbal · Orchestra hit · Atmospheres</p>
           </div>
           <div class="instrument-group reveal">
-            <h3>Plugins <span>4</span></h3>
-            <p>Wavetable Synth · Instrument Browser (every sound in the set, or your own .sf2 files) · MIDI Out (instruments in another program) · Sampler</p>
+            <h3>Plugins <span>3</span></h3>
+            <p>Wavetable Synth · MIDI Out (instruments in another program) · Sampler · and any instrument's panel loads .sf2 SoundFont files of your own</p>
           </div>
         </div>
 
@@ -410,9 +410,13 @@
               <span class="release-badge">Latest</span>
               <time>%VITE_RELEASE_DATE%</time>
             </header>
-            <p class="release-lead">150 instruments, a browser and master monitor in the style of FL Studio, a Settings window, and MIDI out for the instruments that came with your keyboard.</p>
+            <p class="release-lead">150 instruments with drum kits you can build a beat from, a new playlist, a browser and master monitor in the style of FL Studio, a Settings window, and MIDI out for the instruments that came with your keyboard.</p>
             <ul>
               <li><strong>150 instruments, sorted by family.</strong> Drums, Keys, Mallets &amp; Bells, Guitars, Bass, Strings, Brass &amp; Winds, Voices, Synths, Pads and FX. The desktop apps add recorded instruments: pianos, organs, guitars, basses, a full orchestra, choirs and ten drum kits including an 808/909 kit. They come with the app, work offline, and are saved with your project and included when you export audio.</li>
+              <li><strong>Drum kits you can build a beat with.</strong> Each kit has its own folder: the <em>Drum Set</em> adds its kick, snare, clap and hats as separate channels, so you click a beat in on the channel rack the way you do in FL; the <em>Full Kit</em> puts every drum on one channel, with each key of the piano roll named after its drum (on the computer keyboard, Z is the kick); and each drum is there on its own too. A kit's panel has 16 pads to hear it, or to change which drum a channel plays, and a list of kits to swap to.</li>
+              <li><strong>A new playlist.</strong> Tools like FL's (draw, delete and mute, so a clip can be silenced without removing it), a strip showing the whole song that you click or drag to move around, a ruler you drag to move the playhead, a zoom readout and a button that fits the whole song in the window. Tracks have a mute light, solo and a menu (colour, height, move, clear, delete; or right-click the track). Drag a pattern from the list onto a lane to place it, and double-click a clip to open its pattern.</li>
+              <li><strong>A piano roll that shows what's playing.</strong> Keys light up as their notes play, and as you play them on the computer keyboard or a MIDI keyboard; the notes under the playhead glow; the key of the row under your mouse is marked. Click and hold a key to hear it, and slide along the keys to play them in turn.</li>
+              <li><strong>Touchpads.</strong> In the piano roll and the playlist, two fingers scroll in any direction and a pinch zooms. A mouse wheel still zooms, as before.</li>
               <li><strong>FX for builds and drops.</strong> Noise riser, downlifter, impact, sub drop, reverse crash and white noise sweep, plus reverse cymbal, orchestra hit and atmospheres.</li>
               <li><strong>Hear it first, then add it.</strong> In the browser, a click plays an instrument or a sample so you can hear it; drag it onto the channel rack to add it. Drop a sample on a sample channel to swap its sound. You can still add from the channel rack and the Add menu. Imported and recorded audio goes into the sample list.</li>
               <li><strong>A browser in the style of FL Studio.</strong> A row of icons across the top switches between Projects, Instruments, Samples, Keyboard &amp; MIDI, Cloud sync and Demo projects. The instrument library is a searchable tree. Drag the browser's edge to make it wider.</li>
@@ -420,9 +424,10 @@
               <li><strong>Choose what goes to the cloud, and delete projects.</strong> Only the projects you choose go to your cloud now: the cloud button beside a project in the Projects tab saves it there, open or not. The bin button deletes a project to the Recycle Bin, so you can get it back.</li>
               <li><strong>A Settings window.</strong> Press <em>F10</em> or choose <em>Options → Settings</em>: the audio output and latency, metronome volume, how hard the computer keyboard plays, the MIDI port and drum-pad channel, the theme and the size of the whole interface (desktop), and more.</li>
               <li><strong>Panels that behave.</strong> Leave a panel partly out of view, or bring it near a side and it locks there. Resize from any edge or corner, double-click a title bar to maximise, and use the ▾ on each title bar for that panel's own menu. The channel rack's steps stretch to fill their panel, and its playhead now sits exactly over the playing step.</li>
-              <li><strong>Plugins: Wavetable Synth, Instrument Browser, MIDI Out and Sampler.</strong> The Instrument Browser opens every sound in the recorded set and loads .sf2 files of your own. MIDI Out sends a channel's notes to another program, for example the Akai Studio Instrument Collection that comes with the MPK mini IV, through a virtual MIDI cable such as loopMIDI.</li>
+              <li><strong>Plugins: Wavetable Synth, MIDI Out and Sampler.</strong> A recorded instrument's panel lists the instruments by family, so you can swap to another one, and loads .sf2 SoundFont files of your own. MIDI Out sends a channel's notes to another program, for example the Akai Studio Instrument Collection that comes with the MPK mini IV, through a virtual MIDI cable such as loopMIDI.</li>
               <li><strong>Better MIDI keyboard support.</strong> Keyboards with several ports, like the MPK mini IV, play without stray notes from their control ports, and a live MIDI monitor shows what each key, pad and knob sends.</li>
-              <li><strong>Menus like a desktop program</strong>, with shortcuts in their own column and flyouts, and <strong>staying signed in</strong> when you close the app.</li>
+              <li><strong>Menus like a desktop program</strong>, with shortcuts in their own column and flyouts, opening just under the menu bar, and <strong>staying signed in</strong> when you close the app.</li>
+              <li>The mixer no longer writes "C" under every pan knob: a knob at the centre shows nothing, and one turned to a side shows how far (L20, R35).</li>
             </ul>
           </article>
 
@@ -820,6 +825,15 @@
               Open the <em>Instruments</em> tab in the browser on the left. Click an instrument to hear it, and drag
               the one you want onto the channel rack. You can also pick one from the channel rack's <em>Add</em> list,
               or from the <em>Add</em> menu. Samples work the same way in the <em>Samples</em> tab.
+            </p>
+          </details>
+          <details>
+            <summary>What's the best way to make a beat with a drum kit?</summary>
+            <p>
+              Open <em>Drums</em> in the Instruments tab, open a kit and drag its <em>Drum Set</em> onto the channel rack.
+              You get its kick, snare, clap and hats on channels of their own: click their steps to make the beat.
+              Need a tom or a crash too? Drag that drum from the same folder. To play a kit from a keyboard or pad
+              controller instead, use its <em>Full Kit</em>: every key is a different drum, and the piano roll names them.
             </p>
           </details>
           <details>

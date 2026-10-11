@@ -1,9 +1,11 @@
 import { platformText } from "../lib/hotkeys";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 import { useProjectStore } from "../state/projectStore";
 import { useWheelZoom } from "../hooks/useWheelZoom";
-import { IconBroom, IconChevronDown, IconChevronUp, IconCopy, IconTrash } from "./icons";
+import { IconAddLane, IconCopy, IconEraser, IconFit, IconFlag, IconMore, IconMute, IconPencil, IconTrash } from "./icons";
+import { MenuPanel, prepareItems, type MenuItem } from "./MenuPanel";
 import { matchShortcut } from "../lib/hotkeys";
 import { useSessionStore } from "../state/sessionStore";
 import { copyClips, hasClips, pastedClips } from "../state/clipboard";
@@ -43,6 +45,18 @@ const TIMELINE_HEIGHT = MARKER_LANE_HEIGHT + RULER_HEIGHT;
 const COMPACT_TRACK_HEIGHT = 44;
 
 type DrawTool = "pattern" | "audio" | "automation";
+
+/** What a click on the lanes does, as in FL's playlist toolbar. */
+type EditTool = "draw" | "erase" | "mute";
+
+const EDIT_TOOLS: Array<{ id: EditTool; label: string; hint: string; icon: ReactNode }> = [
+  { id: "draw", label: "Draw", hint: "Draw: click a lane to place a clip, drag along it to place a row, drag a clip to move it", icon: <IconPencil /> },
+  { id: "erase", label: "Delete", hint: "Delete: click or drag over clips to remove them (right-drag does this with any tool)", icon: <IconEraser /> },
+  { id: "mute", label: "Mute", hint: "Mute: click a clip to silence it, click again to bring it back", icon: <IconMute /> }
+];
+
+/** A pattern dragged from the list of patterns onto a lane. */
+const PATTERN_DRAG = "application/x-pulsegrid-pattern";
 
 interface ClipDrag {
   mode: "move" | "resize" | "paint" | "erase";
@@ -96,6 +110,8 @@ export function Playlist() {
   const samples = useSamples();
 
   const [tool, setTool] = useState<DrawTool>("pattern");
+  const [editTool, setEditTool] = useState<EditTool>("draw");
+  const toggleClipMute = useProjectStore((state) => state.toggleClipMute);
   const [sampleId, setSampleId] = useState("");
   const [selectedClipId, setSelectedClipId] = useState<string | null>(null);
   const [zoomIndex, setZoomIndex] = useState(DEFAULT_ZOOM);
@@ -335,6 +351,28 @@ export function Playlist() {
     [beginEdit]
   );
 
+  // A double-click on a pattern clip opens that pattern in the channel rack and the piano roll.
+  const openClip = useCallback(
+    (clip: PlaylistClip) => {
+      if (clip.type !== "pattern") return;
+      selectPattern(clip.patternId);
+      useSessionStore.getState().openWindow("rack");
+    },
+    [selectPattern]
+  );
+
+  // Zoom out (or in) until the whole song fits in the window, and go back to its start.
+  const fitSong = () => {
+    const element = laneRef.current;
+    if (!element) return;
+    const end = Math.max(songBars * STEPS_PER_BAR, contentEnd(clips, markers));
+    const room = element.clientWidth - HEADER_WIDTH - 12;
+    let best = 0;
+    for (let index = 0; index < ZOOM_LEVELS.length; index += 1) if (ZOOM_LEVELS[index] * end <= room) best = index;
+    setZoomIndex(best);
+    element.scrollLeft = 0;
+  };
+
   /* ────────────────────────────── keyboard ────────────────────────────── */
 
   useEffect(() => {
@@ -456,13 +494,40 @@ export function Playlist() {
   return (
     <section className="playlist">
       <div className="playlist-toolbar">
-        <span className="toolbar-caption">Place</span>
-        <div className="placement-tools" role="group" aria-label="Draw tool">
+        <div className="pl-group pl-tools" role="group" aria-label="Tool">
+          {EDIT_TOOLS.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              className={`pl-icon-button${editTool === option.id ? " active" : ""}`}
+              aria-pressed={editTool === option.id}
+              aria-label={option.label}
+              title={option.hint}
+              onClick={() => setEditTool(option.id)}
+            >
+              {option.icon}
+            </button>
+          ))}
+        </div>
+
+        <div className="pl-group placement-tools" role="group" aria-label="What a click places">
           {(["pattern", "audio", "automation"] as DrawTool[]).map((option) => (
             <button
               key={option}
+              type="button"
               className={tool === option ? "active" : ""}
-              onClick={() => setTool(option)}
+              aria-pressed={tool === option}
+              title={
+                option === "pattern"
+                  ? "Place the pattern chosen on the left (or drag one from the list onto a lane)"
+                  : option === "audio"
+                    ? "Place an audio clip of the sample chosen here"
+                    : "Place an automation clip for the master volume"
+              }
+              onClick={() => {
+                setTool(option);
+                setEditTool("draw");
+              }}
             >
               {option === "pattern" ? "Pattern" : option === "audio" ? "Audio" : "Automation"}
             </button>
@@ -470,20 +535,23 @@ export function Playlist() {
         </div>
 
         {tool === "audio" ? (
-          <label>
-            Sample
-            <select value={sampleId} onChange={(event) => setSampleId(event.target.value)}>
-              {samples.map((sample) => (
-                <option key={sample.id} value={sample.id}>
-                  {sample.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <select
+            className="pl-sample-select"
+            value={sampleId}
+            aria-label="Sample to place"
+            title="The sample an audio clip plays"
+            onChange={(event) => setSampleId(event.target.value)}
+          >
+            {samples.map((sample) => (
+              <option key={sample.id} value={sample.id}>
+                {sample.name}
+              </option>
+            ))}
+          </select>
         ) : null}
 
-        <label>
-          Snap
+        <label className="pl-field" title="The grid clips snap to">
+          <span>Snap</span>
           <select value={snapSteps} onChange={(event) => setSnapSteps(Number(event.target.value))}>
             <option value={1}>Step</option>
             <option value={4}>Beat</option>
@@ -492,8 +560,8 @@ export function Playlist() {
           </select>
         </label>
 
-        <label>
-          Bars
+        <label className="pl-field" title="How long the song is, in bars; it grows by itself when clips go past the end">
+          <span>Length</span>
           <input
             className="song-length-input"
             type="number"
@@ -502,47 +570,69 @@ export function Playlist() {
             value={songBars}
             onChange={(event) => setSongBars(Number(event.target.value))}
           />
+          <span className="pl-unit">bars</span>
         </label>
 
-        <div className="zoom-controls">
-          <button onClick={() => setZoomIndex((i) => Math.max(0, i - 1))} disabled={zoomIndex === 0}>
+        <div className="pl-group zoom-controls" role="group" aria-label="Zoom">
+          <button
+            type="button"
+            onClick={() => zoom.zoomBy(-1)}
+            disabled={zoomIndex === 0}
+            aria-label="Zoom out"
+            title="Zoom out (the wheel, or a pinch on a touchpad, zooms too)"
+          >
             −
           </button>
-          <span>Zoom</span>
           <button
-            onClick={() => setZoomIndex((i) => Math.min(ZOOM_LEVELS.length - 1, i + 1))}
+            type="button"
+            className="pl-zoom-readout"
+            onClick={() => zoom.zoomTo(DEFAULT_ZOOM)}
+            title="Zoom: click for the normal size"
+          >
+            {Math.round((pxPerStep / ZOOM_LEVELS[DEFAULT_ZOOM]) * 100)}%
+          </button>
+          <button
+            type="button"
+            onClick={() => zoom.zoomBy(1)}
             disabled={zoomIndex === ZOOM_LEVELS.length - 1}
+            aria-label="Zoom in"
+            title="Zoom in"
           >
             +
           </button>
+          <button type="button" className="pl-icon-button" onClick={fitSong} aria-label="Fit the song" title="Fit the whole song in the window">
+            <IconFit />
+          </button>
         </div>
 
-        <button className="secondary-action" onClick={() => addPlaylistTrack()}>
-          + Track
-        </button>
+        <span className="fl-flex" />
 
-        <button
-          className="secondary-action"
-          onClick={() => addMarker(playheadOrStart())}
-          title="Drop a marker at the playhead (M)"
-        >
-          + Marker
-        </button>
-
-        <button
-          disabled={!selectedClipId}
-          onClick={() => {
-            if (!selectedClipId) return;
-            const id = duplicatePlaylistClip(selectedClipId);
-            if (id) setSelectedClipId(id);
-          }}
-        >
-          Duplicate
-        </button>
-
-        <span className="small-note">
-          Click a lane to place · drag to move · right edge resizes · right-click removes
-        </span>
+        <div className="pl-group" role="group" aria-label="Add">
+          <button type="button" className="pl-text-button" onClick={() => addPlaylistTrack()} title="Add a track at the bottom">
+            <IconAddLane /> Track
+          </button>
+          <button
+            type="button"
+            className="pl-text-button"
+            onClick={() => addMarker(playheadOrStart())}
+            title="Drop a marker at the playhead (M)"
+          >
+            <IconFlag /> Marker
+          </button>
+          <button
+            type="button"
+            className="pl-text-button"
+            disabled={!selectedClipId}
+            title="Duplicate the selected clip, right after it (Ctrl+D)"
+            onClick={() => {
+              if (!selectedClipId) return;
+              const id = duplicatePlaylistClip(selectedClipId);
+              if (id) setSelectedClipId(id);
+            }}
+          >
+            <IconCopy /> Duplicate
+          </button>
+        </div>
       </div>
 
       <div className="playlist-body">
@@ -553,13 +643,21 @@ export function Playlist() {
           onSelect={selectPattern}
         />
 
+        <div className="playlist-main">
+        <PlaylistOverview
+          scrollRef={laneRef}
+          clips={clips}
+          tracks={tracks}
+          steps={totalBars * STEPS_PER_BAR}
+          pxPerStep={pxPerStep}
+        />
         <div
-          className="playlist-scroll"
+          className={`playlist-scroll tool-${editTool}`}
           ref={laneRef}
           data-hint={
             wheelZoom
-              ? "Scroll wheel zooms · Shift + wheel scrolls sideways · Alt + wheel scrolls up and down"
-              : platformText("Ctrl + scroll wheel zooms · Shift + wheel scrolls sideways")
+              ? "Scroll wheel zooms · Shift + wheel scrolls sideways · Alt + wheel scrolls up and down · on a touchpad, two fingers scroll and a pinch zooms"
+              : platformText("Ctrl + scroll wheel zooms · Shift + wheel scrolls sideways · on a touchpad, two fingers scroll and a pinch zooms")
           }
         >
           <div className="playlist-content" style={{ width: HEADER_WIDTH + laneWidth }}>
@@ -598,12 +696,35 @@ export function Playlist() {
                       "--track-color": track.color
                     } as React.CSSProperties
                   }
+                  onDragOver={(event) => {
+                    if (!Array.from(event.dataTransfer.types).includes(PATTERN_DRAG)) return;
+                    event.preventDefault();
+                    event.dataTransfer.dropEffect = "copy";
+                  }}
+                  onDrop={(event) => {
+                    const patternId = event.dataTransfer.getData(PATTERN_DRAG);
+                    const pattern = patterns[patternId];
+                    if (!pattern) return;
+                    event.preventDefault();
+                    const rect = event.currentTarget.getBoundingClientRect();
+                    const id = uid();
+                    addPlaylistClip({
+                      id,
+                      type: "pattern",
+                      patternId,
+                      trackIndex,
+                      startStep: Math.max(0, snapStep((event.clientX - rect.left) / pxPerStep, snapSteps)),
+                      lengthSteps: pattern.length
+                    });
+                    selectPattern(patternId);
+                    setSelectedClipId(id);
+                  }}
                   onPointerDown={(event) => {
                     const rect = event.currentTarget.getBoundingClientRect();
                     const step = (event.clientX - rect.left) / pxPerStep;
 
-                    // Right-drag erases a sweep of clips.
-                    if (event.button === 2) {
+                    // Right-drag erases a sweep of clips, and so does the left button with the delete tool.
+                    if (event.button === 2 || (event.button === 0 && editTool === "erase")) {
                       event.preventDefault();
                       beginEdit("Erase clips");
                       dragRef.current = {
@@ -619,7 +740,7 @@ export function Playlist() {
                       return;
                     }
 
-                    if (event.button !== 0) return;
+                    if (event.button !== 0 || editTool === "mute") return;
 
                     // Hold and drag to lay down a row of clips instead of
                     // clicking once per bar.
@@ -648,7 +769,10 @@ export function Playlist() {
                         channels={channels}
                         pxPerStep={pxPerStep}
                         selected={clip.id === selectedClipId}
+                        editTool={editTool}
                         onSelect={() => setSelectedClipId(clip.id)}
+                        onToggleMute={toggleClipMute}
+                        onOpen={openClip}
                         onStartDrag={startClipDrag}
                         onRemove={() => {
                           removePlaylistClip(clip.id);
@@ -674,6 +798,7 @@ export function Playlist() {
               height={lanesHeight + TIMELINE_HEIGHT}
             />
           </div>
+        </div>
         </div>
       </div>
 
@@ -960,8 +1085,8 @@ function Ruler({
 
   return (
     <div
-      className="playlist-ruler"
-      style={{ width: bars * barWidth, height: RULER_HEIGHT }}
+      className={`playlist-ruler${barWidth / 4 >= 8 ? " beats" : ""}`}
+      style={{ width: bars * barWidth, height: RULER_HEIGHT, "--beat": `${barWidth / 4}px` } as React.CSSProperties}
       onPointerDown={(event) => {
         const rect = event.currentTarget.getBoundingClientRect();
         const step = Math.max(0, (event.clientX - rect.left) / pxPerStep);
@@ -999,10 +1124,20 @@ function Ruler({
           return;
         }
 
+        // Click to move the playhead there, and keep the button down to drag it along.
         seekTo(Math.max(0, Math.floor(step)));
+        const onMove = (move: PointerEvent) => seekTo(Math.max(0, Math.floor((move.clientX - rect.left) / pxPerStep)));
+        const onUp = () => {
+          window.removeEventListener("pointermove", onMove);
+          window.removeEventListener("pointerup", onUp);
+          window.removeEventListener("pointercancel", onUp);
+        };
+        window.addEventListener("pointermove", onMove);
+        window.addEventListener("pointerup", onUp);
+        window.addEventListener("pointercancel", onUp);
       }}
       onContextMenu={(event) => event.preventDefault()}
-      title="Click to set the playback start · shift-drag for a loop region · right-click clears it"
+      title="Click or drag to move the playhead · shift-drag for a loop region · right-click clears it"
     >
       {loopStart !== null && loopEnd !== null ? (
         <span
@@ -1059,6 +1194,102 @@ const PlaylistPlayhead = memo(function PlaylistPlayhead({
   );
 });
 
+/* ───────────────────────────── overview ───────────────────────────── */
+
+/**
+ * The whole song in a strip above the lanes, as in FL: every clip in its track's colour, the playhead, and a box
+ * around the part on screen. Click or drag to scroll there.
+ */
+function PlaylistOverview({
+  scrollRef,
+  clips,
+  tracks,
+  steps,
+  pxPerStep
+}: {
+  scrollRef: React.RefObject<HTMLDivElement | null>;
+  clips: PlaylistClip[];
+  tracks: Array<{ color: string; mute: boolean }>;
+  steps: number;
+  pxPerStep: number;
+}) {
+  const [view, setView] = useState({ start: 0, span: 0 });
+  const playheadStep = useTransportStore((state) => state.playheadStep);
+  const startStep = useTransportStore((state) => state.startStep);
+  const strip = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const element = scrollRef.current;
+    if (!element) return;
+    const read = () =>
+      setView({ start: element.scrollLeft / pxPerStep, span: Math.max(0, element.clientWidth - HEADER_WIDTH) / pxPerStep });
+    read();
+    element.addEventListener("scroll", read, { passive: true });
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(read);
+    observer?.observe(element);
+    return () => {
+      element.removeEventListener("scroll", read);
+      observer?.disconnect();
+    };
+  }, [pxPerStep, scrollRef]);
+
+  const total = Math.max(1, steps);
+  const percent = (value: number) => `${(Math.max(0, Math.min(total, value)) / total) * 100}%`;
+  const rows = Math.max(1, tracks.length);
+  const head = playheadStep >= 0 ? playheadStep : startStep;
+
+  const scrollTo = (clientX: number, grab: number) => {
+    const element = scrollRef.current;
+    const box = strip.current?.getBoundingClientRect();
+    if (!element || !box || box.width <= 0) return;
+    const step = ((clientX - box.left) / box.width) * total - grab;
+    element.scrollLeft = Math.max(0, step * pxPerStep);
+  };
+
+  return (
+    <div
+      ref={strip}
+      className="playlist-overview"
+      title="The whole song: click or drag to scroll there"
+      onPointerDown={(event) => {
+        if (event.button !== 0) return;
+        event.preventDefault();
+        const box = strip.current?.getBoundingClientRect();
+        if (!box) return;
+        const step = ((event.clientX - box.left) / box.width) * total;
+        // Dragging the box keeps hold of it where it was grabbed; elsewhere, the box centres on the click.
+        const grab = step >= view.start && step <= view.start + view.span ? step - view.start : view.span / 2;
+        scrollTo(event.clientX, grab);
+        const onMove = (move: PointerEvent) => scrollTo(move.clientX, grab);
+        const onUp = () => {
+          window.removeEventListener("pointermove", onMove);
+          window.removeEventListener("pointerup", onUp);
+          window.removeEventListener("pointercancel", onUp);
+        };
+        window.addEventListener("pointermove", onMove);
+        window.addEventListener("pointerup", onUp);
+        window.addEventListener("pointercancel", onUp);
+      }}
+    >
+      {clips.map((clip) => (
+        <span
+          key={clip.id}
+          className={`overview-clip${clip.muted || tracks[clip.trackIndex]?.mute ? " muted" : ""}`}
+          style={{
+            left: percent(clip.startStep),
+            width: `max(2px, ${(clipLength(clip) / total) * 100}%)`,
+            top: `${(clip.trackIndex / rows) * 100}%`,
+            height: `${100 / rows}%`,
+            background: tracks[clip.trackIndex]?.color
+          }}
+        />
+      ))}
+      <span className="overview-playhead" style={{ left: percent(head) }} />
+      <span className="overview-view" style={{ left: percent(view.start), width: percent(view.span) }} />
+    </div>
+  );
+}
+
 /* ───────────────────────────── track header ───────────────────────────── */
 
 const TrackHeader = memo(function TrackHeader({
@@ -1085,7 +1316,9 @@ const TrackHeader = memo(function TrackHeader({
 
   const [draft, setDraft] = useState(track?.name ?? "");
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [menu, setMenu] = useState<{ left: number; top: number } | null>(null);
   const headerRef = useRef<HTMLDivElement | null>(null);
+  const moreRef = useRef<HTMLButtonElement | null>(null);
   useEffect(() => setDraft(track?.name ?? ""), [track?.name]);
 
   // An open palette covers the lane beneath it, so anything else the user
@@ -1137,11 +1370,45 @@ const TrackHeader = memo(function TrackHeader({
     window.addEventListener("pointercancel", onUp);
   };
 
+  const menuItems: MenuItem[] = [
+    { label: "Rename", run: () => headerRef.current?.querySelector<HTMLInputElement>(".track-name-input")?.select() },
+    { label: "Colour…", run: () => setPaletteOpen(true) },
+    {
+      label: "Lane height",
+      items: [
+        { label: "Small", radio: true, checked: track.height <= 32, run: () => setPlaylistTrackHeight(trackIndex, 30) },
+        { label: "Normal", radio: true, checked: track.height > 32 && track.height <= 80, run: () => setPlaylistTrackHeight(trackIndex, DEFAULT_TRACK_HEIGHT) },
+        { label: "Tall", radio: true, checked: track.height > 80, run: () => setPlaylistTrackHeight(trackIndex, 120) }
+      ]
+    },
+    { label: "", separator: true },
+    { label: track.solo ? "Stop soloing" : "Solo", run: () => toggleTrackSolo(trackIndex) },
+    { label: "Move up", disabled: trackIndex === 0, run: () => movePlaylistTrack(trackIndex, trackIndex - 1) },
+    { label: "Move down", disabled: trackIndex === trackCount - 1, run: () => movePlaylistTrack(trackIndex, trackIndex + 1) },
+    { label: "", separator: true },
+    { label: "Clear its clips", run: () => clearPlaylistTrack(trackIndex) },
+    {
+      label: "Delete track",
+      disabled: trackCount <= 1,
+      run: () =>
+        void onConfirm(`Delete "${track.name}"?`, "Its clips will be removed too.", {
+          confirmLabel: "Delete"
+        }).then((confirmed) => {
+          if (confirmed) removePlaylistTrack(trackIndex);
+        })
+    }
+  ];
+
   return (
     <div
       ref={headerRef}
-      className={`track-header${compact ? " compact" : ""}${paletteOpen ? " palette-open" : ""}`}
+      className={`track-header${compact ? " compact" : ""}${paletteOpen ? " palette-open" : ""}${track.mute ? " muted" : ""}`}
       style={{ width, height: track.height, "--track-color": track.color } as React.CSSProperties}
+      onContextMenu={(event) => {
+        if ((event.target as HTMLElement).closest("input")) return;
+        event.preventDefault();
+        setMenu({ left: event.clientX, top: event.clientY });
+      }}
     >
       <span className="track-stripe" aria-hidden="true" />
 
@@ -1158,12 +1425,49 @@ const TrackHeader = memo(function TrackHeader({
           className="track-name-input"
           value={draft}
           aria-label={`${track.name} name`}
+          title="Track name: click to rename"
           onChange={(event) => setDraft(event.target.value)}
           onBlur={() => renamePlaylistTrack(trackIndex, draft)}
           onKeyDown={(event) => {
             if (event.key === "Enter") event.currentTarget.blur();
           }}
         />
+
+        <button
+          className={`track-solo${track.solo ? " active" : ""}`}
+          aria-pressed={track.solo}
+          onClick={() => toggleTrackSolo(trackIndex)}
+          title="Solo: hear only this track (and other soloed ones)"
+        >
+          S
+        </button>
+
+        {/* The light is on while the track plays, as in FL: click it to mute. */}
+        <button
+          className={`track-led${track.mute ? "" : " on"}`}
+          aria-pressed={track.mute}
+          aria-label="Mute track"
+          onClick={() => toggleTrackMute(trackIndex)}
+          title={track.mute ? "Muted: click to hear this track again" : "Playing: click to mute this track"}
+        />
+
+        <button
+          ref={moreRef}
+          className="track-more"
+          aria-label="Track options"
+          aria-expanded={menu !== null}
+          title="Track options: colour, height, move, clear, delete (or right-click the track)"
+          onClick={() => {
+            if (menu) {
+              setMenu(null);
+              return;
+            }
+            const box = moreRef.current?.getBoundingClientRect();
+            if (box) setMenu({ left: box.left, top: box.bottom + 2 });
+          }}
+        >
+          <IconMore />
+        </button>
       </div>
 
       {paletteOpen ? (
@@ -1183,72 +1487,19 @@ const TrackHeader = memo(function TrackHeader({
         </div>
       ) : null}
 
-      <div className="track-buttons">
-        <button
-          className={track.mute ? "active" : ""}
-          aria-pressed={track.mute}
-          onClick={() => toggleTrackMute(trackIndex)}
-          title="Mute track"
-        >
-          M
-        </button>
-        <button
-          className={track.solo ? "active" : ""}
-          aria-pressed={track.solo}
-          onClick={() => toggleTrackSolo(trackIndex)}
-          title="Solo track"
-        >
-          S
-        </button>
-        <button
-          className="track-extra"
-          onClick={() => movePlaylistTrack(trackIndex, trackIndex - 1)}
-          disabled={trackIndex === 0}
-          title="Move up"
-          aria-label="Move up"
-        >
-          <IconChevronUp />
-        </button>
-        <button
-          className="track-extra"
-          onClick={() => movePlaylistTrack(trackIndex, trackIndex + 1)}
-          disabled={trackIndex === trackCount - 1}
-          title="Move down"
-          aria-label="Move down"
-        >
-          <IconChevronDown />
-        </button>
-        <button
-          className="track-extra"
-          onClick={() => clearPlaylistTrack(trackIndex)}
-          title="Clear clips"
-          aria-label="Clear clips"
-        >
-          <IconBroom />
-        </button>
-        <button
-          className="track-extra track-delete"
-          disabled={trackCount <= 1}
-          title="Delete track"
-          aria-label="Delete track"
-          onClick={() =>
-            void onConfirm(`Delete "${track.name}"?`, "Its clips will be removed too.", {
-              confirmLabel: "Delete"
-            }).then((confirmed) => {
-              if (confirmed) removePlaylistTrack(trackIndex);
-            })
-          }
-        >
-          <IconTrash />
-        </button>
-      </div>
-
       <span
         className="track-resize"
         title="Drag to resize the lane · double-click resets it"
         onPointerDown={startResize}
         onDoubleClick={() => setPlaylistTrackHeight(trackIndex, DEFAULT_TRACK_HEIGHT)}
       />
+
+      {menu
+        ? createPortal(
+            <MenuPanel items={prepareItems(menuItems)} left={menu.left} top={menu.top} anchor={moreRef.current} onClose={() => setMenu(null)} />,
+            document.body
+          )
+        : null}
     </div>
   );
 });
@@ -1261,7 +1512,10 @@ interface ClipViewProps {
   channels: Channel[];
   pxPerStep: number;
   selected: boolean;
+  editTool: EditTool;
   onSelect: () => void;
+  onToggleMute: (clipId: string) => void;
+  onOpen: (clip: PlaylistClip) => void;
   onStartDrag: (clip: PlaylistClip, mode: "move" | "resize", event: React.PointerEvent) => void;
   onRemove: () => void;
 }
@@ -1277,7 +1531,10 @@ const ClipView = memo(function ClipView({
   channels,
   pxPerStep,
   selected,
+  editTool,
   onSelect,
+  onToggleMute,
+  onOpen,
   onStartDrag,
   onRemove
 }: ClipViewProps) {
@@ -1288,13 +1545,23 @@ const ClipView = memo(function ClipView({
 
   return (
     <div
-      className={`playlist-clip clip-${clip.type}${selected ? " selected" : ""}`}
+      className={`playlist-clip clip-${clip.type}${selected ? " selected" : ""}${clip.muted ? " muted" : ""}`}
       style={{ left: clip.startStep * pxPerStep, width }}
-      title={`${label} — bar ${Math.floor(clip.startStep / STEPS_PER_BAR) + 1}`}
+      title={`${label}${clip.muted ? " (muted)" : ""} — bar ${Math.floor(clip.startStep / STEPS_PER_BAR) + 1}${clip.type === "pattern" ? " · double-click to open the pattern" : ""}`}
       onPointerDown={(event) => {
         if (event.button !== 0) return;
+        // The delete tool's press goes on to the lane, which erases whatever the drag passes over.
+        if (editTool === "erase") return;
+        if (editTool === "mute") {
+          event.stopPropagation();
+          onToggleMute(clip.id);
+          return;
+        }
         onSelect();
         onStartDrag(clip, "move", event);
+      }}
+      onDoubleClick={() => {
+        if (editTool === "draw") onOpen(clip);
       }}
       onContextMenu={(event) => {
         event.preventDefault();
@@ -1318,7 +1585,7 @@ const ClipView = memo(function ClipView({
         className="clip-resize"
         title="Drag to resize"
         onPointerDown={(event) => {
-          if (event.button !== 0) return;
+          if (event.button !== 0 || editTool !== "draw") return;
           onStartDrag(clip, "resize", event);
         }}
       />
@@ -1551,6 +1818,12 @@ function PatternPicker({
             <div
               key={patternId}
               className={`pattern-picker-item${selected ? " selected" : ""}`}
+              title={`${pattern.name}: click to place it with the draw tool, or drag it onto a lane`}
+              draggable
+              onDragStart={(event) => {
+                event.dataTransfer.setData(PATTERN_DRAG, patternId);
+                event.dataTransfer.effectAllowed = "copy";
+              }}
               onClick={() => onSelect(patternId)}
             >
               <span className="picker-index">{index + 1}</span>

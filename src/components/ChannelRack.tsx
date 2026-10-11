@@ -8,6 +8,7 @@ import { Knob } from "./controls";
 import { Waveform } from "./Waveform";
 import { useSamples, useSelectedPattern, useUnmount } from "../hooks/useStudio";
 import { auditionChannel } from "../audio/engine";
+import { stepPitchOf } from "../lib/drumKits";
 import { INSTRUMENT_GROUPS, availableInstruments, synthPresets } from "../presets/presets";
 import { addInstrument } from "../lib/addInstrument";
 import { DRAG_TYPE, carriesDragItem, decodeDragItem, type DragItem } from "../lib/dragData";
@@ -137,7 +138,8 @@ export function ChannelRack() {
               instruments.some((entry) => entry.group === group) ? (
                 <optgroup key={group} label={group}>
                   {instruments.map((entry, index) =>
-                    entry.group === group ? (
+                    // Single drums are left to the browser and the menus, where they sit in their kit's folder.
+                    entry.group === group && entry.soundfont?.drumNote === undefined ? (
                       <option key={entry.label} value={index}>
                         {entry.label}
                       </option>
@@ -356,7 +358,7 @@ const ChannelRow = memo(function ChannelRow({
     setStep(patternId, channel.id, index, nextValue);
 
     if (nextValue !== null && !useTransportStore.getState().isPlaying) {
-      auditionChannel(channel.id, 60, nextValue);
+      auditionChannel(channel.id, stepPitchOf(channel), nextValue);
     }
   };
 
@@ -446,6 +448,7 @@ const ChannelRow = memo(function ChannelRow({
             defaultValue={0}
             color={channel.color}
             display={panLabel(channel.pan)}
+            readout={Math.abs(channel.pan) < 0.005 ? "" : panLabel(channel.pan)}
             learnId={`channel:${channel.id}:pan`}
             onChange={(value) => setChannelPan(channel.id, value)}
             onCommitStart={() => beginEdit("Channel pan")}
@@ -579,7 +582,7 @@ const ChannelRow = memo(function ChannelRow({
 });
 
 function panLabel(pan: number): string {
-  if (Math.abs(pan) < 0.005) return "C";
+  if (Math.abs(pan) < 0.005) return "Centre";
   return `${pan < 0 ? "L" : "R"}${Math.round(Math.abs(pan) * 100)}`;
 }
 

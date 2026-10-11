@@ -32,7 +32,14 @@ export function previewChannelFor(entry: InstrumentMenuEntry): Channel {
     loop: false,
     synthPreset: entry.preset,
     soundfont: entry.soundfont
-      ? { fontId: BUILTIN_ID, fontName: BUILTIN_NAME, bank: entry.soundfont.bank, program: entry.soundfont.program, name: entry.label }
+      ? {
+          fontId: BUILTIN_ID,
+          fontName: BUILTIN_NAME,
+          bank: entry.soundfont.bank,
+          program: entry.soundfont.program,
+          name: entry.label,
+          ...(entry.soundfont.drumNote !== undefined ? { drumNote: entry.soundfont.drumNote } : {})
+        }
       : undefined
   };
 }
@@ -58,6 +65,14 @@ const BEAT: PreviewNote[] = [
 
 /** What to play to show off an instrument, chosen by what kind of instrument it is. */
 export function previewNotesFor(entry: InstrumentMenuEntry): PreviewNote[] {
+  // One drum of a kit: hit twice, the second softer, the way it would sit in a beat.
+  if (entry.soundfont?.drumNote !== undefined) {
+    return [
+      { at: 0, pitch: 60, duration: 0.4 },
+      { at: 0.3, pitch: 60, duration: 0.4, velocity: 0.6 }
+    ];
+  }
+  // A whole kit, or a drum set made from one.
   if (entry.soundfont?.bank === 128) return BEAT;
   if ((DRUM_TYPES as readonly string[]).includes(entry.type)) return [{ at: 0, pitch: 60, duration: 0.5 }];
 

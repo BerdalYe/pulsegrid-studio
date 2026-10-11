@@ -104,6 +104,8 @@ export interface SoundFontRef {
   brightness?: number;
   /** Semitones, -24..24. */
   transpose?: number;
+  /** Plays only this drum of a kit, like a one-shot: middle C (60) plays it as recorded and other notes pitch it. */
+  drumNote?: number;
 }
 
 export type ClipType = "pattern" | "audio" | "automation";
@@ -112,6 +114,8 @@ export interface BasePlaylistClip {
   id: string;
   trackIndex: number;
   startStep: number;
+  /** Left in place but silent, like FL's mute tool. */
+  muted?: boolean;
 }
 
 export interface PatternClip extends BasePlaylistClip {

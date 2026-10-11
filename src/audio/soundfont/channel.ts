@@ -43,7 +43,8 @@ export function createSoundFontChannelVoice(
     options.pitch,
     options.velocity,
     options.duration,
-    { attack: ref.attack, release: ref.release, brightness: ref.brightness, transpose: ref.transpose },
-    channel.id
+    { attack: ref.attack, release: ref.release, brightness: ref.brightness, transpose: ref.transpose, fixedKey: ref.drumNote },
+    // The drums of one kit split over several channels still behave as one kit: the closed hat cuts the open one.
+    ref.drumNote !== undefined ? `kit:${ref.fontId}:${ref.bank}:${ref.program}` : channel.id
   );
 }

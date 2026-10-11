@@ -22,7 +22,15 @@ export function instrumentLibrary(available: InstrumentMenuEntry[]): InstrumentL
     plugins: available.filter((entry) => entry.group === "Plugins"),
     folders: INSTRUMENT_GROUPS.filter((name) => name !== "Plugins").flatMap((name) => {
       const entries = available.filter((entry) => entry.group === name);
-      return entries.length === 0 ? [] : [{ label: name, entries }];
+      if (entries.length === 0) return [];
+
+      // Entries that name a folder (each drum kit, the drum machine) are gathered into it, in the order they come.
+      const inner = new Map<string, InstrumentMenuEntry[]>();
+      for (const entry of entries) if (entry.folder) inner.set(entry.folder, [...(inner.get(entry.folder) ?? []), entry]);
+      const loose = entries.filter((entry) => !entry.folder);
+      const folders = [...inner].map(([label, items]) => ({ label, entries: items }));
+
+      return [{ label: name, ...(loose.length > 0 ? { entries: loose } : {}), ...(folders.length > 0 ? { folders } : {}) }];
     })
   };
 }

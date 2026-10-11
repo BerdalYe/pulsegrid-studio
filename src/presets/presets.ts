@@ -1,4 +1,5 @@
 import { wavetablePresets } from "./wavetablePresets";
+import { DRUM_KITS, KIT_PIECES } from "../lib/drumKits";
 import type { SynthMod, WavetableOsc } from "../audio/modulation";
 import {
   SCHEMA_VERSION,
@@ -998,8 +999,12 @@ export interface InstrumentMenuEntry {
   group: InstrumentGroup;
   /** A synth with its own editor: adding it opens that editor straight away. */
   plugin?: boolean;
-  /** Plays a recorded instrument from the built-in SoundFont instead of the synth. */
-  soundfont?: { bank: number; program: number };
+  /** Plays a recorded instrument from the built-in SoundFont instead of the synth; `drumNote` picks one drum of a kit. */
+  soundfont?: { bank: number; program: number; drumNote?: number };
+  /** A folder of its own inside the family, e.g. one per drum kit. */
+  folder?: string;
+  /** Adds a kit's main drums, one channel each, instead of one channel. */
+  drumSet?: boolean;
   /** Sends its notes out of a MIDI port, to another program, instead of making sound here. */
   midiOut?: boolean;
   /** A sample channel, starting on this built-in sample. */
@@ -1032,32 +1037,41 @@ const fx = (label: string, sample: string): InstrumentMenuEntry => ({ label, typ
  */
 export const INSTRUMENT_MENU: InstrumentMenuEntry[] = [
   { label: "Wavetable Synth", type: "synth", preset: "wt-init", group: "Plugins", plugin: true },
-  // Opens a panel with every instrument in the SoundFont, and lets you add your own SoundFont files.
-  { label: "Instrument Browser", type: "synth", group: "Plugins", plugin: true, soundfont: { bank: 0, program: 0 } },
+  // Plays a SoundFont (.sf2) file of your own. Only offered where there is no built-in set (the web studio): in the
+  // apps every recorded instrument's panel can load one, and the built-in sounds are in the folders below.
+  { label: "SoundFont Player", type: "synth", group: "Plugins", plugin: true, soundfont: { bank: 0, program: 0 } },
   // For instruments that live in another program (the Akai Studio Instrument Collection, a hardware synth).
   { label: "MIDI Out (external instrument)", type: "synth", group: "Plugins", plugin: true, midiOut: true },
   { label: "Sampler", type: "sample", group: "Plugins" },
 
   // ── drums: recorded kits, then the drum machine's one-shots ──
-  sampled("Standard Kit", "Drums", 0, 128),
-  sampled("Room Kit", "Drums", 8, 128),
-  sampled("Power Kit", "Drums", 16, 128),
-  sampled("Electronic Kit", "Drums", 24, 128),
-  sampled("808/909 Kit", "Drums", 25, 128),
-  sampled("Dance Kit", "Drums", 26, 128),
-  sampled("Jazz Kit", "Drums", 32, 128),
-  sampled("Brush Kit", "Drums", 40, 128),
-  sampled("Orchestral Percussion", "Drums", 48, 128),
-  sampled("Taiko Drum", "Drums", 116),
-  { label: "Kick", type: "kick", group: "Drums" },
-  { label: "Snare", type: "snare", group: "Drums" },
-  { label: "Clap", type: "clap", group: "Drums" },
-  { label: "Hi-hat", type: "hat", group: "Drums" },
-  { label: "Shaker", type: "shaker", group: "Drums" },
-  { label: "Rimshot", type: "rim", group: "Drums" },
-  { label: "Tom", type: "tom", group: "Drums" },
-  { label: "Crash Cymbal", type: "cymbal", group: "Drums" },
-  { label: "Cowbell", type: "cowbell", group: "Drums" },
+  // Each kit is a folder: the drum set (its main drums as separate channels, the way FL builds a beat), the whole
+  // kit on one channel (for the piano roll and a pad controller), and each drum on its own.
+  ...DRUM_KITS.flatMap((kit): InstrumentMenuEntry[] => {
+    const family = kit.name.replace(/ Kit$/, "");
+    return [
+      { label: `${family} Drum Set`, type: "synth", group: "Drums", folder: kit.name, drumSet: true, soundfont: { bank: 128, program: kit.program } },
+      { label: `${family} Full Kit`, type: "synth", group: "Drums", folder: kit.name, soundfont: { bank: 128, program: kit.program } },
+      ...KIT_PIECES.map((piece): InstrumentMenuEntry => ({
+        label: `${kit.short} ${piece.name}`,
+        type: "synth",
+        group: "Drums",
+        folder: kit.name,
+        soundfont: { bank: 128, program: kit.program, drumNote: piece.note }
+      }))
+    ];
+  }),
+  { ...sampled("Orchestral Percussion", "Drums", 48, 128), folder: "Orchestral & World" },
+  { ...sampled("Taiko Drum", "Drums", 116), folder: "Orchestral & World" },
+  { label: "Kick", type: "kick", group: "Drums", folder: "Drum Machine" },
+  { label: "Snare", type: "snare", group: "Drums", folder: "Drum Machine" },
+  { label: "Clap", type: "clap", group: "Drums", folder: "Drum Machine" },
+  { label: "Hi-hat", type: "hat", group: "Drums", folder: "Drum Machine" },
+  { label: "Shaker", type: "shaker", group: "Drums", folder: "Drum Machine" },
+  { label: "Rimshot", type: "rim", group: "Drums", folder: "Drum Machine" },
+  { label: "Tom", type: "tom", group: "Drums", folder: "Drum Machine" },
+  { label: "Crash Cymbal", type: "cymbal", group: "Drums", folder: "Drum Machine" },
+  { label: "Cowbell", type: "cowbell", group: "Drums", folder: "Drum Machine" },
 
   // ── keys ──
   sampled("Grand Piano", "Keys", 0),
@@ -1209,12 +1223,12 @@ export const INSTRUMENT_MENU: InstrumentMenuEntry[] = [
 ];
 
 /**
- * The instruments to offer. Where the built-in recorded set doesn't exist (the web studio),
- * its entries are left out rather than adding silent channels; the Instrument Browser plugin stays,
- * since it can load a SoundFont of your own.
+ * The instruments to offer. Where the built-in recorded set doesn't exist (the web studio), its entries are left
+ * out rather than adding silent channels, and the SoundFont Player takes their place, for a SoundFont of your own.
+ * Where it does exist, the player isn't needed: the recorded instruments are all in their folders.
  */
 export function availableInstruments(builtinAvailable: boolean | null): InstrumentMenuEntry[] {
-  if (builtinAvailable !== false) return INSTRUMENT_MENU;
+  if (builtinAvailable !== false) return INSTRUMENT_MENU.filter((entry) => !(entry.plugin && entry.soundfont));
   return INSTRUMENT_MENU.filter((entry) => !entry.soundfont || entry.plugin);
 }
 

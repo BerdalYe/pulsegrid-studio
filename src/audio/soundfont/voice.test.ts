@@ -290,6 +290,15 @@ describe("playing a SoundFont note", () => {
     expect(play(font(), { pitch: 60, tweaks: { transpose: -12 } }).sources[0].playbackRate.value).toBeCloseTo(0.5, 5);
   });
 
+  it("plays one drum of a kit on every key, as recorded at C5 and tuned up or down from there", () => {
+    // A drum's recording doesn't follow the key (scale tuning 0), as in every drum kit.
+    const kit = font({ [GEN.scaleTuning]: 0 }, 128);
+    expect(play(kit, { pitch: 60, tweaks: { fixedKey: 38 } }).sources[0].playbackRate.value).toBeCloseTo(1, 5);
+    expect(play(kit, { pitch: 67, tweaks: { fixedKey: 38 } }).sources[0].playbackRate.value).toBeCloseTo(Math.pow(2, 7 / 12), 5);
+    expect(play(kit, { pitch: 48, tweaks: { fixedKey: 38 } }).sources[0].playbackRate.value).toBeCloseTo(0.5, 5);
+    expect(play(kit, { pitch: 60, tweaks: { fixedKey: 38, transpose: 12 } }).sources[0].playbackRate.value).toBeCloseTo(2, 5);
+  });
+
   it("adds a low-pass filter where the instrument has one, at the frequency it asks for", () => {
     const filtered = play(font({ [GEN.initialFilterFc]: 9600, [GEN.initialFilterQ]: 100 }));
     expect(filtered.filters).toHaveLength(1);

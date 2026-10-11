@@ -17,7 +17,8 @@ import { copyNotes, hasNotes, notesSpan, pastedNotes } from "../state/clipboard"
 import { useTransportStore } from "../state/transportStore";
 import { VelocityEditor } from "./VelocityEditor";
 import { useSelectedChannel, useSelectedPattern, useUnmount } from "../hooks/useStudio";
-import { auditionChannel, previewChannel } from "../audio/engine";
+import { auditionChannel, ensureAudio, noteOff, noteOn } from "../audio/engine";
+import { drumName, isFullKit, stepPitchOf } from "../lib/drumKits";
 
 import {
   STEPS_PER_BAR,
@@ -25,18 +26,21 @@ import {
   clamp,
   isBlackPitch,
   isPitchedChannel,
+  isStepActive,
   pitchName,
   snapStep,
   uid
 } from "../lib/utils";
 
-import type { NoteData } from "../types";
+import type { Channel, NoteData, Pattern } from "../types";
 
 const MIN_PITCH = 24;
 const MAX_PITCH = 108;
 const ROW_COUNT = MAX_PITCH - MIN_PITCH + 1;
 const ROW_HEIGHT = 15;
 const KEYBOARD_WIDTH = 56;
+/** Wide enough for a drum's name beside each key, for a whole drum kit. */
+const DRUM_KEYBOARD_WIDTH = 108;
 
 const ZOOM_LEVELS = [10, 12, 14, 16, 19, 22, 26, 30, 36, 42, 50, 60, 72, 84, 100];
 const DEFAULT_ZOOM = 7;
@@ -158,6 +162,11 @@ export function PianoRoll() {
   );
 
   const noteWidth = ZOOM_LEVELS[zoomIndex];
+  // A whole drum kit has a different drum on every key, so the keys carry the drums' names.
+  const drumMap = isFullKit(channel);
+  const keyboardWidth = drumMap ? DRUM_KEYBOARD_WIDTH : KEYBOARD_WIDTH;
+  const [hoverPitch, setHoverPitch] = useState<number | null>(null);
+  const [pressedPitch, setPressedPitch] = useState<number | null>(null);
   const wheelZoom = useSessionStore((state) => state.wheelZoom);
   const notes = useMemo<NoteData[]>(
     () => (pattern && channel ? pattern.channels[channel.id]?.notes ?? [] : []),
@@ -198,20 +207,40 @@ export function PianoRoll() {
     };
 
     const gridContext = setup(grid, gridWidth, gridHeight);
-    const keysContext = setup(keys, KEYBOARD_WIDTH, gridHeight);
+    const keysContext = setup(keys, keyboardWidth, gridHeight);
     if (!gridContext || !keysContext) return;
 
     // Keyboard.
-    keysContext.clearRect(0, 0, KEYBOARD_WIDTH, gridHeight);
+    keysContext.clearRect(0, 0, keyboardWidth, gridHeight);
     for (let row = 0; row < ROW_COUNT; row++) {
       const pitch = MAX_PITCH - row;
       const y = row * ROW_HEIGHT;
       const black = isBlackPitch(pitch);
 
+      if (drumMap) {
+        // A drum kit: a named drum on each key that has one, the rest dark and empty.
+        const name = drumName(pitch);
+        keysContext.fillStyle = name ? (black ? "#cfcfd6" : "#e6e6e6") : "#26262c";
+        keysContext.fillRect(0, y, keyboardWidth, ROW_HEIGHT);
+        keysContext.strokeStyle = theme.lineSoft;
+        keysContext.strokeRect(0.5, y + 0.5, keyboardWidth - 1, ROW_HEIGHT - 1);
+        if (name) {
+          keysContext.fillStyle = "#1c1c22";
+          keysContext.font = "600 9.5px system-ui, sans-serif";
+          keysContext.fillText(name, 5, y + ROW_HEIGHT - 4, keyboardWidth - 30);
+        }
+        keysContext.fillStyle = name ? "#6b6b76" : "#55555e";
+        keysContext.font = "8px system-ui, sans-serif";
+        keysContext.textAlign = "right";
+        keysContext.fillText(pitchName(pitch), keyboardWidth - 4, y + ROW_HEIGHT - 4);
+        keysContext.textAlign = "left";
+        continue;
+      }
+
       keysContext.fillStyle = black ? "#141414" : "#e6e6e6";
-      keysContext.fillRect(0, y, KEYBOARD_WIDTH, ROW_HEIGHT);
+      keysContext.fillRect(0, y, keyboardWidth, ROW_HEIGHT);
       keysContext.strokeStyle = theme.lineSoft;
-      keysContext.strokeRect(0.5, y + 0.5, KEYBOARD_WIDTH - 1, ROW_HEIGHT - 1);
+      keysContext.strokeRect(0.5, y + 0.5, keyboardWidth - 1, ROW_HEIGHT - 1);
 
       if (pitch % 12 === 0) {
         keysContext.fillStyle = "#333";
@@ -227,8 +256,8 @@ export function PianoRoll() {
       gridContext.fillStyle = isBlackPitch(pitch) ? theme.panel : theme.panelAlt;
       gridContext.fillRect(0, row * ROW_HEIGHT, gridWidth, ROW_HEIGHT);
 
-      // Dim the rows outside the chosen key so the ones in it stand out.
-      if (scaleSet && !scaleSet.has(((pitch - scaleRoot) % 12 + 12) % 12)) {
+      // Dim the rows outside the chosen key so the ones in it stand out; for a drum kit, the keys with no drum.
+      if (drumMap ? !drumName(pitch) : scaleSet && !scaleSet.has(((pitch - scaleRoot) % 12 + 12) % 12)) {
         gridContext.fillStyle = "rgba(0,0,0,0.34)";
         gridContext.fillRect(0, row * ROW_HEIGHT, gridWidth, ROW_HEIGHT);
       }
@@ -329,6 +358,8 @@ export function PianoRoll() {
   }, [
     channel,
     channels,
+    drumMap,
+    keyboardWidth,
     ghostNotes,
     gridHeight,
     gridWidth,
@@ -726,7 +757,7 @@ export function PianoRoll() {
     levels: ZOOM_LEVELS,
     index: zoomIndex,
     setIndex: setZoomIndex,
-    gutter: KEYBOARD_WIDTH,
+    gutter: keyboardWidth,
     active: Boolean(pattern && channel)
   });
 
@@ -1105,24 +1136,83 @@ export function PianoRoll() {
         ref={scrollRef}
         data-hint={
           wheelZoom
-            ? "Scroll wheel zooms · Shift + wheel scrolls sideways · Alt + wheel scrolls up and down"
-            : platformText("Ctrl + scroll wheel zooms · Shift + wheel scrolls sideways")
+            ? "Scroll wheel zooms · Shift + wheel scrolls sideways · Alt + wheel scrolls up and down · on a touchpad, two fingers scroll and a pinch zooms"
+            : platformText("Ctrl + scroll wheel zooms · Shift + wheel scrolls sideways · on a touchpad, two fingers scroll and a pinch zooms")
         }
       >
         <div className="piano-inner" style={{ height: gridHeight }}>
-          <canvas ref={keysRef} className="piano-keys" onPointerDown={(event) => {
-            const rect = event.currentTarget.getBoundingClientRect();
-            const pitch = MAX_PITCH - Math.floor((event.clientY - rect.top) / ROW_HEIGHT);
-            previewChannel(channel.id, pitch, 0.85, 0.4);
-          }} />
+          <div className="piano-keys-col" style={{ width: keyboardWidth, height: gridHeight }}>
+            <canvas
+              ref={keysRef}
+              className="piano-keys"
+              onPointerDown={(event) => {
+                if (event.button !== 0) return;
+                // Held for as long as the button is, and sliding along the keys plays each one, like a real keyboard.
+                const rect = event.currentTarget.getBoundingClientRect();
+                const pitchAt = (clientY: number) => clamp(MAX_PITCH - Math.floor((clientY - rect.top) / ROW_HEIGHT), MIN_PITCH, MAX_PITCH);
+                let current = pitchAt(event.clientY);
+                ensureAudio();
+                noteOn(channel.id, current, 0.85);
+                setPressedPitch(current);
+
+                const onMove = (move: PointerEvent) => {
+                  const next = pitchAt(move.clientY);
+                  if (next === current) return;
+                  noteOff(channel.id, current);
+                  current = next;
+                  noteOn(channel.id, current, 0.85);
+                  setPressedPitch(current);
+                };
+                const onUp = () => {
+                  noteOff(channel.id, current);
+                  setPressedPitch(null);
+                  window.removeEventListener("pointermove", onMove);
+                  window.removeEventListener("pointerup", onUp);
+                  window.removeEventListener("pointercancel", onUp);
+                };
+                window.addEventListener("pointermove", onMove);
+                window.addEventListener("pointerup", onUp);
+                window.addEventListener("pointercancel", onUp);
+              }}
+              onPointerMove={(event) => {
+                const rect = event.currentTarget.getBoundingClientRect();
+                const pitch = MAX_PITCH - Math.floor((event.clientY - rect.top) / ROW_HEIGHT);
+                if (pitch !== hoverPitch) setHoverPitch(pitch);
+              }}
+              onPointerLeave={() => setHoverPitch(null)}
+            />
+            <KeyLights
+              pattern={pattern}
+              channel={channel}
+              notes={notes}
+              width={keyboardWidth}
+              hoverPitch={hoverPitch}
+              pressedPitch={pressedPitch}
+            />
+          </div>
 
           <div className="piano-grid-wrap">
             <canvas
               ref={gridRef}
               className="piano-grid"
               onPointerDown={handlePointerDown}
+              onPointerMove={(event) => {
+                // The row under the pointer lights its key, so it is easy to see which note a click would write.
+                const rect = event.currentTarget.getBoundingClientRect();
+                const pitch = MAX_PITCH - Math.floor((event.clientY - rect.top) / ROW_HEIGHT);
+                if (pitch !== hoverPitch) setHoverPitch(pitch);
+              }}
+              onPointerLeave={() => setHoverPitch(null)}
               onContextMenu={(event) => event.preventDefault()}
             />
+            {hoverPitch !== null && hoverPitch >= MIN_PITCH && hoverPitch <= MAX_PITCH ? (
+              <div
+                className="piano-row-hover"
+                style={{ top: (MAX_PITCH - hoverPitch) * ROW_HEIGHT, height: ROW_HEIGHT, width: gridWidth }}
+                aria-hidden="true"
+              />
+            ) : null}
+            <PlayingNotes pattern={pattern} channel={channel} notes={notes} noteWidth={noteWidth} />
             {marquee ? (
               <div
                 className="piano-marquee"
@@ -1147,10 +1237,121 @@ export function PianoRoll() {
           noteWidth={noteWidth}
           color={channel.color}
           selected={selected}
-          offsetLeft={KEYBOARD_WIDTH}
+          offsetLeft={keyboardWidth}
         />
       ) : null}
     </section>
+  );
+}
+
+/** The pattern's steps that are playing now: one per clip of it under the playhead in song mode. */
+function usePlayingSteps(pattern: Pattern): number[] {
+  const playheadStep = useTransportStore((state) => state.playheadStep);
+  const isPlaying = useTransportStore((state) => state.isPlaying);
+  const mode = useSessionStore((state) => state.mode);
+  const clips = useProjectStore((state) => state.playlist.clips);
+
+  return useMemo(() => {
+    if (!isPlaying || playheadStep < 0 || pattern.length <= 0) return [];
+    if (mode === "pattern") return [playheadStep % pattern.length];
+    return clips.flatMap((clip) =>
+      clip.type === "pattern" &&
+      clip.patternId === pattern.id &&
+      playheadStep >= clip.startStep &&
+      playheadStep < clip.startStep + clip.lengthSteps
+        ? [(playheadStep - clip.startStep) % pattern.length]
+        : []
+    );
+  }, [clips, isPlaying, mode, pattern.id, pattern.length, playheadStep]);
+}
+
+/** Which notes of the channel are sounding at those steps. */
+function soundingNotes(notes: NoteData[], steps: number[]): NoteData[] {
+  if (steps.length === 0) return [];
+  return notes.filter((note) => steps.some((step) => note.start <= step + 0.001 && step < note.start + note.length - 0.001));
+}
+
+/**
+ * Lights on the keys: the notes the pattern is playing, what is being played on the keyboard (computer, MIDI or a
+ * click on these keys), and the key of the row under the pointer.
+ */
+function KeyLights({
+  pattern,
+  channel,
+  notes,
+  width,
+  hoverPitch,
+  pressedPitch
+}: {
+  pattern: Pattern;
+  channel: Channel;
+  notes: NoteData[];
+  width: number;
+  hoverPitch: number | null;
+  pressedPitch: number | null;
+}) {
+  const steps = usePlayingSteps(pattern);
+  const live = useTransportStore((state) => state.activeMidiNotes);
+  const cells = pattern.channels[channel.id]?.steps;
+
+  const lit = new Set<number>(live);
+  if (pressedPitch !== null) lit.add(pressedPitch);
+  for (const note of soundingNotes(notes, steps)) lit.add(note.pitch);
+  // Steps play too: the kick for a whole kit, middle C for the rest.
+  if (cells && steps.some((step) => isStepActive(cells[step]))) lit.add(stepPitchOf(channel));
+
+  return (
+    <div className="piano-key-lights" aria-hidden="true">
+      {hoverPitch !== null && hoverPitch >= MIN_PITCH && hoverPitch <= MAX_PITCH && !lit.has(hoverPitch) ? (
+        <span className="piano-key-hover" style={{ top: (MAX_PITCH - hoverPitch) * ROW_HEIGHT, height: ROW_HEIGHT, width }} />
+      ) : null}
+      {[...lit]
+        .filter((pitch) => pitch >= MIN_PITCH && pitch <= MAX_PITCH)
+        .map((pitch) => (
+          <span
+            key={pitch}
+            className="piano-key-lit"
+            style={{ top: (MAX_PITCH - pitch) * ROW_HEIGHT, height: ROW_HEIGHT, width, "--lit-color": channel.color } as React.CSSProperties}
+          />
+        ))}
+    </div>
+  );
+}
+
+/** A glow over each note while the playhead is on it. */
+function PlayingNotes({
+  pattern,
+  channel,
+  notes,
+  noteWidth
+}: {
+  pattern: Pattern;
+  channel: Channel;
+  notes: NoteData[];
+  noteWidth: number;
+}) {
+  const steps = usePlayingSteps(pattern);
+  return (
+    <>
+      {soundingNotes(notes, steps)
+        .filter((note) => note.pitch >= MIN_PITCH && note.pitch <= MAX_PITCH)
+        .map((note) => (
+          <span
+            key={note.id}
+            className="piano-note-playing"
+            style={
+              {
+                left: note.start * noteWidth + 1,
+                top: (MAX_PITCH - note.pitch) * ROW_HEIGHT + 1,
+                width: Math.max(6, note.length * noteWidth - 2),
+                height: ROW_HEIGHT - 2,
+                "--lit-color": channel.color
+              } as React.CSSProperties
+            }
+            aria-hidden="true"
+          />
+        ))}
+    </>
   );
 }
 
