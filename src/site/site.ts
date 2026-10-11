@@ -59,29 +59,6 @@ window.matchMedia("(min-width: 901px)").addEventListener("change", (query) => {
   if (query.matches) setMenu(false);
 });
 
-/* ── fade-in ── */
-
-const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-const revealed = document.querySelectorAll<HTMLElement>(".reveal");
-
-if (reduceMotion || !("IntersectionObserver" in window)) {
-  for (const element of revealed) element.classList.add("visible");
-} else {
-  document.documentElement.classList.add("js-reveal");
-  const observer = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        if (!entry.isIntersecting) continue;
-        entry.target.classList.add("visible");
-        observer.unobserve(entry.target);
-      }
-    },
-    { rootMargin: "0px 0px -6% 0px" }
-  );
-
-  for (const element of revealed) observer.observe(element);
-}
-
 /* ── download details ── */
 
 // A build made before the installer exists has no date or checksum; leave

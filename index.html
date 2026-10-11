@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark" />
     <meta name="theme-color" content="#0d0c14" />
-    <title>PulseGrid Studio — free music production for Windows, Mac and the web</title>
+    <title>PulseGrid Studio: free and open-source music production for Windows, Mac and the web</title>
     <meta
       name="description"
-      content="PulseGrid Studio is a free music studio: step sequencer, piano roll, playlist and mixer, 150 instruments, 14 effects, MIDI keyboard support, MIDI out and optional cloud sync between your computers. Download for Windows or Mac, or open it in your browser."
+      content="PulseGrid Studio is a free and open-source music studio: step sequencer, piano roll, playlist and mixer, 150 instruments, 14 effects, MIDI keyboard support, MIDI out and optional cloud sync between your computers. Download for Windows or Mac, or open it in your browser."
     />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="PulseGrid Studio" />
@@ -32,8 +32,8 @@
     <div class="announce" id="announce" role="region" aria-label="Announcement">
       <span class="announce-badge">1.5</span>
       <p class="announce-text">
-        <strong>PulseGrid Studio 1.5 is here.</strong>
-        <span>150 instruments, a browser and master monitor in the style of FL Studio, a Settings window and MIDI out.</span>
+        <strong>PulseGrid Studio 1.5 is here, and it's open source.</strong>
+        <span>Drum kits you can build a beat from, a new playlist, 150 instruments, and the source code on GitHub.</span>
       </p>
       <a class="announce-link" href="#whats-new">See what's new</a>
       <button class="announce-close" id="announce-close" type="button" aria-label="Dismiss announcement">
@@ -52,11 +52,15 @@
         <a href="#sounds">Sounds</a>
         <a href="#compare">Desktop &amp; web</a>
         <a href="#whats-new">What's new</a>
+        <a href="#source">Source</a>
         <a href="#download">Download</a>
         <a href="#faq">FAQ</a>
       </nav>
 
       <div class="header-actions">
+        <a class="github-link" href="https://github.com/BerdalYe/pulsegrid-studio" rel="noopener" aria-label="PulseGrid Studio on GitHub" title="Source code on GitHub">
+          <svg class="icon-fill" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z" /></svg>
+        </a>
         <a class="button button-outline studio-link" href="/studio.html">
           <span class="hide-narrow">Open </span>Web Studio
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3h8v8M13 3 3 13" /></svg>
@@ -71,16 +75,11 @@
       <!-- ─────────────────────────────── hero ─────────────────────────────── -->
       <section class="hero">
         <div class="hero-copy">
-          <a class="release-pill" href="#whats-new">
-            <span class="pill-tag">New</span>
-            Version %VITE_APP_VERSION%: 150 instruments and a new browser
-            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3l5 5-5 5" /></svg>
-          </a>
-
-          <h1>Make beats <span class="gradient-text">that hit.</span></h1>
+          <h1>A free and open-source music studio</h1>
           <p class="lead">
-            A complete music studio — step sequencer, piano roll, playlist and mixer — with 150 instruments
-            and 14 effects built in. Free for Windows and Mac, and it runs in your browser too.
+            PulseGrid Studio has a step sequencer, piano roll, playlist and mixer, with 150 instruments and 14
+            effects built in. It runs on Windows, Mac and in your browser, and its source code is on GitHub under
+            the GPL.
           </p>
 
           <div class="hero-actions">
@@ -89,10 +88,14 @@
               Download for Windows or Mac
             </a>
             <a class="button button-ghost" href="/studio.html">Try it in your browser</a>
+            <a class="button button-ghost" href="https://github.com/BerdalYe/pulsegrid-studio" rel="noopener">
+              <svg class="icon-fill" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z" /></svg>
+              Source code
+            </a>
           </div>
 
           <ul class="trust-row" aria-label="At a glance">
-            <li>Free</li>
+            <li>Free and open source (GPL-3.0)</li>
             <li>No account needed</li>
             <li>Works offline</li>
             <li>No ads or tracking</li>
@@ -101,7 +104,7 @@
 
         <figure class="hero-shot">
           <div class="window-frame">
-            <div class="window-bar" aria-hidden="true"><i></i><i></i><i></i><span>Neon Drive — PulseGrid Studio</span></div>
+            <div class="window-bar" aria-hidden="true"><i></i><i></i><i></i><span>Neon Drive · PulseGrid Studio</span></div>
             <img
               src="/site/studio.png"
               alt="PulseGrid Studio playing a song: the instrument browser, the playlist, the channel rack and the master monitor in the top bar"
@@ -124,7 +127,6 @@
       <!-- ─────────────────────────────── tour ─────────────────────────────── -->
       <section class="section" id="tour">
         <header class="section-head">
-          <p class="eyebrow">A look inside</p>
           <h2>Everything you need to finish a track.</h2>
           <p>The workflow producers already know: patterns in the channel rack, melodies in the piano roll, the song in the playlist, and the mix in the mixer.</p>
         </header>
@@ -247,7 +249,7 @@
               <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0" /><path d="M12 7v5l3 2" /></svg>
             </div>
             <h3>Undo everything</h3>
-            <p>Every edit — notes, steps, knobs, clips — can be undone and redone, grouped the way you made it.</p>
+            <p>Every edit (notes, steps, knobs, clips) can be undone and redone, grouped the way you made it.</p>
           </article>
 
           <article class="feature reveal">
@@ -287,7 +289,6 @@
       <!-- ─────────────────────────────── sounds ─────────────────────────────── -->
       <section class="section section-tint" id="sounds">
         <header class="section-head">
-          <p class="eyebrow">Sound library</p>
           <h2>150 instruments. 14 effects. Nothing to download.</h2>
           <p>Recorded instruments and the studio's own synths, sorted by family. Click any of them in the browser to hear it, then drag it onto the channel rack. The recorded instruments come with the Windows and Mac apps; the web studio has the synths, the drum machine and the effects, and can load SoundFont files of your own.</p>
         </header>
@@ -355,7 +356,6 @@
       <!-- ─────────────────────────────── compare ─────────────────────────────── -->
       <section class="section" id="compare">
         <header class="section-head">
-          <p class="eyebrow">Two ways to use it</p>
           <h2>Desktop app or web studio.</h2>
           <p>The same studio either way. Projects move freely between the two as <code>.pulsegrid</code> files, or automatically with cloud sync.</p>
         </header>
@@ -396,10 +396,51 @@
         </div>
       </section>
 
+      <!-- ─────────────────────────────── source ─────────────────────────────── -->
+      <section class="section" id="source">
+        <header class="section-head">
+          <h2>Open source</h2>
+          <p>
+            The source code is on GitHub under the GNU General Public License, version 3. You can read how it works,
+            build it yourself, change it and share your changes, as long as what you share stays open source too.
+          </p>
+        </header>
+
+        <div class="source-grid">
+          <article class="source-card">
+            <h3>Get the code</h3>
+            <pre><code>git clone https://github.com/BerdalYe/pulsegrid-studio.git</code></pre>
+            <p>React, TypeScript and the Web Audio API, with Electron for the Windows and Mac apps.</p>
+          </article>
+          <article class="source-card">
+            <h3>Build it</h3>
+            <pre><code>npm install
+npm run app:dev</code></pre>
+            <p>Needs Node.js 22 or newer. The <a href="https://github.com/BerdalYe/pulsegrid-studio#readme" rel="noopener">README</a> covers the installers and the web studio.</p>
+          </article>
+          <article class="source-card">
+            <h3>Help out</h3>
+            <p>Report a bug, suggest a feature or send a pull request. <a href="https://github.com/BerdalYe/pulsegrid-studio/blob/main/CONTRIBUTING.md" rel="noopener">CONTRIBUTING.md</a> explains how.</p>
+            <p><a href="https://github.com/BerdalYe/pulsegrid-studio/issues" rel="noopener">Open issues</a></p>
+          </article>
+          <article class="source-card">
+            <h3>The licence</h3>
+            <p>Use it for anything, change it, share it. Whoever shares a changed version shares its source code too, under the same licence. Your music is never affected: it's yours.</p>
+            <p><a href="https://github.com/BerdalYe/pulsegrid-studio/blob/main/LICENSE" rel="noopener">Read the GPL-3.0</a></p>
+          </article>
+        </div>
+
+        <p class="source-actions">
+          <a class="button button-ghost" href="https://github.com/BerdalYe/pulsegrid-studio" rel="noopener">
+            <svg class="icon-fill" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z" /></svg>
+            View PulseGrid Studio on GitHub
+          </a>
+        </p>
+      </section>
+
       <!-- ─────────────────────────────── what's new ─────────────────────────────── -->
       <section class="section section-tint" id="whats-new">
         <header class="section-head">
-          <p class="eyebrow">Release notes</p>
           <h2>What's new</h2>
         </header>
 
@@ -410,9 +451,10 @@
               <span class="release-badge">Latest</span>
               <time>%VITE_RELEASE_DATE%</time>
             </header>
-            <p class="release-lead">150 instruments with drum kits you can build a beat from, a new playlist, a browser and master monitor in the style of FL Studio, a Settings window, and MIDI out for the instruments that came with your keyboard.</p>
+            <p class="release-lead">PulseGrid Studio is now open source. Also: 150 instruments with drum kits you can build a beat from, a new playlist, a browser and master monitor in the style of FL Studio, a Settings window, and MIDI out for the instruments that came with your keyboard.</p>
             <ul>
               <li><strong>150 instruments, sorted by family.</strong> Drums, Keys, Mallets &amp; Bells, Guitars, Bass, Strings, Brass &amp; Winds, Voices, Synths, Pads and FX. The desktop apps add recorded instruments: pianos, organs, guitars, basses, a full orchestra, choirs and ten drum kits including an 808/909 kit. They come with the app, work offline, and are saved with your project and included when you export audio.</li>
+              <li><strong>Open source.</strong> The source code is on <a href="https://github.com/BerdalYe/pulsegrid-studio" rel="noopener">GitHub</a> under the GNU GPL, version 3: read it, build it, change it and share your changes. Bug reports and pull requests are welcome.</li>
               <li><strong>Drum kits you can build a beat with.</strong> Each kit has its own folder: the <em>Drum Set</em> adds its kick, snare, clap and hats as separate channels, so you click a beat in on the channel rack the way you do in FL; the <em>Full Kit</em> puts every drum on one channel, with each key of the piano roll named after its drum (on the computer keyboard, Z is the kick); and each drum is there on its own too. A kit's panel has 16 pads to hear it, or to change which drum a channel plays, and a list of kits to swap to.</li>
               <li><strong>A new playlist.</strong> Tools like FL's (draw, delete and mute, so a clip can be silenced without removing it), a strip showing the whole song that you click or drag to move around, a ruler you drag to move the playhead, a zoom readout and a button that fits the whole song in the window. Tracks have a mute light, solo and a menu (colour, height, move, clear, delete; or right-click the track). Drag a pattern from the list onto a lane to place it, and double-click a clip to open its pattern.</li>
               <li><strong>A piano roll that shows what's playing.</strong> Keys light up as their notes play, and as you play them on the computer keyboard or a MIDI keyboard; the notes under the playhead glow; the key of the row under your mouse is marked. Click and hold a key to hear it, and slide along the keys to play them in turn.</li>
@@ -571,7 +613,7 @@
               <h3>Version 0.4.3</h3>
             </header>
             <ul>
-              <li><strong>A steady top bar.</strong> Long hints — like the one on the record button — no longer stretch the hint bar and push the toolbars sideways; they're trimmed to fit instead.</li>
+              <li><strong>A steady top bar.</strong> Long hints, like the one on the record button, no longer stretch the hint bar and push the toolbars sideways; they're trimmed to fit instead.</li>
               <li><strong>Tidier channel rack.</strong> Every row lines up, whether its piano roll button reads "Piano" or "Piano (12)".</li>
               <li>Icons and letters on the small buttons (M, S, window controls, track and mixer buttons) are centered, and the tempo readout sits in the middle of its panel.</li>
             </ul>
@@ -582,7 +624,7 @@
               <h3>Version 0.4.2</h3>
             </header>
             <ul>
-              <li><strong>See your song at a glance.</strong> Pattern clips on the playlist now show what's in them — drum hits in rows and notes by pitch, repeated across the clip — and audio clips show their waveform.</li>
+              <li><strong>See your song at a glance.</strong> Pattern clips on the playlist now show what's in them (drum hits in rows and notes by pitch, repeated across the clip), and audio clips show their waveform.</li>
               <li><strong>Opens full screen.</strong> The studio starts with the playlist filling the window and the channel rack floating over it. Floating windows always stay in front of a maximized one.</li>
               <li>Taller playlist lanes by default, and a calmer track list: move, clear and delete show up when you point at a lane.</li>
               <li>The version number is shown in the top bar and the window title, and the hint bar is tidier.</li>
@@ -649,12 +691,12 @@
             </a>
 
             <p class="or-line">
-              Using something else? <a href="/studio.html">Open the web studio</a> — nothing to install.
+              Using something else? The <a href="/studio.html">web studio</a> needs no install.
             </p>
 
             <p class="agree-line">
               By downloading you agree to the <a href="/legal.html#agreement">user agreement</a>. It's short, and
-              it says what you'd hope: PulseGrid is free, and the music you make is yours.
+              it says what you'd hope: PulseGrid is free and open source, and the music you make is yours.
             </p>
           </div>
 
@@ -669,7 +711,7 @@
                 </li>
                 <li>
                   <strong>If Smart App Control blocks it</strong>, Windows won't offer a way to run it until the app is
-                  code-signed. Use the <a href="/studio.html">web studio</a> in the meantime — it's the same studio.
+                  code-signed. Use the <a href="/studio.html">web studio</a> in the meantime; it's the same studio.
                 </li>
                 <li><strong>Accept the user agreement</strong> the first time the studio opens.</li>
                 <li>
@@ -723,7 +765,6 @@
       <!-- ─────────────────────────────── faq ─────────────────────────────── -->
       <section class="section section-tint" id="faq">
         <header class="section-head">
-          <p class="eyebrow">Questions</p>
           <h2>Frequently asked</h2>
         </header>
 
@@ -731,6 +772,15 @@
           <details>
             <summary>Is PulseGrid Studio really free?</summary>
             <p>Yes. The desktop app and the web studio are free, with no subscription, ads or in-app purchases, and you never need an account. An account is only for the optional cloud sync.</p>
+          </details>
+          <details>
+            <summary>Is it open source?</summary>
+            <p>
+              Yes. The source code is on <a href="https://github.com/BerdalYe/pulsegrid-studio" rel="noopener">GitHub</a> under the GNU General Public
+              License, version 3. You can build the app yourself, change it and share your version, as long as you
+              share its source code under the same licence. The licence covers the app, not your music: what you make
+              with it is yours.
+            </p>
           </details>
           <details>
             <summary>Who owns the music I make?</summary>
@@ -743,7 +793,7 @@
           <details>
             <summary>Where are my projects saved?</summary>
             <p>
-              In the desktop app, in <em>Documents\PulseGrid Studio</em> by default — change it under
+              In the desktop app, in <em>Documents\PulseGrid Studio</em> by default. Change it under
               <em>File → Change save folder…</em>. In the web studio, in your browser's own storage on your device;
               use <em>File → Download project</em> to keep a copy as a file. With a free account you can also keep
               the projects you choose in the cloud and open them on any of your computers. To delete a project, use
@@ -806,7 +856,7 @@
               The installer isn't code-signed yet, so Windows doesn't recognise the publisher. SmartScreen shows a
               warning you can pass: check that the SHA-256 checksum above matches your download, then choose
               <em>More info → Run anyway</em>. On Windows 11 PCs with <em>Smart App Control</em> turned on, unsigned
-              apps are blocked with no way to run them — use the <a href="/studio.html">web studio</a> there until
+              apps are blocked with no way to run them. Use the <a href="/studio.html">web studio</a> there until
               a signed release is available.
             </p>
           </details>
@@ -860,7 +910,7 @@
           <img src="/icon.png" alt="" width="28" height="28" />
           <span>PulseGrid <strong>Studio</strong></span>
         </a>
-        <p>Free music production for Windows, Mac and the web.</p>
+        <p>Free and open-source music production for Windows, Mac and the web.</p>
       </div>
 
       <nav class="footer-columns" aria-label="Footer">
@@ -870,6 +920,7 @@
           <a href="/studio.html">Web studio</a>
           <a href="#tour">Tour</a>
           <a href="#whats-new">What's new</a>
+          <a href="https://github.com/BerdalYe/pulsegrid-studio" rel="noopener">Source code</a>
         </div>
         <div>
           <h3>Help</h3>
@@ -877,17 +928,19 @@
           <a href="#download">System requirements</a>
           <a href="#download">Verify your download</a>
           <a href="https://github.com/BerdalYe/pulsegrid-studio/issues/new" rel="noopener">Report a problem</a>
+          <a href="https://github.com/BerdalYe/pulsegrid-studio/blob/main/CONTRIBUTING.md" rel="noopener">Contribute</a>
         </div>
         <div>
           <h3>Legal</h3>
           <a href="/legal.html#agreement">User agreement</a>
           <a href="/legal.html#privacy">Privacy</a>
           <a href="/legal.html#credits">Credits</a>
+          <a href="https://github.com/BerdalYe/pulsegrid-studio/blob/main/LICENSE" rel="noopener">Licence (GPL-3.0)</a>
         </div>
       </nav>
 
       <div class="footer-bottom">
-        <span>© <span data-year></span> PulseGrid Studio</span>
+        <span>© <span data-year></span> PulseGrid Studio contributors · free software under the GPL-3.0</span>
         <span>Version %VITE_APP_VERSION%</span>
       </div>
     </footer>

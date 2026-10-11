@@ -31,7 +31,7 @@ import { GuidedTour } from "./components/GuidedTour";
 import { CloudToast } from "./components/CloudToast";
 import { IconClose, IconMaximise, IconMinimise, IconRestore } from "./components/icons";
 import { ShortcutsDialog } from "./components/ShortcutsDialog";
-import { SynthEditor, useSynthEditor } from "./components/SynthEditor";
+import { SynthEditor, useEditorStacking, useSynthEditor } from "./components/SynthEditor";
 import { SoundFontEditor } from "./components/SoundFontEditor";
 import { MenuPanel, prepareItems, type MenuItem } from "./components/MenuPanel";
 import { isFullKit } from "./lib/drumKits";
@@ -41,7 +41,7 @@ import { MidiOutEditor } from "./components/MidiOutEditor";
 import { matchShortcut, platformText, shortcutLabel, type ShortcutId } from "./lib/hotkeys";
 import { PIANO_KEYS } from "./lib/pianoKeys";
 import { markTourSeen, tourSeen } from "./lib/tour";
-import { reportProblemUrl } from "./lib/reportProblem";
+import { REPO_URL, reportProblemUrl } from "./lib/reportProblem";
 import { readAcceptance, type AgreementAcceptance } from "./agreement";
 import { initDefaultSamples } from "./audio/sampleRegistry";
 import { availableInstruments, type InstrumentMenuEntry } from "./presets/presets";
@@ -456,6 +456,8 @@ function Studio() {
           const editor = useSynthEditor.getState();
           if (channel?.type !== "synth") {
             announce("Select a synth channel first, then press F8 to open its sound editor.");
+          } else if (editor.channelId === channel.id && editor.behind) {
+            editor.setBehind(false);
           } else if (editor.channelId === channel.id) {
             editor.close();
           } else {
@@ -536,6 +538,7 @@ function Studio() {
   }, [redo, runFileAction, toggleWindow, undo]);
 
   useComputerKeyboard();
+  useEditorStacking();
 
   /* ─────────────────────────────── menus ─────────────────────────────── */
 
@@ -716,6 +719,7 @@ function Studio() {
             "noopener"
           )
       },
+      { label: "Source code on GitHub", run: () => window.open(REPO_URL, "_blank", "noopener") },
       { label: "User agreement…", run: () => setAgreementOpen(true) },
       { label: `Keyboard shortcuts…   ${shortcutLabel("showShortcuts")}`, run: () => setShortcutsOpen(true) }
     ]
@@ -1053,11 +1057,10 @@ function StudioWindow({ id, title, onFocus, onClose, onStatus, children }: Studi
         top: layout.maximized ? 0 : layout.y,
         width: layout.maximized ? "100%" : layout.width,
         height: layout.minimized ? 26 : layout.maximized ? "100%" : layout.height,
-        // A maximized window is the backdrop: floating windows always stay in
-        // front of it, so clicking the full-screen playlist can't bury the rack.
-        zIndex: layout.maximized ? layout.z : layout.z + 10
+        // The window clicked last is in front, maximized or not, as in FL.
+        zIndex: layout.z + 10
       }}
-      onPointerDown={onFocus}
+      onPointerDownCapture={onFocus}
     >
       <div
         className="window-titlebar"

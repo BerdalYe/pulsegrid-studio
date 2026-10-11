@@ -44,15 +44,39 @@ import { Knob } from "./controls";
 /** Which synth channel's sound is being edited, if any. */
 interface SynthEditorState {
   channelId: string | null;
+  /** True once a window has been clicked since: the panel then sits behind the windows, like any other. */
+  behind: boolean;
   open: (channelId: string) => void;
   close: () => void;
+  setBehind: (behind: boolean) => void;
 }
 
 export const useSynthEditor = create<SynthEditorState>()((set) => ({
   channelId: null,
-  open: (channelId) => set({ channelId }),
-  close: () => set({ channelId: null })
+  behind: false,
+  open: (channelId) => set({ channelId, behind: false }),
+  close: () => set({ channelId: null, behind: false }),
+  setBehind: (behind) => set((state) => (state.behind === behind ? state : { behind }))
 }));
+
+/**
+ * Whichever was clicked last is in front: the sound panel or a window. A click in a window sends the panel behind
+ * the windows; a click on the panel brings it back. Clicks elsewhere (the menus, the transport) leave it be.
+ */
+export function useEditorStacking(): void {
+  useEffect(() => {
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target instanceof Element ? event.target : null;
+      if (!target) return;
+      const editor = useSynthEditor.getState();
+      if (!editor.channelId) return;
+      if (target.closest(".synth-editor")) editor.setBehind(false);
+      else if (target.closest(".window-area")) editor.setBehind(true);
+    };
+    window.addEventListener("pointerdown", onPointerDown, true);
+    return () => window.removeEventListener("pointerdown", onPointerDown, true);
+  }, []);
+}
 
 /* ─────────────────────────────── helpers ─────────────────────────────── */
 
@@ -484,6 +508,7 @@ interface Gesture {
 
 export function SynthEditor() {
   const channelId = useSynthEditor((state) => state.channelId);
+  const behind = useSynthEditor((state) => state.behind);
   const close = useSynthEditor((state) => state.close);
   const channel = useProjectStore((state) => state.channels.find((entry) => entry.id === channelId));
   const updatePatch = useProjectStore((state) => state.updateChannelSynthPatch);
@@ -647,7 +672,7 @@ export function SynthEditor() {
   return (
     <ModContext.Provider value={modApi}>
       <div
-        className={`synth-editor${armed || dragging ? " modding" : ""}`}
+        className={`synth-editor${armed || dragging ? " modding" : ""}${behind ? " behind" : ""}`}
         role="dialog"
         aria-label={`Sound editor for ${channel.name}`}
         style={{ transform: `translate(${offset.x}px, ${offset.y}px)` }}

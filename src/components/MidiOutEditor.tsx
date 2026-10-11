@@ -20,6 +20,7 @@ export function looksLikeCable(name: string): boolean {
  */
 export function MidiOutEditor() {
   const channelId = useSynthEditor((state) => state.channelId);
+  const behind = useSynthEditor((state) => state.behind);
   const close = useSynthEditor((state) => state.close);
   const channel = useProjectStore((state) => state.channels.find((entry) => entry.id === channelId));
   const update = useProjectStore((state) => state.updateChannelMidiOut);
@@ -84,7 +85,7 @@ export function MidiOutEditor() {
 
   return (
     <div
-      className="synth-editor midiout-editor"
+      className={`synth-editor midiout-editor${behind ? " behind" : ""}`}
       role="dialog"
       aria-label={`MIDI out for ${channel.name}`}
       style={{ transform: `translate(${offset.x}px, ${offset.y}px)` }}

@@ -1,5 +1,5 @@
 import { platformText } from "../lib/hotkeys";
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 import { useProjectStore } from "../state/projectStore";
@@ -115,6 +115,9 @@ export function Playlist() {
   const [sampleId, setSampleId] = useState("");
   const [selectedClipId, setSelectedClipId] = useState<string | null>(null);
   const [zoomIndex, setZoomIndex] = useState(DEFAULT_ZOOM);
+  // A size between the levels, from dragging the overview's edges (or Fit); the wheel and buttons go back to levels.
+  const [freePx, setFreePx] = useState<number | null>(null);
+  const pendingScroll = useRef<number | null>(null);
 
   const dragRef = useRef<ClipDrag | null>(null);
   const laneRef = useRef<HTMLDivElement | null>(null);
@@ -136,11 +139,36 @@ export function Playlist() {
     containerRef: laneRef,
     levels: ZOOM_LEVELS,
     index: zoomIndex,
-    setIndex: setZoomIndex,
-    gutter: HEADER_WIDTH
+    setIndex: (next) => {
+      setFreePx(null);
+      setZoomIndex(next);
+    },
+    gutter: HEADER_WIDTH,
+    pxNow: freePx ?? undefined
   });
 
-  const pxPerStep = ZOOM_LEVELS[zoomIndex];
+  const pxPerStep = freePx ?? ZOOM_LEVELS[zoomIndex];
+
+  // Any size, from the overview's edges or Fit, with the view starting at `startStep`. The level nearest to it is
+  // where the wheel and the zoom buttons carry on from.
+  const zoomFree = useCallback((px: number, startStep: number) => {
+    const size = clamp(px, ZOOM_LEVELS[0], ZOOM_LEVELS[ZOOM_LEVELS.length - 1]);
+    let nearest = 0;
+    ZOOM_LEVELS.forEach((level, index) => {
+      if (Math.abs(Math.log(level / size)) < Math.abs(Math.log(ZOOM_LEVELS[nearest] / size))) nearest = index;
+    });
+    pendingScroll.current = Math.max(0, startStep * size);
+    setFreePx(size);
+    setZoomIndex(nearest);
+  }, []);
+
+  // Once the lanes have their new width, scroll to where the overview asked for.
+  useLayoutEffect(() => {
+    const element = laneRef.current;
+    if (!element || pendingScroll.current === null) return;
+    element.scrollLeft = pendingScroll.current;
+    pendingScroll.current = null;
+  }, [pxPerStep]);
   const totalSteps = Math.max(songBars * STEPS_PER_BAR, contentEnd(clips, markers));
   const barsToFill = Math.ceil(Math.max(0, viewWidth - HEADER_WIDTH) / (STEPS_PER_BAR * pxPerStep));
   const totalBars = Math.max(Math.ceil(totalSteps / STEPS_PER_BAR), barsToFill);
@@ -367,10 +395,7 @@ export function Playlist() {
     if (!element) return;
     const end = Math.max(songBars * STEPS_PER_BAR, contentEnd(clips, markers));
     const room = element.clientWidth - HEADER_WIDTH - 12;
-    let best = 0;
-    for (let index = 0; index < ZOOM_LEVELS.length; index += 1) if (ZOOM_LEVELS[index] * end <= room) best = index;
-    setZoomIndex(best);
-    element.scrollLeft = 0;
+    zoomFree(room / end, 0);
   };
 
   /* ────────────────────────────── keyboard ────────────────────────────── */
@@ -586,7 +611,10 @@ export function Playlist() {
           <button
             type="button"
             className="pl-zoom-readout"
-            onClick={() => zoom.zoomTo(DEFAULT_ZOOM)}
+            onClick={() => {
+              setFreePx(null);
+              zoom.zoomTo(DEFAULT_ZOOM);
+            }}
             title="Zoom: click for the normal size"
           >
             {Math.round((pxPerStep / ZOOM_LEVELS[DEFAULT_ZOOM]) * 100)}%
@@ -648,8 +676,9 @@ export function Playlist() {
           scrollRef={laneRef}
           clips={clips}
           tracks={tracks}
-          steps={totalBars * STEPS_PER_BAR}
+          steps={totalSteps}
           pxPerStep={pxPerStep}
+          onZoom={zoomFree}
         />
         <div
           className={`playlist-scroll tool-${editTool}`}
@@ -1205,13 +1234,17 @@ function PlaylistOverview({
   clips,
   tracks,
   steps,
-  pxPerStep
+  pxPerStep,
+  onZoom
 }: {
   scrollRef: React.RefObject<HTMLDivElement | null>;
   clips: PlaylistClip[];
   tracks: Array<{ color: string; mute: boolean }>;
+  /** How long the song is: the strip shows this much, however far the view is zoomed out. */
   steps: number;
   pxPerStep: number;
+  /** Dragging an edge of the box: this many pixels per step, with the view starting at this step. */
+  onZoom: (px: number, startStep: number) => void;
 }) {
   const [view, setView] = useState({ start: 0, span: 0 });
   const playheadStep = useTransportStore((state) => state.playheadStep);
@@ -1246,11 +1279,46 @@ function PlaylistOverview({
     element.scrollLeft = Math.max(0, step * pxPerStep);
   };
 
+  // Dragging either edge of the box resizes it, which zooms: the other edge stays where it is, as in FL.
+  const resize = (side: "left" | "right") => (event: React.PointerEvent) => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const element = scrollRef.current;
+    const box = strip.current?.getBoundingClientRect();
+    if (!element || !box || box.width <= 0) return;
+
+    const room = Math.max(1, element.clientWidth - HEADER_WIDTH);
+    const fixedStart = view.start;
+    const fixedEnd = view.start + Math.min(view.span, total - view.start);
+    const stepAt = (clientX: number) => Math.max(0, Math.min(total, ((clientX - box.left) / box.width) * total));
+
+    const onMove = (move: PointerEvent) => {
+      if (side === "right") {
+        const end = Math.max(fixedStart + 1, stepAt(move.clientX));
+        onZoom(room / (end - fixedStart), fixedStart);
+      } else {
+        const start = Math.min(fixedEnd - 1, stepAt(move.clientX));
+        onZoom(room / (fixedEnd - start), start);
+      }
+    };
+    const onUp = () => {
+      document.body.style.cursor = "";
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+    document.body.style.cursor = "ew-resize";
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+  };
+
   return (
     <div
       ref={strip}
       className="playlist-overview"
-      title="The whole song: click or drag to scroll there"
+      title="The whole song: click or drag to scroll there, drag the box's edges to zoom"
       onPointerDown={(event) => {
         if (event.button !== 0) return;
         event.preventDefault();
@@ -1285,7 +1353,10 @@ function PlaylistOverview({
         />
       ))}
       <span className="overview-playhead" style={{ left: percent(head) }} />
-      <span className="overview-view" style={{ left: percent(view.start), width: percent(view.span) }} />
+      <span className="overview-view" style={{ left: percent(view.start), width: percent(Math.min(view.span, total - view.start)) }}>
+        <span className="overview-handle left" onPointerDown={resize("left")} title="Drag to zoom" />
+        <span className="overview-handle right" onPointerDown={resize("right")} title="Drag to zoom" />
+      </span>
     </div>
   );
 }

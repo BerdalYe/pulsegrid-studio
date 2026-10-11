@@ -56,6 +56,7 @@ const KITS: Array<{ name: string; program: number; mapped: boolean }> = [
 export function SoundFontEditor() {
   const channelId = useSynthEditor((state) => state.channelId);
   const close = useSynthEditor((state) => state.close);
+  const behind = useSynthEditor((state) => state.behind);
   const channel = useProjectStore((state) => state.channels.find((entry) => entry.id === channelId));
   const update = useProjectStore((state) => state.updateChannelSoundFont);
   const renameChannel = useProjectStore((state) => state.updateChannelName);
@@ -220,7 +221,7 @@ export function SoundFontEditor() {
 
   return (
     <div
-      className="synth-editor sf-editor"
+      className={`synth-editor sf-editor${behind ? " behind" : ""}`}
       role="dialog"
       aria-label={`Instrument for ${channel.name}`}
       style={{ transform: `translate(${offset.x}px, ${offset.y}px)` }}

@@ -23,6 +23,8 @@ interface WheelZoomOptions {
   gutter: number;
   /** False while the area isn't on screen yet. */
   active?: boolean;
+  /** The size actually in use, when it is between two levels (set by dragging the overview's edges). */
+  pxNow?: number;
 }
 
 /**
@@ -36,12 +38,13 @@ export function useWheelZoom({
   index,
   setIndex,
   gutter,
-  active = true
+  active = true,
+  pxNow
 }: WheelZoomOptions): { zoomBy: (steps: number) => void; zoomTo: (level: number) => void } {
   // The wheel handler lives as long as the element does, so it reads the
   // current values from here rather than from the render it was made in.
-  const live = useRef({ index, levels, gutter, setIndex });
-  live.current = { index, levels, gutter, setIndex };
+  const live = useRef({ index, levels, gutter, setIndex, pxNow });
+  live.current = { index, levels, gutter, setIndex, pxNow };
 
   const carried = useRef(0);
   /** When the last touchpad movement came, so the rest of the same gesture is read as a touchpad too. */
@@ -52,7 +55,7 @@ export function useWheelZoom({
 
   const zoomTo = useCallback(
     (next: number, pointerX: number | null) => {
-      const { index: current, levels: table, gutter: strip, setIndex: change } = live.current;
+      const { index: current, levels: table, gutter: strip, setIndex: change, pxNow: now } = live.current;
       const target = clampIndex(next, table.length);
       if (target === current) return;
 
@@ -60,7 +63,7 @@ export function useWheelZoom({
       if (element) {
         const x = pointerX ?? strip + (element.clientWidth - strip) / 2;
         anchor.current = {
-          unit: unitUnderPointer(element.scrollLeft, x, strip, table[current]),
+          unit: unitUnderPointer(element.scrollLeft, x, strip, now ?? table[current]),
           pointerX: x
         };
       }

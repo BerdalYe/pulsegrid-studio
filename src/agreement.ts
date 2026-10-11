@@ -5,7 +5,7 @@
  * Bump AGREEMENT_VERSION whenever the wording changes: everyone who accepted
  * an older version is asked again.
  */
-export const AGREEMENT_VERSION = 2;
+export const AGREEMENT_VERSION = 3;
 
 export type AgreementLanguage = "en" | "no";
 
@@ -34,7 +34,7 @@ export const agreementCopy: Record<AgreementLanguage, AgreementCopy> = {
     languageName: "Norsk",
     title: "Brukeravtale",
     parties: "PulseGrid Studio",
-    intro: "PulseGrid Studio er gratis å bruke. Disse korte vilkårene forklarer hva det betyr. Les dem før du begynner.",
+    intro: "PulseGrid Studio er gratis og har åpen kildekode. Disse korte vilkårene forklarer hva det betyr. Les dem før du begynner.",
     sections: [
       {
         heading: "Gratis å bruke",
@@ -46,11 +46,11 @@ export const agreementCopy: Record<AgreementLanguage, AgreementCopy> = {
       },
       {
         heading: "Innebygde lyder",
-        text: "De innebygde instrumentene, trommelydene og samplene er laget av PulseGrid Studio selv og kan brukes fritt i musikken din, også kommersielt. Samples du importerer selv, følger sine egne lisenser."
+        text: "Studioets egne synther, trommemaskin og effektlyder er laget av PulseGrid Studio, og de innspilte instrumentene kommer fra GeneralUser GS av S. Christian Collins. Alle kan brukes fritt i musikken din, også kommersielt. Samples du importerer selv, følger sine egne lisenser."
       },
       {
-        heading: "Selve programmet",
-        text: "PulseGrid Studio tilhører skaperen sin. Del gjerne lenken til den offisielle nedlastingen, men ikke selg programmet eller del endrede kopier av det."
+        heading: "Åpen kildekode",
+        text: "PulseGrid Studio er fri programvare med åpen kildekode under GNU General Public License, versjon 3 (GPL-3.0). Du kan bruke, studere, endre og dele programmet, også endrede kopier, så lenge det du deler har samme lisens og kildekoden følger med eller er tilgjengelig. Hele lisensen ligger sammen med kildekoden på GitHub."
       },
       {
         heading: "Ingen garanti",
@@ -67,7 +67,7 @@ export const agreementCopy: Record<AgreementLanguage, AgreementCopy> = {
     languageName: "English",
     title: "User Agreement",
     parties: "PulseGrid Studio",
-    intro: "PulseGrid Studio is free to use. These short terms explain what that means. Please read them before you start.",
+    intro: "PulseGrid Studio is free and open source. These short terms explain what that means. Please read them before you start.",
     sections: [
       {
         heading: "Free to use",
@@ -79,11 +79,11 @@ export const agreementCopy: Record<AgreementLanguage, AgreementCopy> = {
       },
       {
         heading: "Built-in sounds",
-        text: "The built-in instruments, drum sounds and samples are made by PulseGrid Studio itself and are free to use in your music, commercially too. Samples you import yourself stay under their own licences."
+        text: "The studio's own synths, drum machine and FX are made by PulseGrid Studio, and the recorded instruments come from GeneralUser GS by S. Christian Collins. All of them are free to use in your music, commercially too. Samples you import yourself stay under their own licences."
       },
       {
-        heading: "The app itself",
-        text: "PulseGrid Studio belongs to its creator. You're welcome to share the link to the official download, but please don't sell the app or share modified copies of it."
+        heading: "Open source",
+        text: "PulseGrid Studio is free and open-source software under the GNU General Public License, version 3 (GPL-3.0). You may use, study, change and share it, changed copies included, as long as what you share keeps the same licence and comes with its source code or a way to get it. The full licence is with the source code on GitHub."
       },
       {
         heading: "No warranty",

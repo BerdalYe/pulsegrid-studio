@@ -11,6 +11,7 @@ import { SITE_URL } from "../sync/config";
 import { UI_SCALE_RANGE, useAppSettings, type LatencyChoice } from "../state/appSettings";
 import { useSessionStore } from "../state/sessionStore";
 import { useConfirm } from "./ConfirmDialog";
+import { REPO_URL } from "../lib/reportProblem";
 
 type PageId = "general" | "interface" | "audio" | "midi" | "files" | "about";
 
@@ -397,13 +398,18 @@ function AboutPage({ onShowShortcuts }: { onShowShortcuts: () => void }) {
 
   return (
     <>
-      <Row label="PulseGrid Studio" hint="Free music production for Windows, Mac and the web.">
+      <Row label="PulseGrid Studio" hint="Free and open-source music production for Windows, Mac and the web.">
         <span className="settings-note">Version {__APP_VERSION__}</span>
       </Row>
       <Row label="Keyboard shortcuts" hint="Every key, in one list.">
         <button type="button" onClick={onShowShortcuts}>
           Show shortcuts
         </button>
+      </Row>
+      <Row label="Source code" hint="Open source under the GNU GPL, version 3: read it, change it, build it yourself, or help out.">
+        <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
+          Open on GitHub
+        </a>
       </Row>
       <Row label="Credits and terms">
         <a href={`${SITE_URL}/legal.html`} target="_blank" rel="noopener noreferrer">

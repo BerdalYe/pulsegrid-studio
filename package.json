@@ -35,8 +35,15 @@
     "vitest": "^2.1.9",
     "zustand": "^4.5.2"
   },
-  "description": "PulseGrid Studio - a pattern-based music workstation.",
+  "description": "PulseGrid Studio - a free and open-source music studio: channel rack, piano roll, playlist and mixer.",
   "author": "PulseGrid",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://pulsegridstudio.netlify.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BerdalYe/pulsegrid-studio.git"
+  },
+  "bugs": "https://github.com/BerdalYe/pulsegrid-studio/issues",
   "main": "electron/main.cjs",
   "pulsegrid": {
     "updateUrl": "https://pulsegridstudio.netlify.app/downloads/",

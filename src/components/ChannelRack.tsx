@@ -483,8 +483,11 @@ const ChannelRow = memo(function ChannelRow({
               aria-pressed={editingSound}
               onClick={() => {
                 selectChannel(channel.id);
-                if (editingSound) useSynthEditor.getState().close();
-                else useSynthEditor.getState().open(channel.id);
+                const editor = useSynthEditor.getState();
+                // Open but behind a window: bring it to the front rather than close it.
+                if (editingSound && editor.behind) editor.setBehind(false);
+                else if (editingSound) editor.close();
+                else editor.open(channel.id);
               }}
               title={`Open ${channel.midiOut ? "the MIDI out settings" : channel.soundfont ? "the instrument picker" : channel.synthPatch?.wt ? "the Wavetable Synth" : "the sound editor"} for this channel (F8)`}
             >

@@ -5817,3 +5817,36 @@ svg.ui-icon .ghost {
 .pattern-picker-item[draggable="true"] {
   cursor: grab;
 }
+
+/* A sound panel behind the windows, after a window was clicked: it comes back when clicked or reopened. */
+.synth-editor.behind {
+  z-index: 0;
+}
+
+/* The overview box's edges: drag one to zoom, keeping the other where it is. */
+.overview-handle {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  width: 7px;
+  cursor: ew-resize;
+}
+
+.overview-handle.left {
+  left: -1px;
+  border-left: 2px solid transparent;
+}
+
+.overview-handle.right {
+  right: -1px;
+  border-right: 2px solid transparent;
+}
+
+.overview-handle:hover,
+.overview-handle:active {
+  border-color: var(--accent-2);
+}
+
+.overview-view {
+  min-width: 14px;
+}

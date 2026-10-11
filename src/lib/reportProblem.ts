@@ -4,7 +4,9 @@
  * nothing about the project — and the user sees and edits all of it before
  * anything is sent.
  */
-export const ISSUES_URL = "https://github.com/BerdalYe/pulsegrid-studio/issues/new";
+/** Where the source code lives: PulseGrid Studio is open source (GPL-3.0). */
+export const REPO_URL = "https://github.com/BerdalYe/pulsegrid-studio";
+export const ISSUES_URL = `${REPO_URL}/issues/new`;
 
 /** A plain browser name from a user-agent string, or null when unsure. */
 export function browserName(userAgent: string): string | null {
