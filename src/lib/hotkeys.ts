@@ -43,6 +43,7 @@ export type ShortcutId =
   | "windowSynth"
   | "toggleBrowser"
   | "showShortcuts"
+  | "openSettings"
   | "nextPattern"
   | "previousPattern"
   | "newPattern"
@@ -128,6 +129,7 @@ export const SHORTCUTS: Shortcut[] = [
   s("windowSynth", "Windows", "Synth sound editor (selected channel)", ["F8"], { code: "F8" }),
   s("toggleBrowser", "Windows", "Show or hide the browser panel", ["Ctrl+B"], { code: "KeyB", ctrl: true }),
   s("showShortcuts", "Windows", "Keyboard shortcuts", ["F1"], { code: "F1" }),
+  s("openSettings", "Windows", "Settings", ["F10"], { code: "F10" }),
 
   // ── patterns and channels ──
   s("nextPattern", "Patterns and channels", "Next pattern", ["Alt+Page Down"], { code: "PageDown", alt: true }),

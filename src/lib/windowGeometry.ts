@@ -42,9 +42,30 @@ export function clampRect(rect: Rect, area: Size, min: Size = MIN_WINDOW): Rect 
   };
 }
 
-/** A window dragged by its title bar, kept inside the area and drawn to the area's edges when it comes close. */
+/**
+ * Where a window may be placed: no bigger than the area, and free to sit partly out of view, but with a strip
+ * of it always showing (and its title bar never above the area) so it can be grabbed again.
+ */
+export function looseRect(rect: Rect, area: Size, min: Size = MIN_WINDOW, keep = 150, bar = 26): Rect {
+  if (area.width <= 0 || area.height <= 0) return rect;
+  const least = minimum(area, min);
+  const width = Math.round(between(rect.width, least.width, area.width));
+  const height = Math.round(between(rect.height, least.height, area.height));
+  const showing = Math.min(keep, width);
+  return {
+    width,
+    height,
+    x: Math.round(between(rect.x, showing - width, area.width - showing)),
+    y: Math.round(between(rect.y, 0, area.height - Math.min(bar, height)))
+  };
+}
+
+/**
+ * A window dragged by its title bar. It can be carried partly out of view and left there, and it draws to the
+ * edges of the area (and to flush against the far edges) when it comes close.
+ */
 export function moveRect(start: Rect, dx: number, dy: number, area: Size, snap = 10): Rect {
-  const moved = clampRect({ ...start, x: start.x + dx, y: start.y + dy }, area);
+  const moved = looseRect({ ...start, x: start.x + dx, y: start.y + dy }, area);
   if (area.width <= 0 || area.height <= 0 || snap <= 0) return moved;
 
   const pull = (position: number, size: number, extent: number) => {
@@ -95,10 +116,10 @@ export function resizeRect(start: Rect, edge: Edge, dx: number, dy: number, area
 
 /** A window carried along when the area changes size: the same share of it, then made to fit. */
 export function scaleRect(rect: Rect, from: Size, to: Size, min: Size = MIN_WINDOW): Rect {
-  if (from.width <= 0 || from.height <= 0 || to.width <= 0 || to.height <= 0) return clampRect(rect, to, min);
+  if (from.width <= 0 || from.height <= 0 || to.width <= 0 || to.height <= 0) return looseRect(rect, to, min);
   const fx = to.width / from.width;
   const fy = to.height / from.height;
-  return clampRect(
+  return looseRect(
     { x: rect.x * fx, y: rect.y * fy, width: rect.width * fx, height: rect.height * fy },
     to,
     min

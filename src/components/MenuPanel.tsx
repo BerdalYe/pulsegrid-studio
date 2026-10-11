@@ -215,14 +215,33 @@ function MenuLeaveCatcher({ children, onLeave, focusRow }: { children: ReactNode
 export function MenuPanel({
   items,
   left,
+  top,
   onClose,
-  onSwitch
+  onSwitch,
+  anchor
 }: {
   items: MenuItem[];
   left: number;
+  /** Where the menu hangs from; the menu bar's own height by default. */
+  top?: number;
   onClose: () => void;
-  onSwitch: (direction: -1 | 1) => void;
+  /** Only for a menu in a bar: ← and → move to the next menu. */
+  onSwitch?: (direction: -1 | 1) => void;
+  /** The button that opened it, so pressing it again isn't taken as a click elsewhere. */
+  anchor?: HTMLElement | null;
 }) {
+  // A click anywhere else closes it (a menu in the menu bar is closed by the bar itself).
+  useEffect(() => {
+    if (!anchor) return;
+    const close = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest(".menu-panel, .menu-flyout") || anchor.contains(target)) return;
+      onClose();
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, [anchor, onClose]);
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -235,7 +254,7 @@ export function MenuPanel({
       // At the top level (no flyout has focus), ← and → move along the menu bar.
       const focused = document.activeElement as HTMLElement | null;
       const inFlyout = focused?.closest(".menu-flyout");
-      if (!inFlyout && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
+      if (onSwitch && !inFlyout && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
         const row = focused?.closest<HTMLElement>(".menu-row");
         const opensFlyout = row && row.querySelector(".menu-arrow")?.textContent === "▸";
         if (event.key === "ArrowRight" && opensFlyout) return;
@@ -251,7 +270,14 @@ export function MenuPanel({
   }, [onClose, onSwitch]);
 
   return (
-    <div className="menu-panel" style={{ left }}>
+    <div
+      className="menu-panel"
+      style={
+        top === undefined
+          ? { left }
+          : { left: Math.max(4, Math.min(left, window.innerWidth - 250)), top, maxHeight: `calc(100vh - ${top + 8}px)` }
+      }
+    >
       <MenuList items={items} onClose={onClose} depth={0} />
     </div>
   );

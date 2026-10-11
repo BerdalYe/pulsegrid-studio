@@ -241,3 +241,86 @@ export function IconReset(props: IconProps) {
     </Icon>
   );
 }
+
+/* ───────────────────────────── the browser's tabs ───────────────────────────── */
+
+/** A folder: the saved projects. */
+export function IconFolder(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z" />
+    </Icon>
+  );
+}
+
+/** A sound wave: the samples. */
+export function IconWave(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M3 12h2.5l2-6 3 12 3-15 3 12 2-3H21" />
+    </Icon>
+  );
+}
+
+/** A keyboard: the instruments and plugins. */
+export function IconKeys(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="3" y="6" width="18" height="12" rx="2" />
+      <path d="M8 6v12M12 6v12M16 6v12" strokeWidth="1.5" />
+      <path d="M7 6v6.5h2V6M11 6v6.5h2V6M15 6v6.5h2V6" className="solid" strokeWidth="1" />
+    </Icon>
+  );
+}
+
+/** A MIDI socket: five pins in an arc. */
+export function IconMidi(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="12" r="8.5" />
+      <circle cx="6.8" cy="11" r="1" className="solid" />
+      <circle cx="9" cy="7.7" r="1" className="solid" />
+      <circle cx="12" cy="6.8" r="1" className="solid" />
+      <circle cx="15" cy="7.7" r="1" className="solid" />
+      <circle cx="17.2" cy="11" r="1" className="solid" />
+      <path d="M10.5 16.5h3" />
+    </Icon>
+  );
+}
+
+/** A cloud: the optional account. */
+export function IconCloud(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M7 18.5a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 10.5a4 4 0 0 1-.5 8z" />
+    </Icon>
+  );
+}
+
+/** A star: the demo projects. */
+export function IconStar(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 4l2.4 5 5.5.7-4 3.8 1 5.5-4.9-2.7-4.9 2.7 1-5.5-4-3.8 5.5-.7z" />
+    </Icon>
+  );
+}
+
+/** A cog: the settings. */
+export function IconCog(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 3.5v2.2M12 18.3v2.2M3.5 12h2.2M18.3 12h2.2M6 6l1.6 1.6M16.4 16.4L18 18M6 18l1.6-1.6M16.4 7.6L18 6" />
+    </Icon>
+  );
+}
+
+/** A small arrow for a menu button: ▾. */
+export function IconCaret(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M7 10l5 5 5-5" strokeWidth="2.2" />
+    </Icon>
+  );
+}

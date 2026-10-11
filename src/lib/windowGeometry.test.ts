@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { clampRect, moveRect, resizeRect, scaleRect, type Edge, type Rect } from "./windowGeometry";
+import { clampRect, looseRect, moveRect, resizeRect, scaleRect, type Edge, type Rect } from "./windowGeometry";
 
 const area = { width: 1000, height: 600 };
 const inside = (rect: Rect) =>
@@ -41,17 +41,38 @@ describe("moving", () => {
     expect(moveRect(start, 50, 40, area, 0)).toEqual({ x: 150, y: 140, width: 400, height: 300 });
   });
 
-  it("stops at every edge of the area, whatever the pointer does", () => {
-    for (const [dx, dy] of [[-9999, 0], [9999, 0], [0, -9999], [0, 9999], [9999, 9999], [-9999, -9999]]) {
-      expect(inside(moveRect(start, dx, dy, area))).toBe(true);
-    }
-  });
-
   it("draws to an edge when it comes close", () => {
     expect(moveRect(start, -92, 0, area).x).toBe(0);
     expect(moveRect(start, 495, 0, area).x).toBe(600);
     expect(moveRect(start, 0, 195, area).y).toBe(300);
     expect(moveRect(start, 30, 30, area).x).toBe(130);
+  });
+});
+
+describe("leaving a window partly out of view", () => {
+  const start = { x: 100, y: 100, width: 400, height: 300 };
+
+  it("lets it sit past the edges, with a strip always showing", () => {
+    const right = moveRect(start, 5000, 0, area);
+    expect(right.x).toBe(area.width - 150);
+    const left = moveRect(start, -5000, 0, area);
+    expect(left.x + left.width).toBe(150);
+    const down = moveRect(start, 0, 5000, area);
+    expect(down.y).toBe(area.height - 26);
+  });
+
+  it("never lifts the title bar above the area", () => {
+    expect(moveRect(start, 0, -5000, area).y).toBe(0);
+  });
+
+  it("keeps a window where it was put: placing it again changes nothing", () => {
+    const out = moveRect(start, 5000, 5000, area);
+    expect(looseRect(out, area)).toEqual(out);
+  });
+
+  it("is not pulled back inside when the area changes slightly", () => {
+    const out = { x: 800, y: 100, width: 400, height: 300 };
+    expect(looseRect(out, area).x).toBe(800);
   });
 });
 
@@ -100,15 +121,16 @@ describe("when the area changes size", () => {
     expect(r).toEqual({ x: 200, y: 100, width: 1000, height: 600 });
   });
 
-  it("shrinks it with the area and keeps it inside", () => {
+  it("shrinks it with the area and keeps it within reach", () => {
     const r = scaleRect({ x: 600, y: 300, width: 400, height: 300 }, { width: 1000, height: 600 }, { width: 500, height: 300 });
     expect(r.width).toBe(320); // not below the minimum
-    expect(r.x + r.width).toBeLessThanOrEqual(500);
-    expect(r.y + r.height).toBeLessThanOrEqual(300);
+    expect(r.x).toBeLessThanOrEqual(500 - 150); // a strip still shows
+    expect(r.y).toBeLessThanOrEqual(300 - 26); // and so does the title bar
   });
 
-  it("only fits the window when the old size is unknown", () => {
+  it("only makes the window reachable when the old size is unknown", () => {
     const r = scaleRect({ x: 2000, y: 0, width: 400, height: 300 }, { width: 0, height: 0 }, area);
-    expect(inside(r)).toBe(true);
+    expect(r.x).toBeLessThanOrEqual(area.width - 150);
+    expect(r.x + r.width).toBeGreaterThan(0);
   });
 });

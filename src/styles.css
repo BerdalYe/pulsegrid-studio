@@ -1391,8 +1391,89 @@ kbd {
   display: flex;
   min-width: 0;
   flex: 0 0 auto;
+  flex-direction: column;
   border-right: 1px solid #0d0d10;
   background: var(--panel);
+}
+
+/* The browser's title, and which section is showing. */
+.tools-head {
+  display: flex;
+  height: 26px;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border-bottom: 1px solid #0d0d10;
+  background: linear-gradient(var(--chrome), var(--chrome-2));
+  user-select: none;
+}
+
+.tools-head strong {
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.tools-crumb {
+  overflow: hidden;
+  min-width: 0;
+  flex: 1;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tools-crumb::before {
+  margin-right: 8px;
+  color: var(--muted);
+  content: "›";
+}
+
+/* One icon per section, in a row across the top. */
+.tools-tabs {
+  display: flex;
+  flex: none;
+  gap: 2px;
+  padding: 6px 6px 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--chrome-2);
+}
+
+.tools-tab {
+  display: inline-flex;
+  height: 30px;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: 4px 4px 0 0;
+  background: transparent;
+  color: var(--muted);
+}
+
+.tools-tab svg.ui-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.tools-tab:hover {
+  background: var(--panel-3);
+  color: var(--text);
+}
+
+.tools-tab.active {
+  position: relative;
+  top: 1px;
+  border-color: var(--line);
+  background: var(--panel);
+  box-shadow: inset 0 2px 0 var(--accent);
+  color: var(--accent-2);
 }
 
 .tools-scroll {
@@ -1404,6 +1485,27 @@ kbd {
   flex-direction: column;
   gap: 6px;
   padding: 8px 8px 12px;
+}
+
+.tools-pane {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tools-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.tools-actions button {
+  flex: 1;
+}
+
+.tools-caption {
+  color: var(--muted);
+  font-size: 10px;
 }
 
 /* A thin handle on the right edge: drag it to set the width, double-click to reset. */
@@ -1432,39 +1534,76 @@ kbd {
   background: var(--accent);
 }
 
-/* ── collapsible sections ── */
+/* ── the instrument library: folders and instruments, as a tree ── */
 
-.tool-section {
-  flex: none;
-  border: 1px solid var(--line-soft);
-  border-radius: var(--radius);
-  background: var(--chrome-2);
+.tree {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.tool-section-head {
+.tree-list {
   display: flex;
-  align-items: center;
-  gap: 4px;
-  padding-right: 6px;
+  flex-direction: column;
 }
 
-.tool-section-toggle {
+.tree-row {
   display: flex;
-  min-width: 0;
-  flex: 1;
+  width: 100%;
   align-items: center;
-  gap: 7px;
-  padding: 7px 8px;
+  gap: 6px;
+  padding: 4px 8px;
   border: 0;
+  border-radius: 2px;
   background: transparent;
+  color: var(--text);
+  font-size: 12px;
   text-align: left;
 }
 
-.tool-section-toggle:hover {
-  background: transparent;
+.tree-row:hover {
+  background: var(--panel-3);
 }
 
-.tool-chevron {
+.tree-row:active,
+.tree-leaf:hover .tree-icon {
+  color: var(--accent-2);
+}
+
+.tree-icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--muted);
+}
+
+.tree-icon svg.ui-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.tree-label {
+  overflow: hidden;
+  min-width: 0;
+  flex: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tree-count,
+.tree-where {
+  flex: none;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.tree-where {
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tree-caret {
   width: 0;
   height: 0;
   flex: none;
@@ -1474,47 +1613,8 @@ kbd {
   transition: transform 0.12s;
 }
 
-.tool-section.open .tool-chevron {
+.tree-caret.open {
   transform: rotate(90deg);
-}
-
-.tool-section-title {
-  flex: none;
-  color: var(--text);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.tool-section-summary {
-  overflow: hidden;
-  min-width: 0;
-  color: var(--muted);
-  font-size: 10px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.tool-section-actions {
-  display: flex;
-  flex: none;
-  align-items: center;
-  gap: 4px;
-}
-
-.tool-section-body {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 6px;
-  padding: 2px 8px 8px;
-}
-
-.mini-button {
-  height: 20px;
-  padding: 0 7px;
-  font-size: 10px;
 }
 
 .tool-field {
@@ -1522,9 +1622,9 @@ kbd {
   flex-direction: column;
   align-items: stretch;
   gap: 3px;
-  text-align: left;
   color: var(--muted);
   font-size: 10px;
+  text-align: left;
 }
 
 .tool-field select {
@@ -1534,10 +1634,10 @@ kbd {
 
 .tool-line {
   overflow: hidden;
-  text-align: left;
   margin: 0;
   color: var(--muted);
   font-size: 11px;
+  text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1572,7 +1672,7 @@ kbd {
   white-space: nowrap;
 }
 
-/* The projects and cloud panels sit inside their section; no box of their own. */
+/* The projects and cloud panels fill the tab; no box of their own. */
 .projects-panel,
 .cloud-panel {
   display: flex;
@@ -1596,8 +1696,6 @@ kbd {
 
 .sample-list {
   display: flex;
-  max-height: 280px;
-  overflow-y: auto;
   flex-direction: column;
   gap: 3px;
 }
@@ -4765,4 +4863,185 @@ svg.ui-icon .ghost {
 .midiout-check input {
   flex: none;
   margin-top: 2px;
+}
+
+/* ─────────────── the settings window ─────────────── */
+
+.settings-dialog {
+  display: flex;
+  width: 760px;
+  max-width: calc(100vw - 32px);
+  height: 540px;
+  max-height: calc(100vh - 48px);
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+}
+
+.settings-head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.settings-head h2 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.settings-main {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+}
+
+.settings-nav {
+  display: flex;
+  width: 150px;
+  flex: none;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 8px;
+  border-right: 1px solid var(--line-soft);
+  background: var(--chrome-2);
+}
+
+.settings-nav button {
+  padding: 8px 12px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: left;
+}
+
+.settings-nav button:hover {
+  background: var(--panel-3);
+  color: var(--text);
+}
+
+.settings-nav button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.settings-page {
+  min-width: 0;
+  overflow-y: auto;
+  flex: 1;
+  padding: 6px 22px 18px;
+}
+
+.settings-page h3 {
+  margin: 14px 0 6px;
+  color: var(--accent-2);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.settings-label {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 45%;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.settings-label strong {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.settings-label span {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.settings-control {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 45%;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.settings-control select {
+  min-width: 0;
+  max-width: 100%;
+  flex: 1;
+}
+
+.settings-note {
+  color: var(--muted);
+  font-size: 11px;
+  text-align: right;
+}
+
+.settings-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  font-size: 12px;
+}
+
+.settings-slider {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-slider input[type="range"] {
+  min-width: 0;
+  flex: 1;
+  accent-color: var(--accent);
+}
+
+.settings-slider output {
+  width: 44px;
+  flex: none;
+  color: var(--muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+@media (max-width: 640px) {
+  .settings-main {
+    flex-direction: column;
+  }
+  .settings-nav {
+    width: auto;
+    flex-direction: row;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .settings-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .settings-control {
+    justify-content: flex-start;
+  }
 }

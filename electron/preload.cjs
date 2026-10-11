@@ -3,7 +3,7 @@
  * sandboxed with no Node access; everything it may do on disk is one of the
  * named calls below, each handled (and checked) in the main process.
  */
-const { contextBridge, ipcRenderer } = require("electron");
+const { contextBridge, ipcRenderer, webFrame } = require("electron");
 
 const listen = (channel, callback) => {
   const handler = (_event, payload) => callback(payload);
@@ -39,6 +39,11 @@ contextBridge.exposeInMainWorld("pulsegridDesktop", {
     read: (id) => ipcRenderer.invoke("soundfont:read", id),
     write: (id, name, bytes) => ipcRenderer.invoke("soundfont:write", id, name, bytes),
     remove: (id) => ipcRenderer.invoke("soundfont:remove", id)
+  },
+
+  // The size of the whole interface, from the settings (1 is normal).
+  setZoom: (factor) => {
+    if (typeof factor === "number" && Number.isFinite(factor)) webFrame.setZoomFactor(Math.min(2, Math.max(0.5, factor)));
   },
 
   setTitle: (title) => ipcRenderer.send("window:title", title),

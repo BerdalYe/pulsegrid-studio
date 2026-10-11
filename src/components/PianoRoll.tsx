@@ -17,7 +17,7 @@ import { copyNotes, hasNotes, notesSpan, pastedNotes } from "../state/clipboard"
 import { useTransportStore } from "../state/transportStore";
 import { VelocityEditor } from "./VelocityEditor";
 import { useSelectedChannel, useSelectedPattern, useUnmount } from "../hooks/useStudio";
-import { previewChannel } from "../audio/engine";
+import { auditionChannel, previewChannel } from "../audio/engine";
 
 import {
   STEPS_PER_BAR,
@@ -457,7 +457,7 @@ export function PianoRoll() {
       };
 
       addNote(patternId, channel.id, note);
-      previewChannel(channel.id, pitch, note.velocity / 127, 0.15);
+      auditionChannel(channel.id, pitch, note.velocity / 127, 0.15);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps -- noteAt reads `notes`
     [addNote, channel, noteWidth, notes, pattern, patternId, removeNote, snapSteps]
@@ -676,7 +676,7 @@ export function PianoRoll() {
         anchorId: hit.note.id
       };
 
-      if (!hit.onHandle) previewChannel(channel.id, hit.note.pitch, hit.note.velocity / 127, 0.25);
+      if (!hit.onHandle) auditionChannel(channel.id, hit.note.pitch, hit.note.velocity / 127, 0.25);
       return;
     }
 
@@ -707,7 +707,7 @@ export function PianoRoll() {
     beginEdit("Add note");
     addNote(patternId, channel.id, note);
     setSelected(new Set([note.id]));
-    previewChannel(channel.id, pitch, note.velocity / 127, 0.3);
+    auditionChannel(channel.id, pitch, note.velocity / 127, 0.3);
 
     // Keep hold of the new note so dragging right sizes it straight away.
     dragRef.current = {

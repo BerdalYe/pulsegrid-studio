@@ -17,7 +17,26 @@ import { isDesktop } from "../files/desktop";
 import { ProjectsPanel } from "./ProjectsPanel";
 import { CloudPanel } from "./CloudPanel";
 import { useConfirm } from "./ConfirmDialog";
-import { ToolSection } from "./ToolSection";
+import { InstrumentTree } from "./InstrumentTree";
+import { IconCloud, IconFolder, IconKeys, IconMidi, IconStar, IconWave } from "./icons";
+import { syncConfigured } from "../sync/config";
+import type { ReactNode } from "react";
+
+type TabId = "projects" | "samples" | "instruments" | "midi" | "cloud" | "demos";
+
+const TAB_KEY = "pulsegrid:browser-tab";
+
+function readTab(): TabId {
+  try {
+    const saved = localStorage.getItem(TAB_KEY);
+    if (saved === "projects" || saved === "samples" || saved === "instruments" || saved === "midi" || saved === "cloud" || saved === "demos") {
+      return saved;
+    }
+  } catch {
+    /* the first tab is fine */
+  }
+  return "instruments";
+}
 
 const WIDTH_KEY = "pulsegrid:browser-width";
 const MIN_WIDTH = 220;
@@ -58,6 +77,27 @@ export function StudioTools({ onStatus }: StudioToolsProps) {
   const [selectedMidi, setSelectedMidi] = useState<string>(() => midiManager.getInputChoice());
   const [midiReady, setMidiReady] = useState(false);
   const fileInput = useRef<HTMLInputElement | null>(null);
+
+  // The browser's sections, as a row of icons across the top: the saved projects (desktop), the samples, the
+  // instrument library, MIDI, the account (when sync is set up) and the demo projects.
+  const desktop = isDesktop();
+  const tabs: Array<{ id: TabId; label: string; icon: ReactNode }> = [
+    ...(desktop ? [{ id: "projects" as const, label: "Projects", icon: <IconFolder /> }] : []),
+    { id: "instruments", label: "Instruments", icon: <IconKeys /> },
+    { id: "samples", label: "Samples", icon: <IconWave /> },
+    { id: "midi", label: "Keyboard & MIDI", icon: <IconMidi /> },
+    ...(syncConfigured ? [{ id: "cloud" as const, label: "Cloud sync", icon: <IconCloud /> }] : []),
+    { id: "demos", label: "Demo projects", icon: <IconStar /> }
+  ];
+  const [tab, setTab] = useState<TabId>(readTab);
+  const chooseTab = (next: TabId) => {
+    setTab(next);
+    try {
+      localStorage.setItem(TAB_KEY, next);
+    } catch {
+      /* the tab holds until the app closes */
+    }
+  };
 
   // The panel's width is yours to set: drag its right edge.
   const [width, setWidth] = useState(readWidth);
@@ -191,241 +231,272 @@ export function StudioTools({ onStatus }: StudioToolsProps) {
   }, [onStatus]);
 
   const target = channels.find((channel) => channel.id === selectedChannelId);
+  const current = tabs.find((entry) => entry.id === tab) ?? tabs[0];
 
   return (
     <aside className="studio-tools" style={{ width, flexBasis: width }} aria-label="Browser">
-      <div className="tools-scroll">
-        {isDesktop() ? <ProjectsPanel onStatus={onStatus} /> : null}
+      <header className="tools-head">
+        <strong>Browser</strong>
+        <span className="tools-crumb">{current.label}</span>
+        {midiReady ? <MidiActivity /> : null}
+      </header>
 
-        <ToolSection
-          id="samples"
-          title="Samples"
-          summary={`${samples.length}`}
-          actions={
-            <>
-              <button type="button" className="mini-button" onClick={() => fileInput.current?.click()} title="Import audio files as sample channels">
-                Import
+      <nav className="tools-tabs" role="tablist" aria-label="Browser sections">
+        {tabs.map((entry) => (
+          <button
+            key={entry.id}
+            type="button"
+            role="tab"
+            aria-selected={entry.id === current.id}
+            className={`tools-tab${entry.id === current.id ? " active" : ""}`}
+            title={entry.label}
+            aria-label={entry.label}
+            onClick={() => chooseTab(entry.id)}
+          >
+            {entry.icon}
+          </button>
+        ))}
+      </nav>
+
+      <div className="tools-scroll" role="tabpanel">
+        {current.id === "projects" ? <ProjectsPanel onStatus={onStatus} /> : null}
+
+        {current.id === "samples" ? (
+          <div className="tools-pane">
+            <div className="tools-actions">
+              <button type="button" onClick={() => fileInput.current?.click()} title="Import audio files as sample channels">
+                Import audio…
               </button>
               <button
                 type="button"
-                className={`mini-button${isRecording ? " active" : ""}`}
+                className={isRecording ? "active" : ""}
                 onClick={() => void handleRecord()}
                 title={isRecording ? "Stop recording" : "Record from the microphone"}
               >
-                {isRecording ? "Stop" : "Record"}
+                {isRecording ? "Stop recording" : "Record mic"}
               </button>
-            </>
-          }
-        >
-          <input
-            ref={fileInput}
-            type="file"
-            accept="audio/*"
-            multiple
-            className="hidden-file-input"
-            onChange={(event) => void handleImport(event)}
-          />
-
-          {isRecording ? (
-            <div className="record-meter" aria-hidden="true">
-              <span style={{ width: `${Math.min(100, recordLevel * 100)}%` }} />
+              <input
+                ref={fileInput}
+                type="file"
+                accept="audio/*"
+                multiple
+                className="hidden-file-input"
+                onChange={(event) => void handleImport(event)}
+              />
             </div>
-          ) : null}
 
-          <div className="sample-list">
-            {samples.map((sample) => (
-              <div className="sample-item" key={sample.id}>
-                <button
-                  className="sample-name"
-                  title="Add as a new sample channel"
-                  onClick={() => {
-                    const id = addChannel("sample", sample.name, sample.id);
-                    selectChannel(id);
-                    previewChannel(id);
-                    onStatus(`Added "${sample.name}".`);
-                  }}
-                >
-                  {sample.name}
-                  <em>{sample.duration.toFixed(2)}s</em>
-                </button>
-
-                <Waveform sampleId={sample.id} width={132} height={22} />
-
-                <span className="sample-buttons">
-                  {selectedChannelId ? (
-                    <button
-                      title="Load into the selected channel"
-                      onClick={() => updateChannelSample(selectedChannelId, { sampleId: sample.id })}
-                    >
-                      ↳
-                    </button>
-                  ) : null}
-
-                  {!sample.builtIn ? (
-                    <button
-                      title="Remove from the browser"
-                      onClick={() => {
-                        removeSample(sample.id);
-                        onStatus(`Removed "${sample.name}" from the browser.`);
-                      }}
-                    >
-                      ×
-                    </button>
-                  ) : null}
-                </span>
+            {isRecording ? (
+              <div className="record-meter" aria-hidden="true">
+                <span style={{ width: `${Math.min(100, recordLevel * 100)}%` }} />
               </div>
-            ))}
-          </div>
-        </ToolSection>
+            ) : null}
 
-        <ToolSection
-          id="midi"
-          title="Keyboard & MIDI"
-          defaultOpen={false}
-          summary={target ? `Plays ${target.name}` : "Keys play nothing yet"}
-          actions={midiReady ? <MidiActivity /> : undefined}
-        >
-          <label className="tool-field">
-            Keys play
-            <select
-              value={selectedChannelId ?? ""}
-              onChange={(event) => selectChannel(event.target.value || null)}
-              title="The channel that receives MIDI and computer-keyboard notes. Play with Z–M and Q–U, and [ and ] for the octave."
-            >
-              <option value="">None</option>
-              {channels.map((channel) => (
-                <option key={channel.id} value={channel.id}>
-                  {channel.name}
-                </option>
-              ))}
-            </select>
-          </label>
+            <div className="tools-caption">
+              {samples.length} sample{samples.length === 1 ? "" : "s"} · click one to add it as a channel
+            </div>
 
-          {midiReady ? (
-            <>
-              <p className="tool-line" title={midiDevices.map((device) => device.name).join(", ")}>
-                {midiDevices.length === 0 ? "No MIDI device. Plug one in." : midiDevices.map((device) => device.name).join(", ")}
-              </p>
+            <div className="sample-list">
+              {samples.map((sample) => (
+                <div className="sample-item" key={sample.id}>
+                  <button
+                    className="sample-name"
+                    title="Add as a new sample channel"
+                    onClick={() => {
+                      const id = addChannel("sample", sample.name, sample.id);
+                      selectChannel(id);
+                      previewChannel(id);
+                      onStatus(`Added "${sample.name}".`);
+                    }}
+                  >
+                    {sample.name}
+                    <em>{sample.duration.toFixed(2)}s</em>
+                  </button>
 
-              <label className="tool-field">
-                Listen to
-                <select
-                  value={selectedMidi}
-                  aria-label="MIDI input to listen to"
-                  title="Which MIDI port to listen to. Automatic listens to the ports you play on and ignores a keyboard's DAW and control ports."
-                  onChange={(event) => {
-                    setSelectedMidi(event.target.value);
-                    midiManager.setInputChoice(event.target.value);
-                  }}
-                >
-                  <option value="auto">Automatic</option>
-                  <option value="all">Every port</option>
-                  {midiDevices.map((device) => (
-                    <option key={device.id} value={device.id}>
-                      {device.name}
-                      {device.control ? " (control port)" : ""}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  <Waveform sampleId={sample.id} width={132} height={22} />
 
-              <label className="tool-field">
-                Drum pads on channel
-                <select
-                  value={padChannel}
-                  onChange={(event) => setPadChannel(Number(event.target.value))}
-                  title="The MIDI channel your drum pads send on (10 on most controllers)"
-                >
-                  {Array.from({ length: 16 }, (_, index) => index + 1).map((channel) => (
-                    <option key={channel} value={channel}>
-                      {channel}
-                      {channel === 10 ? " (usual)" : ""}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  <span className="sample-buttons">
+                    {selectedChannelId ? (
+                      <button
+                        title="Load into the selected channel"
+                        onClick={() => updateChannelSample(selectedChannelId, { sampleId: sample.id })}
+                      >
+                        ↳
+                      </button>
+                    ) : null}
 
-              <details className="tool-details">
-                <summary>MIDI monitor</summary>
-                <div className="midi-monitor" aria-label="MIDI monitor">
-                  <div className="midi-monitor-head">
-                    <span>Last messages</span>
-                    <button type="button" className="link-button" onClick={clearMonitor} disabled={monitor.length === 0}>
-                      Clear
-                    </button>
-                  </div>
-                  {monitor.length === 0 ? (
-                    <span className="small-note">Press a key, pad or knob and what it sends shows up here.</span>
-                  ) : (
-                    monitor.map((line) => (
-                      <div key={line.id} className="midi-monitor-line" title={line.device}>
-                        {line.text}
-                        {line.hint ? <em>{line.hint}</em> : null}
-                      </div>
-                    ))
-                  )}
+                    {!sample.builtIn ? (
+                      <button
+                        title="Remove from the browser"
+                        onClick={() => {
+                          removeSample(sample.id);
+                          onStatus(`Removed "${sample.name}" from the browser.`);
+                        }}
+                      >
+                        ×
+                      </button>
+                    ) : null}
+                  </span>
                 </div>
-              </details>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
-              <details className="tool-details">
-                <summary>How the controls work</summary>
-                <p className="small-note">
-                  Keys play the channel above. Pads (MIDI channel {padChannel}) hit your drum channels. Knobs 1–7 control
-                  volume, pan, insert, master, swing and tempo; right-click any knob on screen, then turn one on your
-                  controller, to link them. A keyboard with several ports, like the Akai MPK mini IV, is listened to on the
-                  port you play on; its DAW, plugin and control ports are ignored.
+        {current.id === "instruments" ? (
+          <div className="tools-pane">
+            <div className="tools-caption">Click an instrument to add it as a new channel</div>
+            <InstrumentTree onStatus={onStatus} />
+          </div>
+        ) : null}
+
+        {current.id === "midi" ? (
+          <div className="tools-pane">
+            <label className="tool-field">
+              Keys play
+              <select
+                value={selectedChannelId ?? ""}
+                onChange={(event) => selectChannel(event.target.value || null)}
+                title="The channel that receives MIDI and computer-keyboard notes. Play with Z–M and Q–U, and [ and ] for the octave."
+              >
+                <option value="">None</option>
+                {channels.map((channel) => (
+                  <option key={channel.id} value={channel.id}>
+                    {channel.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {target ? null : <p className="small-note">Pick a channel, or select one in the rack, and your keys will play it.</p>}
+
+            {midiReady ? (
+              <>
+                <p className="tool-line" title={midiDevices.map((device) => device.name).join(", ")}>
+                  {midiDevices.length === 0 ? "No MIDI device. Plug one in." : midiDevices.map((device) => device.name).join(", ")}
                 </p>
+
+                <label className="tool-field">
+                  Listen to
+                  <select
+                    value={selectedMidi}
+                    aria-label="MIDI input to listen to"
+                    title="Which MIDI port to listen to. Automatic listens to the ports you play on and ignores a keyboard's DAW and control ports."
+                    onChange={(event) => {
+                      setSelectedMidi(event.target.value);
+                      midiManager.setInputChoice(event.target.value);
+                    }}
+                  >
+                    <option value="auto">Automatic</option>
+                    <option value="all">Every port</option>
+                    {midiDevices.map((device) => (
+                      <option key={device.id} value={device.id}>
+                        {device.name}
+                        {device.control ? " (control port)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="tool-field">
+                  Drum pads on channel
+                  <select
+                    value={padChannel}
+                    onChange={(event) => setPadChannel(Number(event.target.value))}
+                    title="The MIDI channel your drum pads send on (10 on most controllers)"
+                  >
+                    {Array.from({ length: 16 }, (_, index) => index + 1).map((channel) => (
+                      <option key={channel} value={channel}>
+                        {channel}
+                        {channel === 10 ? " (usual)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <details className="tool-details" open>
+                  <summary>MIDI monitor</summary>
+                  <div className="midi-monitor" aria-label="MIDI monitor">
+                    <div className="midi-monitor-head">
+                      <span>Last messages</span>
+                      <button type="button" className="link-button" onClick={clearMonitor} disabled={monitor.length === 0}>
+                        Clear
+                      </button>
+                    </div>
+                    {monitor.length === 0 ? (
+                      <span className="small-note">Press a key, pad or knob and what it sends shows up here.</span>
+                    ) : (
+                      monitor.map((line) => (
+                        <div key={line.id} className="midi-monitor-line" title={line.device}>
+                          {line.text}
+                          {line.hint ? <em>{line.hint}</em> : null}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </details>
+
+                <details className="tool-details">
+                  <summary>How the controls work</summary>
+                  <p className="small-note">
+                    Keys play the channel above. Pads (MIDI channel {padChannel}) hit your drum channels. Knobs 1–7 control
+                    volume, pan, insert, master, swing and tempo; right-click any knob on screen, then turn one on your
+                    controller, to link them. A keyboard with several ports, like the Akai MPK mini IV, is listened to on the
+                    port you play on; its DAW, plugin and control ports are ignored.
+                  </p>
+                  <button
+                    type="button"
+                    className="link-button"
+                    onClick={() => {
+                      resetMappings();
+                      onStatus("MIDI knob mappings reset to defaults.");
+                    }}
+                  >
+                    Reset knob mappings
+                  </button>
+                </details>
+              </>
+            ) : (
+              <button onClick={() => void enableMidi()}>Turn on MIDI</button>
+            )}
+          </div>
+        ) : null}
+
+        {current.id === "cloud" ? <CloudPanel onStatus={onStatus} /> : null}
+
+        {current.id === "demos" ? (
+          <div className="tools-pane">
+            <div className="tools-caption">Open one to see how a track is put together</div>
+            <div className="demo-list">
+              {presetProjects.map((preset) => (
                 <button
-                  type="button"
-                  className="link-button"
+                  key={preset.id}
+                  title={preset.description}
                   onClick={() => {
-                    resetMappings();
-                    onStatus("MIDI knob mappings reset to defaults.");
-                  }}
-                >
-                  Reset knob mappings
-                </button>
-              </details>
-            </>
-          ) : (
-            <button onClick={() => void enableMidi()}>Turn on MIDI</button>
-          )}
-        </ToolSection>
+                    // On the desktop the open project is saved (or you are asked)
+                    // first, and the demo opens as a new, separate project.
+                    if (isDesktop()) {
+                      void settleCurrentProject().then((ok) => {
+                        if (ok) onStatus(loadPreset(preset.id));
+                      });
+                      return;
+                    }
 
-        <CloudPanel onStatus={onStatus} />
-
-        <ToolSection id="demos" title="Demo projects" defaultOpen={false} summary={`${presetProjects.length} to try`}>
-          <div className="demo-list">
-            {presetProjects.map((preset) => (
-              <button
-                key={preset.id}
-                title={preset.description}
-                onClick={() => {
-                  // On the desktop the open project is saved (or you are asked)
-                  // first, and the demo opens as a new, separate project.
-                  if (isDesktop()) {
-                    void settleCurrentProject().then((ok) => {
+                    // Loading a demo replaces the project *and* clears the undo
+                    // stack, so a mis-click here is unrecoverable. File → New asks
+                    // first for a strictly less destructive action.
+                    void confirm(`Load "${preset.name}"?`, "This replaces the current project — anything unsaved will be lost.", {
+                      confirmLabel: "Load"
+                    }).then((ok) => {
                       if (ok) onStatus(loadPreset(preset.id));
                     });
-                    return;
-                  }
-
-                  // Loading a demo replaces the project *and* clears the undo
-                  // stack, so a mis-click here is unrecoverable. File → New asks
-                  // first for a strictly less destructive action.
-                  void confirm(`Load "${preset.name}"?`, "This replaces the current project — anything unsaved will be lost.", {
-                    confirmLabel: "Load"
-                  }).then((ok) => {
-                    if (ok) onStatus(loadPreset(preset.id));
-                  });
-                }}
-              >
-                {preset.name}
-                <em>{preset.description}</em>
-              </button>
-            ))}
+                  }}
+                >
+                  {preset.name}
+                  <em>{preset.description}</em>
+                </button>
+              ))}
+            </div>
           </div>
-        </ToolSection>
+        ) : null}
       </div>
 
       <div

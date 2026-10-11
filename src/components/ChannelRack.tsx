@@ -7,7 +7,7 @@ import { useConfirm } from "./ConfirmDialog";
 import { Knob } from "./controls";
 import { Waveform } from "./Waveform";
 import { useSamples, useSelectedPattern, useUnmount } from "../hooks/useStudio";
-import { previewChannel } from "../audio/engine";
+import { auditionChannel } from "../audio/engine";
 import { INSTRUMENT_GROUPS, availableInstruments, synthPresets } from "../presets/presets";
 import { addInstrument } from "../lib/addInstrument";
 import { useSoundFontStore } from "../audio/soundfont/registry";
@@ -35,6 +35,8 @@ const STEP_PITCH = STEP_SIZE + STEP_GAP;
 const MAX_STEP_PITCH = 52;
 /** Width of the fixed channel header column; the playhead lines up against it. */
 const HEAD_WIDTH = 392;
+/** The step grid's side padding (see `.steps` in the stylesheet): the first step starts this far past the header. */
+const STEPS_PAD_X = 8;
 
 
 
@@ -69,7 +71,7 @@ export function ChannelRack() {
 
   const stepPitch = Math.max(
     STEP_PITCH,
-    Math.min(MAX_STEP_PITCH, Math.floor((viewWidth - HEAD_WIDTH - 12) / Math.max(1, pattern.length)))
+    Math.min(MAX_STEP_PITCH, Math.floor((viewWidth - HEAD_WIDTH - STEPS_PAD_X * 2 - 4) / Math.max(1, pattern.length)))
   );
 
   return (
@@ -124,7 +126,7 @@ export function ChannelRack() {
           style={
             {
               "--step-pitch": `${stepPitch}px`,
-              minWidth: HEAD_WIDTH + pattern.length * stepPitch
+              minWidth: HEAD_WIDTH + STEPS_PAD_X * 2 + pattern.length * stepPitch
             } as CSSProperties
           }
         >
@@ -172,7 +174,7 @@ const RackPlayhead = memo(function RackPlayhead({ patternLength }: { patternLeng
     <div
       className="rack-playhead"
       style={{
-        left: `calc(${HEAD_WIDTH}px + ${step} * var(--step-pitch, ${STEP_PITCH}px))`,
+        left: `calc(${HEAD_WIDTH + STEPS_PAD_X}px + ${step} * var(--step-pitch, ${STEP_PITCH}px))`,
         width: `calc(var(--step-pitch, ${STEP_PITCH}px) - ${STEP_GAP}px)`
       }}
       aria-hidden="true"
@@ -306,7 +308,7 @@ const ChannelRow = memo(function ChannelRow({
     setStep(patternId, channel.id, index, nextValue);
 
     if (nextValue !== null && !useTransportStore.getState().isPlaying) {
-      previewChannel(channel.id, 60, nextValue);
+      auditionChannel(channel.id, 60, nextValue);
     }
   };
 

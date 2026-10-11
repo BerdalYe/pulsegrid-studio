@@ -88,6 +88,8 @@ export interface DesktopBridge {
   setTitle(title: string): void;
   askSaveChanges(name: string): Promise<"save" | "discard" | "cancel">;
   closeNow(): void;
+  /** The size of the whole interface (1 is normal). */
+  setZoom?(factor: number): void;
   getUpdateStatus(): Promise<UpdateStatus>;
   setCheckUpdates(enabled: boolean): Promise<UpdateStatus>;
   checkForUpdates(): Promise<UpdateStatus>;

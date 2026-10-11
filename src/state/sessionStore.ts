@@ -2,7 +2,7 @@ import { create } from "zustand";
 
 import type { PlaybackMode, SessionData, ViewName } from "../types";
 import { STEPS_PER_BAR, clamp } from "../lib/utils";
-import { clampRect, scaleRect, type Rect, type Size } from "../lib/windowGeometry";
+import { looseRect, scaleRect, type Rect, type Size } from "../lib/windowGeometry";
 
 export interface WindowLayout {
   open: boolean;
@@ -73,7 +73,7 @@ interface SessionState extends SessionData {
   openAllWindows: () => void;
   moveWindow: (id: WindowId, x: number, y: number) => void;
   resizeWindow: (id: WindowId, width: number, height: number) => void;
-  /** Place a window (moved and resized in one go); it is kept inside the work area. */
+  /** Place a window (moved and resized in one go). It may sit partly out of view, but a strip of it stays in the work area. */
   setWindowRect: (id: WindowId, rect: Rect) => void;
   /** The size of the area the windows float in, as measured. Windows follow it as it changes. */
   area: Size;
@@ -283,7 +283,7 @@ export const useSessionStore = create<SessionState>()((set, get) => ({
 
   setWindowRect: (id, rect) =>
     set((state) => {
-      const fitted = clampRect(rect, state.area);
+      const fitted = looseRect(rect, state.area);
       const current = state.windows[id];
       if (
         fitted.x === current.x &&

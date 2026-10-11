@@ -1,6 +1,7 @@
 import { Scheduler } from "./Scheduler";
 import { midiManager, parseMidiMessage } from "./midi";
 import { midiOutPanic } from "./midiOut";
+import { currentSettings, useAppSettings } from "../state/appSettings";
 import { Sequencer } from "./sequencer";
 import { RenderGraph } from "./graph";
 import { initDefaultSamples } from "./sampleRegistry";
@@ -58,7 +59,9 @@ export function ensureAudio(): AudioContext | null {
 
   if (!AudioContextClass) return null;
 
-  context = new AudioContextClass({ latencyHint: "interactive" });
+  context = new AudioContextClass({ latencyHint: currentSettings().latency });
+  // The speakers chosen in the settings, if any.
+  void applyOutputDevice();
 
   initDefaultSamples(context);
 
@@ -103,7 +106,8 @@ export function ensureAudio(): AudioContext | null {
           graph.context,
           graph.metronomeInput,
           time,
-          stepIndex % STEPS_PER_BAR === 0
+          stepIndex % STEPS_PER_BAR === 0,
+          currentSettings().metronomeVolume
         );
       }
     },
@@ -188,7 +192,7 @@ export async function startTransport(fromStep?: number): Promise<void> {
     const from = audioContext.currentTime + 0.06;
 
     for (let i = 0; i < beats; i++) {
-      scheduleMetronomeClick(graph.context, graph.metronomeInput, from + i * beat, i === 0);
+      scheduleMetronomeClick(graph.context, graph.metronomeInput, from + i * beat, i === 0, currentSettings().metronomeVolume);
     }
 
     countInSeconds = beats * beat;
@@ -253,6 +257,52 @@ export function panic(): void {
   for (const voice of heldVoices.values()) voice.kill(now);
   heldVoices.clear();
   midiOutPanic();
+}
+
+/* ────────────────────────────── speakers and latency ────────────────────────────── */
+
+type SinkContext = AudioContext & { setSinkId?: (id: string) => Promise<void>; sinkId?: string | { type: string } };
+
+/** Play through the speakers chosen in the settings (or the system's own choice). False where that can't be done. */
+export async function applyOutputDevice(): Promise<boolean> {
+  const live = context as SinkContext | null;
+  if (!live || typeof live.setSinkId !== "function") return false;
+  try {
+    await live.setSinkId(currentSettings().outputDeviceId);
+    return true;
+  } catch (error) {
+    console.warn("The chosen output device couldn't be used:", error);
+    return false;
+  }
+}
+
+// Choosing other speakers takes effect straight away.
+let lastDevice = currentSettings().outputDeviceId;
+useAppSettings.subscribe((state) => {
+  if (state.outputDeviceId === lastDevice) return;
+  lastDevice = state.outputDeviceId;
+  void applyOutputDevice();
+});
+
+/** What the audio is running at, for the settings window. Null until the audio has started. */
+export function getAudioInfo(): { sampleRate: number; baseLatencyMs: number; outputLatencyMs: number; canChooseOutput: boolean } | null {
+  const live = context as SinkContext | null;
+  if (!live) return null;
+  return {
+    sampleRate: live.sampleRate,
+    baseLatencyMs: Math.round((live.baseLatency ?? 0) * 1000),
+    outputLatencyMs: Math.round(((live as AudioContext & { outputLatency?: number }).outputLatency ?? 0) * 1000),
+    canChooseOutput: typeof live.setSinkId === "function"
+  };
+}
+
+/** One metronome click through the master, so a person can check they hear the speakers they chose. */
+export function playTestClick(): void {
+  const live = ensureAudio();
+  if (!live || !graph) return;
+  const volume = Math.max(0.5, currentSettings().metronomeVolume);
+  scheduleMetronomeClick(graph.context, graph.metronomeInput, live.currentTime + 0.03, true, volume);
+  scheduleMetronomeClick(graph.context, graph.metronomeInput, live.currentTime + 0.4, false, volume);
 }
 
 /* ────────────────────────────── live playing ────────────────────────────── */
@@ -331,6 +381,12 @@ export function noteOff(channelId: string, pitch: number): void {
 
   voice.release(context.currentTime);
   heldVoices.delete(key);
+}
+
+/** A one-shot for clicking a step or a note in, which stays quiet when the settings say so. */
+export function auditionChannel(channelId: string, pitch = 60, velocity = 0.85, seconds = 0.4): void {
+  if (!currentSettings().audition) return;
+  previewChannel(channelId, pitch, velocity, seconds);
 }
 
 /** One-shot audition, e.g. clicking a step or a piano-roll note. */

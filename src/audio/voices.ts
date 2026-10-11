@@ -74,15 +74,18 @@ export function scheduleMetronomeClick(
   context: BaseAudioContext,
   destination: AudioNode,
   time: number,
-  accent: boolean
+  accent: boolean,
+  /** 0 to 1, from the settings. */
+  volume = 1
 ): void {
+  if (volume <= 0) return;
   const osc = context.createOscillator();
   const gain = context.createGain();
 
   osc.type = "triangle";
   osc.frequency.setValueAtTime(accent ? 1800 : 1200, time);
 
-  const level = accent ? 0.5 : 0.28;
+  const level = (accent ? 0.5 : 0.28) * Math.min(1, Math.max(0, volume)) * 1.4;
   const decay = accent ? 0.055 : 0.04;
 
   // A couple of milliseconds of attack keeps it a click rather than a pop.

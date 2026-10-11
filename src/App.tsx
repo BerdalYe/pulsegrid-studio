@@ -9,6 +9,9 @@ import {
 } from "react";
 
 import { useProjectStore } from "./state/projectStore";
+import { currentSettings, useAppSettings } from "./state/appSettings";
+import { THEMES } from "./lib/themes";
+import { SettingsDialog } from "./components/SettingsDialog";
 import { useSessionStore, type WindowId } from "./state/sessionStore";
 
 import { useTransportStore } from "./state/transportStore";
@@ -30,6 +33,7 @@ import { ShortcutsDialog } from "./components/ShortcutsDialog";
 import { SynthEditor, useSynthEditor } from "./components/SynthEditor";
 import { SoundFontEditor } from "./components/SoundFontEditor";
 import { MenuPanel, prepareItems, type MenuItem } from "./components/MenuPanel";
+import { WindowMenuButton } from "./components/WindowMenu";
 import { EDGE_CURSOR, moveRect, resizeRect, type Edge, type Rect } from "./lib/windowGeometry";
 import { MidiOutEditor } from "./components/MidiOutEditor";
 import { matchShortcut, platformText, shortcutLabel, type ShortcutId } from "./lib/hotkeys";
@@ -38,10 +42,11 @@ import { markTourSeen, tourSeen } from "./lib/tour";
 import { reportProblemUrl } from "./lib/reportProblem";
 import { readAcceptance, type AgreementAcceptance } from "./agreement";
 import { initDefaultSamples } from "./audio/sampleRegistry";
-import { INSTRUMENT_GROUPS, availableInstruments } from "./presets/presets";
+import { availableInstruments, type InstrumentMenuEntry } from "./presets/presets";
+import { instrumentLibrary, type InstrumentFolder } from "./lib/instrumentLibrary";
 import { addInstrument } from "./lib/addInstrument";
 import { probeBuiltinSoundFont, refreshSavedFonts, useSoundFontStore, watchProjectFonts } from "./audio/soundfont/registry";
-import { isDesktop, useFileStore } from "./files/desktop";
+import { getDesktop, isDesktop, useFileStore } from "./files/desktop";
 import { startMidi } from "./audio/midiController";
 import { useMidiStore } from "./audio/midiMap";
 import { checkForUpdatesNow, initUpdates, toggleUpdateChecks, useUpdateStore } from "./files/updates";
@@ -92,11 +97,6 @@ const windowShortcut: Record<WindowId, ShortcutId> = {
   mixer: "windowMixer"
 };
 
-const THEMES = [
-  { id: 'pulse-violet', name: 'Pulse (default)' },
-  { id: 'cyberpunk-neon', name: 'Cyberpunk Neon' },
-  { id: 'charcoal-studio', name: 'Charcoal Studio' }
-];
 
 const NO_RECENT: Array<{ path: string; name: string }> = [];
 
@@ -137,6 +137,9 @@ function Studio() {
   const [showTools, setShowTools] = useState(true);
   const [exportOpen, setExportOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const showHints = useAppSettings((state) => state.showHints);
+  const uiScale = useAppSettings((state) => state.uiScale);
   const wheelZoom = useSessionStore((state) => state.wheelZoom);
   const toggleWheelZoom = useSessionStore((state) => state.toggleWheelZoom);
   const [agreement, setAgreement] = useState<AgreementAcceptance | null>(() => readAcceptance());
@@ -171,6 +174,11 @@ function Studio() {
   }, []);
 
   const showStatus = useCallback((message: string) => setStatus(message), []);
+
+  // The size of the interface, from the settings (the desktop app; the web studio uses the browser's zoom).
+  useEffect(() => {
+    getDesktop()?.setZoom?.(uiScale);
+  }, [uiScale]);
 
   // Clear the status line after a while so it doesn't linger forever.
   useEffect(() => {
@@ -464,6 +472,11 @@ function Studio() {
           setShortcutsOpen(true);
           return;
 
+        case "openSettings":
+          event.preventDefault();
+          setSettingsOpen((open) => !open);
+          return;
+
         case "nextPattern":
         case "previousPattern": {
           event.preventDefault();
@@ -595,30 +608,21 @@ function Studio() {
       { label: `Undo   ${shortcutLabel("undo")}`, run: undo },
       { label: `Redo   ${shortcutLabel("redo")}`, run: redo }
     ],
-    // The plugins first, then each family of instruments in a flyout, as in FL's own menus.
+    // The plugins first, then the instruments in flyouts, as in FL's own menus.
     Add: (() => {
-      const available = availableInstruments(builtinSounds);
-      const entryItem = (entry: (typeof available)[number]): MenuItem => ({
+      const library = instrumentLibrary(availableInstruments(builtinSounds));
+      const entryItem = (entry: InstrumentMenuEntry): MenuItem => ({
         label: entry.label,
         run: () => {
           addInstrument(entry);
           setStatus(`Added ${entry.label}.`);
         }
       });
-      const plugins = available.filter((entry) => entry.group === "Plugins").map(entryItem);
-      const family = (group: string): MenuItem[] => {
-        const entries = available.filter((entry) => entry.group === group);
-        return entries.length === 0 ? [] : [{ label: group, items: entries.map(entryItem) }];
-      };
-      // The sampled instruments and the drum machine up front; the synthesized sounds tucked into one flyout.
-      const synths = INSTRUMENT_GROUPS.filter((group) => !["Plugins", "Instruments", "Drums"].includes(group)).flatMap(family);
-      return [
-        ...plugins,
-        { label: "", separator: true },
-        ...family("Instruments"),
-        ...family("Drums"),
-        ...(synths.length > 0 ? [{ label: "Synth sounds", items: synths } as MenuItem] : [])
-      ];
+      const folderItem = (folder: InstrumentFolder): MenuItem => ({
+        label: folder.label,
+        items: [...(folder.entries ?? []).map(entryItem), ...(folder.folders ?? []).map(folderItem)]
+      });
+      return [...library.plugins.map(entryItem), { label: "", separator: true }, ...library.folders.map(folderItem)];
     })(),
     Patterns: [
       { label: "New pattern", run: () => selectPattern(addPattern()) },
@@ -659,6 +663,8 @@ function Studio() {
       }))
     ],
     Options: [
+      { label: `Settings…   ${shortcutLabel("openSettings")}`, run: () => setSettingsOpen(true) },
+      { label: "", separator: true },
       ...THEMES.map((entry) => ({
         label: entry.name,
         checked: theme === entry.id,
@@ -757,6 +763,16 @@ function Studio() {
       <SoundFontEditor />
       <MidiOutEditor />
       {shortcutsOpen ? <ShortcutsDialog onClose={() => setShortcutsOpen(false)} /> : null}
+      {settingsOpen ? (
+        <SettingsDialog
+          onClose={() => setSettingsOpen(false)}
+          onStatus={showStatus}
+          onShowShortcuts={() => {
+            setSettingsOpen(false);
+            setShortcutsOpen(true);
+          }}
+        />
+      ) : null}
 
       {openMenu ? (
         <MenuPanel
@@ -785,6 +801,7 @@ function Studio() {
                 title={windowTitles[id]}
                 onFocus={() => focusWindow(id)}
                 onClose={() => closeWindow(id)}
+                onStatus={showStatus}
               >
                 {id === "playlist" ? <Playlist /> : null}
                 {id === "rack" ? <ChannelRack /> : null}
@@ -808,8 +825,8 @@ function Studio() {
         <span className={`fl-hint-icon${status ? " fl-hint-icon-status" : ""}`} aria-hidden="true">
           {status ? "" : "i"}
         </span>
-        <span className={`fl-hint-text${status || hint ? "" : " fl-hint-idle"}`} role="status">
-          {status || hint || platformText("Point at anything for a hint · Space plays · Ctrl+S saves")}
+        <span className={`fl-hint-text${status || (showHints && hint) ? "" : " fl-hint-idle"}`} role="status">
+          {status || (showHints ? hint || platformText("Point at anything for a hint · Space plays · Ctrl+S saves") : "")}
         </span>
         <StatusInfo />
       </footer>
@@ -888,7 +905,7 @@ function useComputerKeyboard(): void {
       const pitch = Math.min(127, (octave + 1) * 12 + offset);
       held.current.set(event.code, { pitch, channelId });
       useTransportStore.getState().noteOn(pitch);
-      noteOn(channelId, pitch, 0.85);
+      noteOn(channelId, pitch, currentSettings().keyboardVelocity);
     };
 
     const onKeyUp = (event: KeyboardEvent) => {
@@ -927,12 +944,13 @@ interface StudioWindowProps {
   title: string;
   onFocus: () => void;
   onClose: () => void;
+  onStatus: (message: string) => void;
   children: ReactNode;
 }
 
 const EDGES: Edge[] = ["n", "s", "e", "w", "ne", "nw", "se", "sw"];
 
-function StudioWindow({ id, title, onFocus, onClose, children }: StudioWindowProps) {
+function StudioWindow({ id, title, onFocus, onClose, onStatus, children }: StudioWindowProps) {
   const layout = useSessionStore((state) => state.windows[id]);
   const active = useSessionStore((state) => state.view === id);
   const setWindowRect = useSessionStore((state) => state.setWindowRect);
@@ -967,6 +985,7 @@ function StudioWindow({ id, title, onFocus, onClose, children }: StudioWindowPro
       const dx = move.clientX - current.pointerX;
       const dy = move.clientY - current.pointerY;
 
+      // A window can be left partly out of view; it draws to the edges when it comes close to them.
       setWindowRect(
         id,
         current.kind === "move" ? moveRect(current.rect, dx, dy, area) : resizeRect(current.rect, current.kind, dx, dy, area)
@@ -1027,6 +1046,7 @@ function StudioWindow({ id, title, onFocus, onClose, children }: StudioWindowPro
         title="Drag to move · double-click to maximise"
       >
         <span className={`window-led${active ? " active" : ""}`} />
+        <WindowMenuButton id={id} title={title} onStatus={onStatus} />
         <span className="window-title">{title}</span>
         <span className="window-spacer" />
 
