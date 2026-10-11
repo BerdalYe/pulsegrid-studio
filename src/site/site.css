@@ -1775,3 +1775,10 @@ h3 {
 .download-main .button + .button {
   margin-top: 10px;
 }
+
+.footer-note {
+  margin: 0;
+  color: var(--faint);
+  font-size: 12.5px;
+  grid-column: 1 / -1;
+}

@@ -87,3 +87,7 @@ Copyright © 2026 Mathias Verdal and the PulseGrid Studio contributors.
 
 The recorded instruments are [GeneralUser GS](https://www.schristiancollins.com) by S. Christian Collins,
 under its own licence (`assets/soundfonts/LICENSE-GeneralUser-GS.txt`), which allows use in music and in software.
+The other packages it is built from are listed with their licences in `public/THIRD_PARTY_LICENSES.txt`
+(`npm run licenses` regenerates it).
+
+PulseGrid Studio is an independent project, not affiliated with or endorsed by Image-Line (FL Studio) or Akai Professional.

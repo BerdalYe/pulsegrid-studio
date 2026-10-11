@@ -398,7 +398,10 @@ function AboutPage({ onShowShortcuts }: { onShowShortcuts: () => void }) {
 
   return (
     <>
-      <Row label="PulseGrid Studio" hint="Free and open-source music production for Windows, Mac and the web.">
+      <Row
+        label="PulseGrid Studio"
+        hint="Copyright © 2026 Mathias Verdal and the PulseGrid Studio contributors. Free software under the GNU GPL, version 3 or later, and comes with no warranty."
+      >
         <span className="settings-note">Version {__APP_VERSION__}</span>
       </Row>
       <Row label="Keyboard shortcuts" hint="Every key, in one list.">
@@ -409,6 +412,11 @@ function AboutPage({ onShowShortcuts }: { onShowShortcuts: () => void }) {
       <Row label="Source code" hint="Open source under the GNU GPL, version 3: read it, change it, build it yourself, or help out.">
         <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
           Open on GitHub
+        </a>
+      </Row>
+      <Row label="Licences of the parts it's built from" hint="React, Supabase, the MP3 encoder, the Inter font and the rest, each under its own licence.">
+        <a href={`${SITE_URL}/THIRD_PARTY_LICENSES.txt`} target="_blank" rel="noopener noreferrer">
+          Show the licences
         </a>
       </Row>
       <Row label="Credits and terms">

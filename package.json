@@ -15,7 +15,8 @@
     "icon": "node scripts/make-icon.mjs",
     "dist:win": "tsc && vite build && electron-builder --win --x64 -c.electronDist=node_modules/electron/dist",
     "build:site": "tsc && vite build",
-    "release": "npm run dist:win && npm run build:site",
+    "licenses": "node scripts/third-party-licenses.mjs",
+    "release": "npm run licenses && npm run dist:win && npm run build:site",
     "dist:mac": "tsc && vite build && electron-builder --mac --publish never"
   },
   "devDependencies": {
@@ -70,6 +71,7 @@
       "electron/**/*",
       "assets/soundfonts/**/*",
       "build/icon.png",
+      "LICENSE",
       "package.json"
     ],
     "win": {
