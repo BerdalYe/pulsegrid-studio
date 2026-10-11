@@ -134,7 +134,8 @@ export function fitLayout(
   const w = Math.max(480, Math.round(width));
   const h = Math.max(360, Math.round(height));
 
-  const rackWidth = Math.min(w - gap * 2, Math.max(700, Math.round(w * 0.56)));
+  // Wide enough for the channel header and a full bar of sixteen steps.
+  const rackWidth = Math.min(w - gap * 2, Math.max(830, Math.round(w * 0.56)));
   const rackHeight = Math.min(h - gap * 2, Math.max(300, Math.round(h * 0.44)));
   const pianoLeft = Math.round(w * 0.16);
   const mixerTop = Math.round(h * 0.28);

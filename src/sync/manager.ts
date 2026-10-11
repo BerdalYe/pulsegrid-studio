@@ -1,7 +1,7 @@
 import { browserName } from "../lib/reportProblem";
 import { initAuth, useAuthStore } from "./auth";
 import { getClient } from "./client";
-import { createSyncEngine, type ProjectAdapter, type SyncEngine } from "./engine";
+import { createSyncEngine, type CloudState, type ProjectAdapter, type SyncEngine } from "./engine";
 import { loadSyncState, saveSyncState, type KeyValueStore } from "./links";
 import { createSupabaseBackend, toCloudError } from "./supabase";
 import { useCloudStore } from "./store";
@@ -58,7 +58,7 @@ function storage(): KeyValueStore | null {
 }
 
 function deviceLabel(): string {
-  if (window.pulsegridDesktop) return "Windows app";
+  if (window.pulsegridDesktop) return window.pulsegridDesktop.platform === "darwin" ? "Mac app" : "Windows app";
   const browser = browserName(navigator.userAgent);
   return browser ? `Web studio (${browser})` : "Web studio";
 }
@@ -101,7 +101,9 @@ async function startEngine(userId: string): Promise<void> {
       useCloudStore.getState().patch(patch);
       if (engine === created) syncLinked();
     },
-    onNotice: (message) => useCloudStore.getState().setNotice(message)
+    onNotice: (message) => useCloudStore.getState().setNotice(message),
+    // A project goes to the cloud only when the person chooses it.
+    optIn: true
   });
 
   engine = created;
@@ -312,6 +314,51 @@ export function setSyncEnabled(enabled: boolean): void {
   if (!current) return;
 
   current.setEnabled(enabled);
+  useCloudStore.getState().bumpLinks();
   useCloudStore.getState().patch({ phase: enabled ? "idle" : "excluded", message: "", behind: null });
   if (enabled) void reconcile(true);
+}
+
+/* ─────────────────────────── choosing projects for the cloud ─────────────────────────── */
+
+/** Where a project on this device stands with the cloud, or null when no one is signed in. */
+export function projectCloudState(path: string): CloudState | null {
+  return engine ? engine.stateOf(path.toLowerCase()) : null;
+}
+
+/** Keep a project in the cloud from now on: the open one, or any other one in the save folder. */
+export async function saveProjectToCloud(path: string, name: string): Promise<string> {
+  const current = engine;
+  if (!current || !host) throw new Error("Sign in under Cloud sync to keep projects in the cloud.");
+
+  const key = path.toLowerCase();
+  if (host.key() === key) {
+    setSyncEnabled(true);
+    return `"${name}" is going up to your cloud, and will stay in step from now on.`;
+  }
+
+  const desktop = window.pulsegridDesktop;
+  if (!desktop) throw new Error("Open the project first.");
+  const file = await desktop.readProject(path);
+  const outcome = await current.uploadFile(key, path, name, file.contents);
+  useCloudStore.getState().bumpLinks();
+  await refreshList();
+  return outcome === "uploaded" ? `Saved "${name}" to your cloud.` : `"${name}" syncs with your cloud again.`;
+}
+
+/** Keep a project on this device only. Its copy in the cloud, if any, stays until it is removed there. */
+export function keepProjectLocal(path: string, name: string): string {
+  const current = engine;
+  if (!current) return "";
+  const key = path.toLowerCase();
+  current.setEnabledFor(key, false);
+  if (host?.key() === key) useCloudStore.getState().patch({ phase: "excluded", message: "", behind: null });
+  useCloudStore.getState().bumpLinks();
+  return `"${name}" stays on this PC only now. Any copy already in your cloud is kept; remove it under Cloud sync if you don't want it there.`;
+}
+
+/** A project was deleted from this device: stop tracking it. Its cloud copy stays. */
+export function forgetProject(path: string): void {
+  engine?.forget(path.toLowerCase());
+  useCloudStore.getState().bumpLinks();
 }

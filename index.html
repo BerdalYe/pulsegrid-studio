@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark" />
     <meta name="theme-color" content="#0d0c14" />
-    <title>PulseGrid Studio — free music production for Windows and the web</title>
+    <title>PulseGrid Studio — free music production for Windows, Mac and the web</title>
     <meta
       name="description"
-      content="PulseGrid Studio is a free music studio: step sequencer, piano roll, playlist and mixer, over 100 instruments, 14 effects, MIDI keyboard support, MIDI out and optional cloud sync between your PCs. Download for Windows or Mac, or open it in your browser."
+      content="PulseGrid Studio is a free music studio: step sequencer, piano roll, playlist and mixer, 150 instruments, 14 effects, MIDI keyboard support, MIDI out and optional cloud sync between your computers. Download for Windows or Mac, or open it in your browser."
     />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="PulseGrid Studio" />
-    <meta property="og:description" content="Free music production for Windows and the web. Version 1.0: sync your projects between PCs." />
+    <meta property="og:description" content="Free music production for Windows, Mac and the web: 150 instruments, a full mixer and optional cloud sync." />
     <meta property="og:image" content="https://pulsegridstudio.netlify.app/site/og.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -28,12 +28,12 @@
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
 
-    <!-- The 1.0 announcement. Dismissing it is remembered in this browser (see site.ts). -->
+    <!-- The release announcement. Dismissing it is remembered in this browser (see site.ts). -->
     <div class="announce" id="announce" role="region" aria-label="Announcement">
-      <span class="announce-badge">1.0</span>
+      <span class="announce-badge">1.5</span>
       <p class="announce-text">
-        <strong>PulseGrid Studio 1.0 is here.</strong>
-        <span>Sync your projects between PCs, automatic updates and a guided first start.</span>
+        <strong>PulseGrid Studio 1.5 is here.</strong>
+        <span>150 instruments, a browser and master monitor in the style of FL Studio, a Settings window and MIDI out.</span>
       </p>
       <a class="announce-link" href="#whats-new">See what's new</a>
       <button class="announce-close" id="announce-close" type="button" aria-label="Dismiss announcement">
@@ -73,20 +73,20 @@
         <div class="hero-copy">
           <a class="release-pill" href="#whats-new">
             <span class="pill-tag">New</span>
-            Version %VITE_APP_VERSION%: new instruments and MIDI out
+            Version %VITE_APP_VERSION%: 150 instruments and a new browser
             <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3l5 5-5 5" /></svg>
           </a>
 
           <h1>Make beats <span class="gradient-text">that hit.</span></h1>
           <p class="lead">
-            A complete music studio — step sequencer, piano roll, playlist and mixer — with over 100
-            instruments and 14 effects built in. Free for Windows and Mac, and it runs in your browser too.
+            A complete music studio — step sequencer, piano roll, playlist and mixer — with 150 instruments
+            and 14 effects built in. Free for Windows and Mac, and it runs in your browser too.
           </p>
 
           <div class="hero-actions">
             <a class="button button-primary" href="#download">
               <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v9M4 7l4 4 4-4M2.5 14h11" /></svg>
-              Download for Windows
+              Download for Windows or Mac
             </a>
             <a class="button button-ghost" href="/studio.html">Try it in your browser</a>
           </div>
@@ -104,7 +104,7 @@
             <div class="window-bar" aria-hidden="true"><i></i><i></i><i></i><span>Neon Drive — PulseGrid Studio</span></div>
             <img
               src="/site/studio.png"
-              alt="PulseGrid Studio with a song open: the projects panel, the playlist arrangement and the channel rack"
+              alt="PulseGrid Studio playing a song: the instrument browser, the playlist, the channel rack and the master monitor in the top bar"
               width="1470"
               height="1000"
               fetchpriority="high"
@@ -115,7 +115,7 @@
 
       <!-- ─────────────────────────────── stats ─────────────────────────────── -->
       <section class="stats" aria-label="What's included">
-        <div><strong>57</strong><span>instruments</span></div>
+        <div><strong>150</strong><span>instruments</span></div>
         <div><strong>14</strong><span>effect plugins</span></div>
         <div><strong>16</strong><span>mixer channels with sends</span></div>
         <div><strong>WAV &amp; MP3</strong><span>export</span></div>
@@ -135,13 +135,13 @@
             <h3>Program drums in seconds</h3>
             <p>Click or drag across the step grid to lay down a beat. Set velocity per step, add swing, and give every channel its own volume, pan and mixer insert.</p>
             <ul class="checks">
-              <li>Nine drum voices, from 909 kick to shaker</li>
+              <li>Ten recorded drum kits and nine drum-machine voices</li>
+              <li>Hear a sound in the browser, then drag it onto the rack</li>
               <li>Paint by dragging, right-drag a step for velocity</li>
-              <li>Patterns from one step up to 32 bars</li>
             </ul>
           </div>
           <figure class="showcase-shot">
-            <img src="/site/rack.png" alt="The channel rack with a kick, clap and hi-hat pattern" width="1400" height="792" loading="lazy" />
+            <img src="/site/rack.png" alt="The channel rack with a drum pattern, its steps stretched to fill the window" width="1660" height="798" loading="lazy" />
           </figure>
         </article>
 
@@ -157,7 +157,7 @@
             </ul>
           </div>
           <figure class="showcase-shot">
-            <img src="/site/piano.png" alt="The piano roll with a lead melody and its velocity lane" width="1611" height="1024" loading="lazy" />
+            <img src="/site/piano.png" alt="The piano roll with a lead melody and its velocity lane" width="1600" height="1024" loading="lazy" />
           </figure>
         </article>
 
@@ -173,7 +173,7 @@
             </ul>
           </div>
           <figure class="showcase-shot">
-            <img src="/site/mixer.png" alt="The mixer with sixteen channel strips and an effect chain on one insert" width="1669" height="897" loading="lazy" />
+            <img src="/site/mixer.png" alt="The mixer with sixteen channel strips and an effect chain on one insert" width="1658" height="903" loading="lazy" />
           </figure>
         </article>
 
@@ -197,15 +197,15 @@
           <div class="showcase-copy">
             <span class="showcase-step">05</span>
             <h3>Take your projects anywhere</h3>
-            <p>Sign in with a free account and your projects follow you: the Windows app and the web studio keep them in step, uploading after every save. It's optional, and nothing leaves your device until you sign in.</p>
+            <p>Sign in with a free account and choose which projects go to your cloud. Those follow you between Windows, Mac and the web studio, uploading after every save. The rest stay on your computer, and nothing leaves it until you choose.</p>
             <ul class="checks">
-              <li>Start on one PC, carry on on another</li>
-              <li>Changed on two PCs? Both versions are kept, never overwritten</li>
+              <li>One click beside a project puts it in your cloud</li>
+              <li>Changed on two computers? Both versions are kept, never overwritten</li>
               <li>Works offline and catches up when you're back</li>
             </ul>
           </div>
           <figure class="showcase-shot">
-            <img src="/site/cloud.png" alt="The Cloud panel listing synced projects, with the project showing as in the cloud in the menu bar" width="1760" height="1060" loading="lazy" />
+            <img src="/site/cloud.png" alt="The Projects tab with a cloud button beside each project, and the menu bar showing the open project is in the cloud" width="1760" height="1060" loading="lazy" />
           </figure>
         </article>
 
@@ -214,8 +214,8 @@
             <div class="feature-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><rect x="3" y="5" width="8" height="4" rx="1" /><rect x="13" y="5" width="8" height="4" rx="1" /><rect x="7" y="11" width="10" height="4" rx="1" /><rect x="3" y="17" width="6" height="3" rx="1" /></svg>
             </div>
-            <h3>Arrange the song</h3>
-            <p>Place patterns, audio and automation on the playlist. Section markers, loop regions and colour-coded lanes.</p>
+            <h3>Watch the master</h3>
+            <p>An oscilloscope, a stereo peak meter with a clip light, and CPU, memory and voice counts in the top bar, the way FL Studio shows them.</p>
           </article>
 
           <article class="feature reveal">
@@ -223,7 +223,7 @@
               <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2" /><path d="M6 7v6M10 7v6M14 7v6M18 7v6" /></svg>
             </div>
             <h3>Plug in a MIDI keyboard</h3>
-            <p>Keys play with velocity, pads hit your drums, knobs control the mix. Works with the Akai MPK Mini and other USB keyboards.</p>
+            <p>Keys play with velocity, pads hit your drums, knobs control the mix. Works with the Akai MPK mini IV and other USB keyboards, and MIDI Out plays instruments in other programs.</p>
           </article>
 
           <article class="feature reveal">
@@ -262,8 +262,8 @@
             <div class="feature-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M7 18h9.5a4 4 0 0 0 .6-7.96A5.5 5.5 0 0 0 6.4 8.6 4.8 4.8 0 0 0 7 18z" /><path d="M12 11v5m-2-2 2 2 2-2" /></svg>
             </div>
-            <h3>Sync between PCs</h3>
-            <p>A free, optional account keeps your projects in step between the Windows app and the web studio.</p>
+            <h3>Sync between computers</h3>
+            <p>A free, optional account keeps the projects you choose in step between Windows, Mac and the web studio.</p>
           </article>
 
           <article class="feature reveal">
@@ -271,7 +271,7 @@
               <svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.5-5.8" /><path d="M20 4v5h-5" /></svg>
             </div>
             <h3>Updates by themselves</h3>
-            <p>The Windows app finds new versions on its own and offers a one-click restart, saving your project first.</p>
+            <p>The Windows app finds new versions on its own and offers a one-click restart, saving your project first. The Mac app tells you when one is out.</p>
           </article>
 
           <article class="feature reveal">
@@ -279,7 +279,7 @@
               <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M9.5 9.5a2.6 2.6 0 1 1 3.6 2.4c-.7.4-1.1.9-1.1 1.6M12 17h.01" /></svg>
             </div>
             <h3>Easy to start</h3>
-            <p>A short tour on first launch, a hint for anything you point at, and demo songs to open and take apart.</p>
+            <p>A short tour on first launch, a hint for anything you point at, demo songs to take apart, and a Settings window (F10) for the rest.</p>
           </article>
         </div>
       </section>
@@ -288,50 +288,58 @@
       <section class="section section-tint" id="sounds">
         <header class="section-head">
           <p class="eyebrow">Sound library</p>
-          <h2>Over 100 instruments. 14 effects. Nothing to download.</h2>
-          <p>Most sounds are generated inside the studio, so projects open anywhere without missing plugins or sample packs. The Windows and Mac apps add 35 more instruments on top, and can load instrument files of your own.</p>
+          <h2>150 instruments. 14 effects. Nothing to download.</h2>
+          <p>Recorded instruments and the studio's own synths, sorted by family. Click any of them in the browser to hear it, then drag it onto the channel rack. The recorded instruments come with the Windows and Mac apps; the web studio has the synths, the drum machine and the effects, and can load SoundFont files of your own.</p>
         </header>
 
         <div class="instrument-columns">
           <div class="instrument-group reveal">
-            <h3>Drums <span>9</span></h3>
-            <p>Kick · Snare · Clap · Hi-hat · Shaker · Rimshot · Tom · Crash · Cowbell</p>
+            <h3>Drums <span>19</span></h3>
+            <p>Standard, Room, Power, Electronic, 808/909, Dance, Jazz and Brush kits · Orchestral percussion · Taiko · nine drum-machine voices</p>
           </div>
           <div class="instrument-group reveal">
-            <h3>Keys <span>8</span></h3>
-            <p>Grand Piano · Electric Piano · FM E-Piano · Drawbar Organ · Pipe Organ · Harpsichord · Clavinet · Accordion</p>
+            <h3>Keys <span>14</span></h3>
+            <p>Grand &amp; bright piano · Electric &amp; FM piano · Honky-tonk · Harpsichord · Clavinet · Tonewheel, rock &amp; church organ · Accordion · Harmonica</p>
           </div>
           <div class="instrument-group reveal">
-            <h3>Strings <span>7</span></h3>
-            <p>String Ensemble · Solo Violin · Cello · Pizzicato · Harp · Nylon Guitar · Steel Guitar</p>
+            <h3>Mallets &amp; bells <span>11</span></h3>
+            <p>Celesta · Glockenspiel · Music box · Vibraphone · Marimba · Xylophone · Tubular bells · Kalimba · Steel drums · Glass &amp; digital bells</p>
           </div>
           <div class="instrument-group reveal">
-            <h3>Winds &amp; voice <span>7</span></h3>
-            <p>Brass Section · Trumpet · Saxophone · Clarinet · Flute · Pan Flute · Choir</p>
+            <h3>Guitars <span>10</span></h3>
+            <p>Nylon · Steel · Jazz · Clean · Muted · Overdrive · Distortion · Banjo · Sitar · Koto</p>
           </div>
           <div class="instrument-group reveal">
-            <h3>Mallets <span>7</span></h3>
-            <p>Marimba · Vibraphone · Celesta · Music Box · Glass Bell · Kalimba · Steel Drum</p>
+            <h3>Bass <span>16</span></h3>
+            <p>808 sub &amp; boom · Upright · Finger · Pick · Fretless · Slap · Synth basses · Reese · Acid · FM · Wobble · Analog</p>
           </div>
           <div class="instrument-group reveal">
-            <h3>Bass <span>8</span></h3>
-            <p>808 Sub · 808 Boom · Reese · Acid · FM · Wobble · Analog · Upright</p>
+            <h3>Strings <span>12</span></h3>
+            <p>Violin · Viola · Cello · Double bass · Ensemble · Slow &amp; tremolo strings · Pizzicato · Synth strings · Harp · Timpani</p>
           </div>
           <div class="instrument-group reveal">
-            <h3>Leads, plucks &amp; pads <span>10</span></h3>
-            <p>Supersaw · Cyber Saw · Square · Chiptune · Synth Brass · Hyper Pluck · Future Pluck · Warm, Bright &amp; Dark Pads</p>
+            <h3>Brass &amp; winds <span>19</span></h3>
+            <p>Trumpet · Trombone · Tuba · French horn · Brass section · Four saxophones · Oboe · Bassoon · Clarinet · Piccolo · Flute · Pan flute · Shakuhachi</p>
           </div>
           <div class="instrument-group reveal">
-            <h3>Instruments, in the desktop apps <span>35</span></h3>
-            <p>Grand Piano · Bright Piano · Electric Piano · Church Organ · Nylon &amp; Steel Guitar · Fingered &amp; Slap Bass · Violin · Cello · Harp · Choir · Trumpet · Trombone · French Horn · Sax · Flute · Four drum kits and more. Realistic sounds, 287 in the full set.</p>
+            <h3>Voices <span>6</span></h3>
+            <p>Choir · Voice oohs · Synth voice · Solo vox · Space voice · Vowel lead</p>
           </div>
           <div class="instrument-group reveal">
-            <h3>Plugins <span>3</span></h3>
-            <p>Wavetable Synth · Instrument Browser (every sound in the set, or add your own .sf2 file) · MIDI Out (play instruments that live in another program)</p>
+            <h3>Synths <span>16</span></h3>
+            <p>Supersaw · Saw &amp; square leads · Fifth saw · Polysynth · Chiptune · Hyper &amp; future plucks · Wavetable leads and plucks</p>
           </div>
           <div class="instrument-group reveal">
-            <h3>Sampler <span>1</span></h3>
-            <p>Load any audio file or a microphone recording and play it across the keyboard.</p>
+            <h3>Pads <span>9</span></h3>
+            <p>Warm · Fantasia · Halo · Sweep · Bowed glass · Metal · Bright · Dark evolving · Glass</p>
+          </div>
+          <div class="instrument-group reveal">
+            <h3>FX <span>15</span></h3>
+            <p>Noise riser · Downlifter · Impact · Sub drop · Reverse crash · White noise sweep · Reverse cymbal · Orchestra hit · Atmospheres</p>
+          </div>
+          <div class="instrument-group reveal">
+            <h3>Plugins <span>4</span></h3>
+            <p>Wavetable Synth · Instrument Browser (every sound in the set, or your own .sf2 files) · MIDI Out (instruments in another program) · Sampler</p>
           </div>
         </div>
 
@@ -359,7 +367,7 @@
                 <th scope="col"><span class="visually-hidden">Feature</span></th>
                 <th scope="col">
                   Desktop app
-                  <small>Windows 10 &amp; 11</small>
+                  <small>Windows 10 &amp; 11 · macOS 12+</small>
                 </th>
                 <th scope="col">
                   Web studio
@@ -369,20 +377,20 @@
             </thead>
             <tbody>
               <tr><th scope="row">Price</th><td>Free</td><td>Free</td></tr>
-              <tr><th scope="row">Install</th><td>Windows installer</td><td>Nothing to install</td></tr>
+              <tr><th scope="row">Install</th><td>Windows installer or Mac app</td><td>Nothing to install</td></tr>
               <tr><th scope="row">Where projects live</th><td>Files in your own folder</td><td>Your browser's storage</td></tr>
               <tr><th scope="row">Auto-save</th><td class="yes">To the project file, with backups</td><td class="yes">In the browser</td></tr>
               <tr><th scope="row">Export WAV &amp; MP3</th><td class="yes">Straight to an Exports folder</td><td class="yes">As downloads</td></tr>
               <tr><th scope="row">MIDI keyboards</th><td class="yes">Connect automatically</td><td class="yes">After allowing access</td></tr>
-              <tr><th scope="row">Realistic instruments</th><td class="yes">35 included, plus your own .sf2 files</td><td>Your own .sf2 files</td></tr>
+              <tr><th scope="row">Instruments</th><td class="yes">All 150, recorded and synthesized</td><td>The synths, drum machine and FX, plus your own .sf2 files</td></tr>
               <tr><th scope="row">MIDI out to other programs</th><td class="yes">Yes</td><td class="yes">Yes, after allowing access</td></tr>
-              <tr><th scope="row">Cloud sync</th><td class="yes">Free account, optional</td><td class="yes">Free account, optional</td></tr>
-              <tr><th scope="row">Updates</th><td class="yes">Found and installed automatically</td><td class="yes">Always the latest</td></tr>
+              <tr><th scope="row">Cloud sync</th><td class="yes">Optional; you pick the projects</td><td class="yes">Optional; you pick the projects</td></tr>
+              <tr><th scope="row">Updates</th><td class="yes">Installed automatically on Windows; announced on Mac</td><td class="yes">Always the latest</td></tr>
               <tr><th scope="row">Works offline</th><td class="yes">Always</td><td>Needs the page to load</td></tr>
             </tbody>
           </table>
           <div class="compare-actions">
-            <a class="button button-primary" href="#download">Download for Windows</a>
+            <a class="button button-primary" href="#download">Download for Windows or Mac</a>
             <a class="button button-ghost" href="/studio.html">Open the web studio</a>
           </div>
         </div>
@@ -402,18 +410,19 @@
               <span class="release-badge">Latest</span>
               <time>%VITE_RELEASE_DATE%</time>
             </header>
-            <p class="release-lead">New instruments, a MIDI out for your other instruments, and menus that work like a desktop program.</p>
+            <p class="release-lead">150 instruments, a browser and master monitor in the style of FL Studio, a Settings window, and MIDI out for the instruments that came with your keyboard.</p>
             <ul>
-              <li><strong>35 new instruments in the desktop apps.</strong> <em>Add</em> now has an <em>Instruments</em> group: grand piano, electric piano, organ, guitars, basses, violin, cello, harp, choir, trumpet, trombone, horn, sax, flute, and four drum kits. They come with the app, work offline, and are saved with your project and included when you export audio.</li>
-              <li><strong>Instrument Browser (plugin).</strong> <em>Add → Instrument Browser</em> opens a panel with all 287 sounds, searchable, with attack, release, brightness and transpose. <em>Add a SoundFont…</em> brings in any .sf2 file of your own. The older synthesized sounds are under <em>Add → Synth sounds</em>.</li>
-              <li><strong>MIDI Out (plugin).</strong> <em>Add → MIDI Out</em> sends a channel's notes out of a MIDI port instead of playing them here, timed against the audio clock so they land on the beat. Use it to play instruments that live in another program, for example the Akai Studio Instrument Collection that comes with the MPK mini IV, through a virtual MIDI cable such as loopMIDI. Keys, pads, pitch and mod wheel, sustain and the keyboard's knobs go through. The sound comes from the other program, so it is not in PulseGrid's mixer or in an export from PulseGrid.</li>
-              <li><strong>Better MIDI keyboard support.</strong> Keyboards with several ports, like the MPK mini IV, now play without stray notes from their control ports. Choose which port is listened to, change the drum-pad channel, and watch a live MIDI monitor that says what each key, pad and knob sends. Pressure and preset changes are read too.</li>
-              <li><strong>Menus like a desktop program.</strong> Shortcuts sit in their own column, ticks and bullets show what is on, and the long instrument list is now a set of flyouts. Use the arrow keys to move through menus.</li>
-              <li><strong>A Settings window.</strong> Press <em>F10</em> or choose <em>Options → Settings</em>: pick the audio output and latency, set the metronome volume and how hard the computer keyboard plays, choose the MIDI port and drum-pad channel, change the theme and the size of the whole interface (desktop), and more. Changes apply at once and are remembered.</li>
-              <li><strong>A browser in the style of FL Studio.</strong> A row of icons across the top switches between Projects, Instruments, Samples, Keyboard &amp; MIDI, Cloud sync and Demo projects. The Instruments tab is a searchable tree of every instrument and plugin: click one to add it. Drag the browser's edge to make it wider.</li>
-              <li><strong>Panels that behave.</strong> Move a panel partly out of view and it stays there; bring it near a side and it locks to it. Resize from any edge or corner, double-click a title bar to maximise, and use the ▾ on each title bar for that panel's own menu (snap, pattern length, adding instruments). Panels follow the window when you resize the app, and the channel rack's steps stretch to fill their panel.</li>
-              <li><strong>The channel rack's playhead</strong> now sits exactly over the step that is playing.</li>
-              <li><strong>Stay signed in.</strong> Closing the app no longer signs you out of cloud sync.</li>
+              <li><strong>150 instruments, sorted by family.</strong> Drums, Keys, Mallets &amp; Bells, Guitars, Bass, Strings, Brass &amp; Winds, Voices, Synths, Pads and FX. The desktop apps add recorded instruments: pianos, organs, guitars, basses, a full orchestra, choirs and ten drum kits including an 808/909 kit. They come with the app, work offline, and are saved with your project and included when you export audio.</li>
+              <li><strong>FX for builds and drops.</strong> Noise riser, downlifter, impact, sub drop, reverse crash and white noise sweep, plus reverse cymbal, orchestra hit and atmospheres.</li>
+              <li><strong>Hear it first, then add it.</strong> In the browser, a click plays an instrument or a sample so you can hear it; drag it onto the channel rack to add it. Drop a sample on a sample channel to swap its sound. You can still add from the channel rack and the Add menu. Imported and recorded audio goes into the sample list.</li>
+              <li><strong>A browser in the style of FL Studio.</strong> A row of icons across the top switches between Projects, Instruments, Samples, Keyboard &amp; MIDI, Cloud sync and Demo projects. The instrument library is a searchable tree. Drag the browser's edge to make it wider.</li>
+              <li><strong>A header laid out like FL Studio's.</strong> The top row holds the menus, pattern and song mode, the transport, tempo and time, and a master monitor: an oscilloscope, a stereo peak meter with peak hold and a clip light, and a performance box with CPU load and its recent history, memory in use, the number of voices playing, and a warning if the sound drops out. The second row holds the hint panel, with the project's name and a hint for whatever you point at, then the windows, snap, the pattern and the master knobs.</li>
+              <li><strong>Choose what goes to the cloud, and delete projects.</strong> Only the projects you choose go to your cloud now: the cloud button beside a project in the Projects tab saves it there, open or not. The bin button deletes a project to the Recycle Bin, so you can get it back.</li>
+              <li><strong>A Settings window.</strong> Press <em>F10</em> or choose <em>Options → Settings</em>: the audio output and latency, metronome volume, how hard the computer keyboard plays, the MIDI port and drum-pad channel, the theme and the size of the whole interface (desktop), and more.</li>
+              <li><strong>Panels that behave.</strong> Leave a panel partly out of view, or bring it near a side and it locks there. Resize from any edge or corner, double-click a title bar to maximise, and use the ▾ on each title bar for that panel's own menu. The channel rack's steps stretch to fill their panel, and its playhead now sits exactly over the playing step.</li>
+              <li><strong>Plugins: Wavetable Synth, Instrument Browser, MIDI Out and Sampler.</strong> The Instrument Browser opens every sound in the recorded set and loads .sf2 files of your own. MIDI Out sends a channel's notes to another program, for example the Akai Studio Instrument Collection that comes with the MPK mini IV, through a virtual MIDI cable such as loopMIDI.</li>
+              <li><strong>Better MIDI keyboard support.</strong> Keyboards with several ports, like the MPK mini IV, play without stray notes from their control ports, and a live MIDI monitor shows what each key, pad and knob sends.</li>
+              <li><strong>Menus like a desktop program</strong>, with shortcuts in their own column and flyouts, and <strong>staying signed in</strong> when you close the app.</li>
             </ul>
           </article>
 
@@ -505,7 +514,9 @@
             </ul>
           </article>
 
-          <article class="release reveal">
+          <details class="release-archive">
+            <summary>Earlier versions: 0.3.0 to 0.4.7</summary>
+          <article class="release">
             <header>
               <h3>Version 0.4.7</h3>
             </header>
@@ -516,7 +527,7 @@
             </ul>
           </article>
 
-          <article class="release reveal">
+          <article class="release">
             <header>
               <h3>Version 0.4.6</h3>
             </header>
@@ -526,7 +537,7 @@
             </ul>
           </article>
 
-          <article class="release reveal">
+          <article class="release">
             <header>
               <h3>Version 0.4.5</h3>
             </header>
@@ -538,7 +549,7 @@
             </ul>
           </article>
 
-          <article class="release reveal">
+          <article class="release">
             <header>
               <h3>Version 0.4.4</h3>
             </header>
@@ -550,7 +561,7 @@
             </ul>
           </article>
 
-          <article class="release reveal">
+          <article class="release">
             <header>
               <h3>Version 0.4.3</h3>
             </header>
@@ -561,7 +572,7 @@
             </ul>
           </article>
 
-          <article class="release reveal">
+          <article class="release">
             <header>
               <h3>Version 0.4.2</h3>
             </header>
@@ -573,7 +584,7 @@
             </ul>
           </article>
 
-          <article class="release reveal">
+          <article class="release">
             <header>
               <h3>Version 0.4.1</h3>
             </header>
@@ -585,7 +596,7 @@
             </ul>
           </article>
 
-          <article class="release reveal">
+          <article class="release">
             <header>
               <h3>Version 0.4.0</h3>
             </header>
@@ -597,7 +608,7 @@
             </ul>
           </article>
 
-          <article class="release reveal">
+          <article class="release">
             <header>
               <h3>Version 0.3.0</h3>
               <span class="release-badge release-badge-muted">First desktop release</span>
@@ -610,6 +621,7 @@
               <li>Playlist markers, lane colours and resizable lanes.</li>
             </ul>
           </article>
+          </details>
         </div>
       </section>
 
@@ -728,18 +740,20 @@
             <p>
               In the desktop app, in <em>Documents\PulseGrid Studio</em> by default — change it under
               <em>File → Change save folder…</em>. In the web studio, in your browser's own storage on your device;
-              use <em>File → Download project</em> to keep a copy as a file. With a free account you can also sync
-              projects to the cloud and open them on any of your PCs.
+              use <em>File → Download project</em> to keep a copy as a file. With a free account you can also keep
+              the projects you choose in the cloud and open them on any of your computers. To delete a project, use
+              the bin button beside it in the browser's Projects tab; it goes to the Recycle Bin.
             </p>
           </details>
           <details>
             <summary>How does cloud sync work?</summary>
             <p>
-              Create a free account under <em>Cloud</em> in the left panel of the studio. From then on, each project
-              you save is uploaded automatically, and the same account on another PC lists it under <em>Cloud</em>,
-              ready to open. If the same project was changed on two PCs, neither change is thrown away: the other
-              version is kept as its own project, named “(other version)”. You can remove any project from the
-              cloud, or switch syncing off for a single project. The
+              Create a free account under <em>Cloud sync</em> in the studio's browser. Then choose which projects go
+              to your cloud: the cloud button beside a project in the <em>Projects</em> tab saves it there, and from
+              then on it uploads after each save. The same account on another computer lists it under
+              <em>Cloud sync</em>, ready to open. If the same project was changed on two computers, neither change is
+              thrown away: the other version is kept as its own project, named “(other version)”. You can stop syncing
+              a project, or remove it from the cloud, at any time. The
               <a href="/legal.html#privacy">privacy notice</a> says exactly what is stored.
             </p>
           </details>
@@ -756,7 +770,8 @@
             <p>
               The Windows app checks for a new version shortly after it starts and every few hours while it's open.
               When there is one, it downloads in the background, is checked against its checksum, and a <em>Restart to update</em> button appears in the
-              menu bar; your project is saved first, then the new version installs itself and opens. You can turn the check off under <em>Options</em>. The web studio
+              menu bar; your project is saved first, then the new version installs itself and opens. The Mac app checks too, and
+              tells you when a new version is ready to download. You can turn the check off in <em>Settings</em> (<em>F10</em>). The web studio
               is always the latest version.
             </p>
           </details>
@@ -773,10 +788,11 @@
           <details>
             <summary>Does my MIDI keyboard work?</summary>
             <p>
-              Any class-compliant USB MIDI keyboard works, including the Akai MPK Mini. Keys play the selected
-              instrument, pads on MIDI channel 10 play your drum channels, and the joystick handles pitch bend and
-              modulation. If a knob doesn't do what you expect, right-click any knob on screen and turn the one on
-              your keyboard to link them.
+              Any class-compliant USB MIDI keyboard works, including the Akai MPK mini IV. Keys play the selected
+              instrument, pads play your drum channels (on MIDI channel 10, or the one you set in <em>Settings → MIDI</em>),
+              and the joystick handles pitch bend and modulation. If a knob doesn't do what you expect, right-click any
+              knob on screen and turn the one on your keyboard to link them. The MIDI monitor in the browser's
+              <em>Keyboard &amp; MIDI</em> tab shows what each key, pad and knob sends.
             </p>
           </details>
           <details>
@@ -799,6 +815,24 @@
             </p>
           </details>
           <details>
+            <summary>How do I add an instrument?</summary>
+            <p>
+              Open the <em>Instruments</em> tab in the browser on the left. Click an instrument to hear it, and drag
+              the one you want onto the channel rack. You can also pick one from the channel rack's <em>Add</em> list,
+              or from the <em>Add</em> menu. Samples work the same way in the <em>Samples</em> tab.
+            </p>
+          </details>
+          <details>
+            <summary>Can I use the instruments that came with my keyboard?</summary>
+            <p>
+              Plugin instruments, such as the Akai Studio Instrument Collection, run in a program that can host
+              plugins. PulseGrid can play them from there: add <em>MIDI Out</em>, pick a virtual MIDI cable (loopMIDI
+              on Windows, the IAC Driver on a Mac), and set the other program to listen to the same cable. Your
+              keyboard and the notes you write then play that instrument. Its sound comes from the other program, so
+              it isn't part of a PulseGrid export.
+            </p>
+          </details>
+          <details>
             <summary>Can I move projects between the web studio and the desktop app?</summary>
             <p>Yes. Both use <code>.pulsegrid</code> project files: download a project from one and open it in the other.</p>
           </details>
@@ -812,7 +846,7 @@
           <img src="/icon.png" alt="" width="28" height="28" />
           <span>PulseGrid <strong>Studio</strong></span>
         </a>
-        <p>Free music production for Windows and the web.</p>
+        <p>Free music production for Windows, Mac and the web.</p>
       </div>
 
       <nav class="footer-columns" aria-label="Footer">
@@ -834,6 +868,7 @@
           <h3>Legal</h3>
           <a href="/legal.html#agreement">User agreement</a>
           <a href="/legal.html#privacy">Privacy</a>
+          <a href="/legal.html#credits">Credits</a>
         </div>
       </nav>
 

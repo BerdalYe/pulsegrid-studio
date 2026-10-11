@@ -3,7 +3,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useProjectStore } from "../state/projectStore";
 import { useSessionStore } from "../state/sessionStore";
 import { useTransportStore } from "../state/transportStore";
-import { ensureAudio, previewChannel } from "../audio/engine";
+import { ensureAudio } from "../audio/engine";
+import { previewSample } from "../audio/preview";
+import { DRAG_TYPE, encodeDragItem } from "../lib/dragData";
 import { audioRecorder } from "../audio/recorder";
 import { loadSampleFromFile, removeSample } from "../audio/sampleRegistry";
 import { midiManager, type MidiDevice } from "../audio/midi";
@@ -63,7 +65,6 @@ export function StudioTools({ onStatus }: StudioToolsProps) {
   const selectChannel = useSessionStore((state) => state.selectChannel);
 
   const channels = useProjectStore((state) => state.channels);
-  const addChannel = useProjectStore((state) => state.addChannel);
   const updateChannelSample = useProjectStore((state) => state.updateChannelSample);
 
   const isRecording = useTransportStore((state) => state.isRecording);
@@ -161,28 +162,25 @@ export function StudioTools({ onStatus }: StudioToolsProps) {
         return;
       }
 
+      // Imported sounds go into the browser; dragging one onto the channel rack puts it to use.
       let imported = 0;
-      let lastId: string | null = null;
 
       for (const file of files) {
         try {
-          const sample = await loadSampleFromFile(file, file.name.replace(/\.[^.]+$/, ""), context);
-          lastId = addChannel("sample", sample.name, sample.id);
+          await loadSampleFromFile(file, file.name.replace(/\.[^.]+$/, ""), context);
           imported += 1;
         } catch (error) {
           console.error(error);
         }
       }
 
-      if (lastId) selectChannel(lastId);
-
       onStatus(
         imported === files.length
-          ? `Imported ${imported} sample${imported === 1 ? "" : "s"}.`
+          ? `Imported ${imported} sample${imported === 1 ? "" : "s"}. Drag one onto the channel rack to use it.`
           : `Imported ${imported} of ${files.length} — the rest couldn't be decoded.`
       );
     },
-    [addChannel, onStatus, selectChannel]
+    [onStatus]
   );
 
   const handleRecord = useCallback(async () => {
@@ -202,9 +200,7 @@ export function StudioTools({ onStatus }: StudioToolsProps) {
           return;
         }
 
-        const channelId = addChannel("sample", sample.name, sample.id);
-        selectChannel(channelId);
-        onStatus(`Added "${sample.name}" as a sample channel.`);
+        onStatus(`Recorded "${sample.name}". It is in the sample list: drag it onto the channel rack to use it.`);
       } else {
         await audioRecorder.start(context);
         setIsRecording(true);
@@ -217,7 +213,7 @@ export function StudioTools({ onStatus }: StudioToolsProps) {
         error instanceof Error ? error.message : "The microphone couldn't be started."
       );
     }
-  }, [addChannel, isRecording, onStatus, selectChannel, setIsRecording]);
+  }, [isRecording, onStatus, setIsRecording]);
 
   const enableMidi = useCallback(async () => {
     const ready = await midiManager.init();
@@ -292,7 +288,7 @@ export function StudioTools({ onStatus }: StudioToolsProps) {
             ) : null}
 
             <div className="tools-caption">
-              {samples.length} sample{samples.length === 1 ? "" : "s"} · click one to add it as a channel
+              {samples.length} sample{samples.length === 1 ? "" : "s"} · click to hear, drag onto the channel rack to add
             </div>
 
             <div className="sample-list">
@@ -300,13 +296,14 @@ export function StudioTools({ onStatus }: StudioToolsProps) {
                 <div className="sample-item" key={sample.id}>
                   <button
                     className="sample-name"
-                    title="Add as a new sample channel"
-                    onClick={() => {
-                      const id = addChannel("sample", sample.name, sample.id);
-                      selectChannel(id);
-                      previewChannel(id);
-                      onStatus(`Added "${sample.name}".`);
+                    title={`${sample.name}: click to hear it, drag it onto the channel rack to add it`}
+                    draggable
+                    onDragStart={(event) => {
+                      event.dataTransfer.setData(DRAG_TYPE, encodeDragItem({ kind: "sample", id: sample.id, name: sample.name }));
+                      event.dataTransfer.setData("text/plain", sample.name);
+                      event.dataTransfer.effectAllowed = "copy";
                     }}
+                    onClick={() => previewSample(sample.id)}
                   >
                     {sample.name}
                     <em>{sample.duration.toFixed(2)}s</em>
@@ -344,7 +341,7 @@ export function StudioTools({ onStatus }: StudioToolsProps) {
 
         {current.id === "instruments" ? (
           <div className="tools-pane">
-            <div className="tools-caption">Click an instrument to add it as a new channel</div>
+            <div className="tools-caption">Click to hear · drag onto the channel rack to add</div>
             <InstrumentTree onStatus={onStatus} />
           </div>
         ) : null}

@@ -7,10 +7,10 @@ for (const element of document.querySelectorAll<HTMLElement>("[data-year]")) {
   element.textContent = String(new Date().getFullYear());
 }
 
-/* ── the 1.0 announcement ── */
+/* ── the release announcement ── */
 
 const announce = document.querySelector<HTMLElement>("#announce");
-const ANNOUNCE_KEY = "pulsegrid:announce-1.0";
+const ANNOUNCE_KEY = "pulsegrid:announce-1.5";
 
 function announcementDismissed(): boolean {
   try {

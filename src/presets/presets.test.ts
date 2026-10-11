@@ -120,13 +120,21 @@ describe("instrument menu", () => {
    * picking "Synth" gave you an unnamed default instead of any of the named
    * instruments. Both pickers read this table now; this keeps it that way.
    */
-  it("offers every synth preset somewhere in the list", () => {
+  it("offers every synth preset, except the imitations of instruments the recorded set has", () => {
     const offered = new Set(
       INSTRUMENT_MENU.map((entry) => entry.preset).filter((id): id is string => Boolean(id))
     );
+    // Still in the synth editor's preset list, and still played by projects that use them.
+    const imitations = new Set([
+      "grand-piano", "electric-piano", "fm-epiano", "drawbar-organ", "pipe-organ", "harpsichord", "clavinet", "accordion",
+      "string-ensemble", "solo-violin", "cello", "pizzicato", "harp", "nylon-guitar", "steel-guitar",
+      "brass-section", "trumpet", "saxophone", "clarinet", "flute", "pan-flute", "choir-aah",
+      "marimba", "vibraphone", "celesta", "music-box", "kalimba", "steel-drum", "upright-bass",
+      "square-lead", "synth-brass", "warm-pad"
+    ]);
 
     for (const preset of synthPresets) {
-      expect(offered.has(preset.id), `${preset.name} is not reachable from any picker`).toBe(true);
+      expect(offered.has(preset.id) || imitations.has(preset.id), `${preset.name} is not reachable from any picker`).toBe(true);
     }
   });
 
@@ -209,6 +217,8 @@ describe("plugins", () => {
     const plugins = INSTRUMENT_MENU.filter((entry) => entry.group === "Plugins");
     expect(plugins.length).toBeGreaterThanOrEqual(1);
     for (const entry of plugins) {
+      // The sampler is a plugin in FL's sense too, but it has no synth editor to open.
+      if (entry.type === "sample") continue;
       expect(entry.plugin, entry.label).toBe(true);
       expect(entry.type, entry.label).toBe("synth");
     }
@@ -225,11 +235,42 @@ describe("plugins", () => {
   });
 });
 
+describe("the instrument families", () => {
+  it("sorts instruments by what they are: every family has some, and none is a dumping ground", () => {
+    for (const group of INSTRUMENT_GROUPS) {
+      const count = INSTRUMENT_MENU.filter((entry) => entry.group === group).length;
+      expect(count, group).toBeGreaterThanOrEqual(4);
+      expect(count, group).toBeLessThanOrEqual(24);
+    }
+  });
+
+  it("keeps only real instruments where a recording exists: no synthesized piano, strings or brass", () => {
+    const synthesized = INSTRUMENT_MENU.filter((entry) => entry.preset && !entry.plugin).map((entry) => entry.preset);
+    for (const imitation of ["grand-piano", "electric-piano", "string-ensemble", "solo-violin", "cello", "trumpet", "brass-section", "flute", "marimba", "nylon-guitar"]) {
+      expect(synthesized, imitation).not.toContain(imitation);
+    }
+  });
+
+  it("has an FX folder of transitions and atmospheres, and nothing silly", () => {
+    const fx = INSTRUMENT_MENU.filter((entry) => entry.group === "FX").map((entry) => entry.label);
+    for (const wanted of ["Noise Riser", "Downlifter", "Impact", "Sub Drop", "Reverse Crash", "Reverse Cymbal"]) expect(fx).toContain(wanted);
+    for (const silly of ["Gun Shot", "Helicopter", "Telephone", "Applause", "Birds"]) expect(fx.join("|")).not.toContain(silly);
+  });
+
+  it("starts every FX sample on a built-in sample that exists", async () => {
+    const { builtInSampleIds } = await import("../audio/sampleRegistry");
+    for (const entry of INSTRUMENT_MENU.filter((item) => item.sample)) {
+      expect(builtInSampleIds, entry.label).toContain(entry.sample);
+      expect(entry.type, entry.label).toBe("sample");
+    }
+  });
+});
+
 describe("recorded instruments", () => {
-  const recorded = INSTRUMENT_MENU.filter((entry) => entry.group === "Instruments");
+  const recorded = INSTRUMENT_MENU.filter((entry) => entry.soundfont && !entry.plugin);
 
   it("offers a good spread of them, each with a bank and program inside General MIDI's range", () => {
-    expect(recorded.length).toBeGreaterThanOrEqual(30);
+    expect(recorded.length).toBeGreaterThanOrEqual(80);
     for (const entry of recorded) {
       expect(entry.soundfont, entry.label).toBeDefined();
       expect([0, 128], entry.label).toContain(entry.soundfont!.bank);
@@ -252,7 +293,7 @@ describe("recorded instruments", () => {
 
   it("leaves out the recorded ones where the built-in set isn't there, and keeps everything else", () => {
     const without = availableInstruments(false);
-    expect(without.some((entry) => entry.group === "Instruments")).toBe(false);
+    expect(without.some((entry) => entry.soundfont && !entry.plugin)).toBe(false);
     expect(without.some((entry) => entry.label === "Instrument Browser")).toBe(true);
     expect(without.some((entry) => entry.label === "Kick")).toBe(true);
 

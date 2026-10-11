@@ -4,8 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import { getDesktop, useFileStore, type DesktopProjectEntry } from "../files/desktop";
 import { filterByName } from "../lib/search";
 import { ListSearch } from "./ListSearch";
+import { useAuthStore } from "../sync/auth";
+import { forgetProject, keepProjectLocal, projectCloudState, saveProjectToCloud } from "../sync/manager";
+import { useCloudStore } from "../sync/store";
+import { useConfirm } from "./ConfirmDialog";
+import { IconCloud, IconTrash } from "./icons";
 import {
   chooseSaveFolder,
+  newProject,
   openProjectAt,
   openProjectFromDisk,
   openSaveFolder,
@@ -68,6 +74,35 @@ export function ProjectsPanel({ onStatus }: { onStatus: (message: string) => voi
     };
   }, [folderVersion, settings?.saveFolder]);
 
+  const confirm = useConfirm();
+  const signedIn = useAuthStore((state) => state.status === "signedIn");
+  // Redraw when which projects sync changes.
+  useCloudStore((state) => state.linksVersion);
+
+  /** Delete a project: to the Recycle Bin, so it can be got back. Its cloud copy is left for the Cloud tab. */
+  const remove = async (project: DesktopProjectEntry, current: boolean, inCloud: boolean) => {
+    const bin = getDesktop()?.platform === "darwin" ? "the Bin" : "the Recycle Bin";
+    const ok = await confirm(
+      `Delete "${project.name}"?`,
+      `It goes to ${bin}, so you can get it back from there.${current ? " It is open now, so a new empty project takes its place." : ""}${
+        inCloud ? " Its copy in your cloud is kept; remove it under Cloud sync if you want it gone there too." : ""
+      }`,
+      { confirmLabel: "Delete" }
+    );
+    if (!ok) return;
+
+    try {
+      const deleted = (await getDesktop()?.deleteProject?.(project.path)) ?? false;
+      forgetProject(project.path);
+      // The open project's file is gone: don't let auto-save bring it back.
+      if (current) newProject();
+      useFileStore.getState().touchFolder();
+      onStatus(deleted ? `Deleted "${project.name}". It is in ${bin}.` : `"${project.name}" was already gone.`);
+    } catch (error) {
+      onStatus(error instanceof Error ? error.message : "That project couldn't be deleted.");
+    }
+  };
+
   const run = (action: () => Promise<string>) => {
     void action()
       .then(onStatus)
@@ -127,18 +162,51 @@ export function ProjectsPanel({ onStatus }: { onStatus: (message: string) => voi
         ) : (
           visible.map((project) => {
             const current = project.path === path;
+            const cloud = signedIn ? projectCloudState(project.path) : null;
+            const inCloud = cloud === "synced" || cloud === "pending";
             return (
-              <button
-                key={project.path}
-                className={`project-item${current ? " current" : ""}`}
-                title={project.path}
-                onClick={() => {
-                  if (!current) run(() => openProjectAt(project.path));
-                }}
-              >
-                <span className="project-item-name">{project.name}</span>
-                <em>{current ? "open" : timeAgo(project.modified)}</em>
-              </button>
+              <div key={project.path} className={`project-row${current ? " current" : ""}`}>
+                <button
+                  className={`project-item${current ? " current" : ""}`}
+                  title={project.path}
+                  onClick={() => {
+                    if (!current) run(() => openProjectAt(project.path));
+                  }}
+                >
+                  <span className="project-item-name">{project.name}</span>
+                  <em>{current ? "open" : timeAgo(project.modified)}</em>
+                </button>
+
+                {cloud ? (
+                  <button
+                    className={`project-action project-cloud cloud-${cloud}`}
+                    aria-pressed={inCloud}
+                    aria-label={inCloud ? `${project.name} is in your cloud` : `Save ${project.name} to your cloud`}
+                    title={
+                      cloud === "synced"
+                        ? "In your cloud and in step. Click to keep it on this PC only."
+                        : cloud === "pending"
+                          ? "Going up to your cloud. Click to keep it on this PC only."
+                          : "Only on this PC. Click to save it to your cloud."
+                    }
+                    onClick={() => {
+                      if (inCloud) onStatus(keepProjectLocal(project.path, project.name));
+                      else run(() => saveProjectToCloud(project.path, project.name));
+                    }}
+                  >
+                    <IconCloud />
+                  </button>
+                ) : null}
+
+                <button
+                  className="project-action project-delete"
+                  aria-label={`Delete ${project.name}`}
+                  title="Delete this project"
+                  onClick={() => void remove(project, current, inCloud)}
+                >
+                  <IconTrash />
+                </button>
+              </div>
             );
           })
         )}

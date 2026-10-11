@@ -1,4 +1,5 @@
 import { Scheduler } from "./Scheduler";
+import type { Channel } from "../types";
 import { midiManager, parseMidiMessage } from "./midi";
 import { midiOutPanic } from "./midiOut";
 import { currentSettings, useAppSettings } from "../state/appSettings";
@@ -407,6 +408,64 @@ export function previewChannel(channelId: string, pitch = 60, velocity = 0.85, s
     pitch,
     duration: seconds
   });
+  oneShotEnds.push(audioContext.currentTime + seconds + 0.3);
+  if (oneShotEnds.length > 256) oneShotEnds = oneShotEnds.filter((end) => end > audioContext.currentTime);
+}
+
+/* ─────────────────────────────── browser previews ─────────────────────────────── */
+
+/** Notes for hearing something before it is used: when (seconds from now), which, how long, how hard. */
+export interface PreviewNote {
+  at: number;
+  pitch: number;
+  duration: number;
+  velocity?: number;
+}
+
+let previewVoices: Voice[] = [];
+/** When each one-shot (previews, clicked-in notes) stops sounding, for the voice count. */
+let oneShotEnds: number[] = [];
+
+/**
+ * Play an instrument that isn't in the project yet, straight to the master: what the browser does when an
+ * instrument or a sample is clicked. A new preview stops the last one.
+ */
+export function playPreview(channel: Channel, notes: PreviewNote[]): void {
+  const audioContext = ensureAudio();
+  if (!audioContext || !graph) return;
+
+  stopPreview();
+  const start = audioContext.currentTime + 0.03;
+  for (const note of notes) {
+    const voice = triggerChannel(audioContext, channel, graph.masterInput, {
+      time: start + note.at,
+      velocity: clamp(note.velocity ?? 0.8, 0, 1),
+      pitch: note.pitch,
+      duration: note.duration
+    });
+    if (voice) previewVoices.push(voice);
+    oneShotEnds.push(start + note.at + note.duration + 0.3);
+  }
+}
+
+export function stopPreview(): void {
+  const now = context?.currentTime ?? 0;
+  for (const voice of previewVoices) voice.kill(now);
+  previewVoices = [];
+}
+
+/** How many times the sound has dropped out (the computer couldn't keep up) since the audio started. */
+export function getDropouts(): number {
+  const stats = (context as (AudioContext & { playbackStats?: { underrunEvents?: number } }) | null)?.playbackStats;
+  return stats?.underrunEvents ?? 0;
+}
+
+/** How many notes are sounding right now: the song, held keys and previews. For the performance readout. */
+export function getVoiceCount(): number {
+  if (!context) return 0;
+  const now = context.currentTime;
+  oneShotEnds = oneShotEnds.filter((end) => end > now);
+  return heldVoices.size + (sequencer?.activeVoices(now) ?? 0) + oneShotEnds.length;
 }
 
 /* ─────────────────────────────── metering ─────────────────────────────── */
@@ -438,6 +497,28 @@ function readLevel(analyser: AnalyserNode | null): number {
 
 export function getMixerLevel(trackId: number): number {
   return readLevel(graph?.getMixerAnalyser(trackId) ?? null);
+}
+
+/** The master output's peak on each side (0..2, past 1 is clipping), for the top bar's meter. */
+export function getMasterPeaks(): [number, number] {
+  const sides = graph?.masterSides;
+  if (!sides) return [0, 0];
+  return [readLevel(sides[0]), readLevel(sides[1])];
+}
+
+const scopeBuffers = new WeakMap<AnalyserNode, Float32Array<ArrayBuffer>>();
+
+/** The last few milliseconds of the master output, for the top bar's oscilloscope. Null before audio starts. */
+export function getMasterWave(): Float32Array<ArrayBuffer> | null {
+  const analyser = graph?.masterAnalyser;
+  if (!analyser) return null;
+  let buffer = scopeBuffers.get(analyser);
+  if (!buffer) {
+    buffer = new Float32Array(analyser.fftSize);
+    scopeBuffers.set(analyser, buffer);
+  }
+  analyser.getFloatTimeDomainData(buffer);
+  return buffer;
 }
 
 export function getMasterLevel(): number {

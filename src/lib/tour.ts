@@ -76,9 +76,9 @@ export const TOUR_STEPS: TourStep[] = [
     text: "Press F1 any time for every shortcut. Space plays, Enter plays from the start, L loops and K is the metronome."
   },
   {
-    target: ".status-bar",
+    target: ".fl-hint-panel",
     title: "Hints",
-    text: "Point at anything and it explains itself down here. That's the tour — have fun!"
+    text: "Point at anything and it explains itself up here, under the project's name. That's the tour — have fun!"
   }
 ];
 

@@ -165,7 +165,55 @@ interface BuiltInDef {
   id: string;
   name: string;
   seconds: number;
-  render: (t: number, progress: number) => [number, number];
+  /** One stereo frame at a time, for sounds with no memory from one sample to the next. */
+  render?: (t: number, progress: number) => [number, number];
+  /** The whole sound at once, for sounds that are filtered (a filter remembers its last output). */
+  fill?: (left: Float32Array, right: Float32Array, sampleRate: number) => void;
+}
+
+/* ── the tools the transition effects are made with ── */
+
+/** A one-pole low-pass, moved along by a cutoff that changes over time. */
+function lowPassStep(state: { y: number }, input: number, cutoff: number, sampleRate: number): number {
+  const a = 1 - Math.exp((-2 * Math.PI * Math.min(cutoff, sampleRate * 0.45)) / sampleRate);
+  state.y += a * (input - state.y);
+  return state.y;
+}
+
+/** Noise through a band that sweeps from one cutoff to another, with a loudness shape: risers, downlifters, sweeps. */
+function sweptNoise(
+  left: Float32Array,
+  right: Float32Array,
+  sampleRate: number,
+  cutoff: (progress: number) => number,
+  level: (progress: number) => number
+): void {
+  const lowL = { y: 0 };
+  const lowR = { y: 0 };
+  const bodyL = { y: 0 };
+  const bodyR = { y: 0 };
+  for (let i = 0; i < left.length; i++) {
+    const progress = i / left.length;
+    const top = cutoff(progress);
+    // A band: the low-passed noise, less a low-passed copy two octaves down, so it hisses rather than rumbles.
+    const nl = Math.random() * 2 - 1;
+    const nr = Math.random() * 2 - 1;
+    const bandL = lowPassStep(lowL, nl, top, sampleRate) - lowPassStep(bodyL, nl, top / 4, sampleRate);
+    const bandR = lowPassStep(lowR, nr, top * 1.03, sampleRate) - lowPassStep(bodyR, nr, top / 4, sampleRate);
+    const gain = level(progress) * 1.6;
+    left[i] = Math.tanh(bandL * gain);
+    right[i] = Math.tanh(bandR * gain);
+  }
+}
+
+/** A short fade at the very end, so a sound never stops with a click. */
+function fadeTail(left: Float32Array, right: Float32Array, sampleRate: number, seconds = 0.03): void {
+  const frames = Math.min(left.length, Math.floor(sampleRate * seconds));
+  for (let i = 0; i < frames; i++) {
+    const gain = i / frames;
+    left[left.length - 1 - i] *= gain;
+    right[right.length - 1 - i] *= gain;
+  }
 }
 
 const builtIns: BuiltInDef[] = [
@@ -234,6 +282,104 @@ const builtIns: BuiltInDef[] = [
   }
 ];
 
+// ── transition effects for builds and drops ──
+builtIns.push(
+  {
+    id: "sample-fx-noise-riser",
+    name: "Noise Riser",
+    seconds: 4,
+    fill: (left, right, rate) => {
+      // White noise opening up from a dull hiss to a bright one, getting louder all the way.
+      sweptNoise(left, right, rate, (p) => 300 * Math.pow(40, p), (p) => 0.08 + 0.85 * Math.pow(p, 1.6));
+      fadeTail(left, right, rate, 0.01);
+    }
+  },
+  {
+    id: "sample-fx-downlifter",
+    name: "Downlifter",
+    seconds: 3,
+    fill: (left, right, rate) => {
+      // The other way: bright to dull, loud to quiet, with a falling tone underneath.
+      sweptNoise(left, right, rate, (p) => 12000 * Math.pow(1 / 60, p), (p) => 0.9 * Math.pow(1 - p, 1.4));
+      let phase = 0;
+      for (let i = 0; i < left.length; i++) {
+        const p = i / left.length;
+        phase += (2 * Math.PI * (700 * Math.pow(1 / 12, p))) / rate;
+        const tone = Math.sin(phase) * 0.22 * Math.pow(1 - p, 2);
+        left[i] = left[i] * 0.78 + tone;
+        right[i] = right[i] * 0.78 + tone;
+      }
+      fadeTail(left, right, rate);
+    }
+  },
+  {
+    id: "sample-fx-impact",
+    name: "Impact",
+    seconds: 2.6,
+    fill: (left, right, rate) => {
+      // A boom for the first beat of a drop: a falling sub, a burst of noise, and a long dark tail.
+      const tailL = { y: 0 };
+      const tailR = { y: 0 };
+      let phase = 0;
+      for (let i = 0; i < left.length; i++) {
+        const t = i / rate;
+        phase += (2 * Math.PI * (38 + 70 * Math.exp(-t * 9))) / rate;
+        const sub = Math.sin(phase) * Math.exp(-t * 1.6) * 0.9;
+        const burst = Math.exp(-t * 18);
+        const noiseL = lowPassStep(tailL, Math.random() * 2 - 1, 900 * Math.exp(-t * 1.2) + 120, rate);
+        const noiseR = lowPassStep(tailR, Math.random() * 2 - 1, 950 * Math.exp(-t * 1.2) + 120, rate);
+        const body = (0.5 * burst + 0.35 * Math.exp(-t * 2.2)) * 2.2;
+        left[i] = Math.tanh(sub + noiseL * body);
+        right[i] = Math.tanh(sub + noiseR * body);
+      }
+      fadeTail(left, right, rate);
+    }
+  },
+  {
+    id: "sample-fx-sub-drop",
+    name: "Sub Drop",
+    seconds: 2.2,
+    render: (t, progress) => {
+      // A sine falling from 110 Hz to 30 Hz: felt as much as heard.
+      const phase = 2 * Math.PI * (30 * t + (80 / 2.4) * (1 - Math.exp(-2.4 * t)));
+      const value = Math.tanh(Math.sin(phase) * 1.3) * Math.min(1, t / 0.005) * Math.pow(1 - progress, 1.2) * 0.85;
+      return [value, value];
+    }
+  },
+  {
+    id: "sample-fx-reverse-crash",
+    name: "Reverse Crash",
+    seconds: 2.5,
+    fill: (left, right, rate) => {
+      // A crash cymbal backwards: a bright wash swelling up and stopping dead, for the bar before a drop.
+      const highL = { y: 0 };
+      const highR = { y: 0 };
+      for (let i = 0; i < left.length; i++) {
+        const p = i / left.length;
+        const nl = Math.random() * 2 - 1;
+        const nr = Math.random() * 2 - 1;
+        // Highs only: the noise less its own low-passed copy.
+        const hl = nl - lowPassStep(highL, nl, 4500, rate);
+        const hr = nr - lowPassStep(highR, nr, 4500, rate);
+        const swell = Math.pow(p, 3.2) * 0.8;
+        left[i] = hl * swell;
+        right[i] = hr * swell;
+      }
+      fadeTail(left, right, rate, 0.006);
+    }
+  },
+  {
+    id: "sample-fx-noise-sweep",
+    name: "White Noise Sweep",
+    seconds: 4,
+    fill: (left, right, rate) => {
+      // Up and back down again: a transition you can drop across a bar line.
+      sweptNoise(left, right, rate, (p) => 250 * Math.pow(36, Math.sin(Math.PI * p)), (p) => 0.1 + 0.75 * Math.sin(Math.PI * p));
+      fadeTail(left, right, rate);
+    }
+  }
+);
+
 export const builtInSampleIds = builtIns.map((def) => def.id);
 
 export function initDefaultSamples(context: BaseAudioContext): void {
@@ -247,11 +393,15 @@ export function initDefaultSamples(context: BaseAudioContext): void {
     const left = buffer.getChannelData(0);
     const right = buffer.getChannelData(1);
 
-    for (let i = 0; i < length; i++) {
-      const t = i / sampleRate;
-      const [l, r] = def.render(t, t / def.seconds);
-      left[i] = l;
-      right[i] = r;
+    if (def.fill) {
+      def.fill(left, right, sampleRate);
+    } else if (def.render) {
+      for (let i = 0; i < length; i++) {
+        const t = i / sampleRate;
+        const [l, r] = def.render(t, t / def.seconds);
+        left[i] = l;
+        right[i] = r;
+      }
     }
 
     registerSample(def.id, buffer, def.name, { builtIn: true });

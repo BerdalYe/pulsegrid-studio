@@ -224,7 +224,8 @@ function statusLine(phase: string, message: string, lastSyncedAt: number | null)
     case "error":
       return message || "Couldn't sync";
     case "excluded":
-      return "This project isn't synced";
+    case "local":
+      return "This project is only on this PC";
     case "unsaved":
       return "Syncs after your first edit";
     default:
@@ -301,15 +302,18 @@ function SignedIn({ onStatus }: { onStatus: (message: string) => void }) {
       </div>
 
       {phase !== "unsaved" ? (
-        <label className="autosave-toggle">
+        <label className="autosave-toggle" title="Keep the open project in your cloud and in step with your other computers">
           <input
             type="checkbox"
-            checked={phase !== "excluded"}
+            checked={phase !== "excluded" && phase !== "local"}
             onChange={(event) => setSyncEnabled(event.target.checked)}
           />
-          Sync this project
+          Keep this project in the cloud
         </label>
       ) : null}
+      <p className="small-note">
+        Only the projects you choose go to the cloud. In the Projects tab, the cloud button beside a project saves it there.
+      </p>
 
       <ListSearch
         query={query}

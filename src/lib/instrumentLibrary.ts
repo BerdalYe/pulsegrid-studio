@@ -14,19 +14,15 @@ export interface InstrumentLibrary {
 }
 
 /**
- * The instruments to offer, arranged the same way everywhere (the Add menu and the browser): the plugins on
- * top, then Instruments and Drums, then every synthesized sound tucked into one folder of families.
+ * The instruments to offer, arranged the same way everywhere (the Add menu, the browser, the channel rack's menu):
+ * the plugins on top, then one folder per family (Drums, Keys, Mallets & Bells, … FX).
  */
 export function instrumentLibrary(available: InstrumentMenuEntry[]): InstrumentLibrary {
-  const group = (name: string): InstrumentFolder[] => {
-    const entries = available.filter((entry) => entry.group === name);
-    return entries.length === 0 ? [] : [{ label: name, entries }];
-  };
-
-  const synths = INSTRUMENT_GROUPS.filter((name) => !["Plugins", "Instruments", "Drums"].includes(name)).flatMap(group);
-
   return {
     plugins: available.filter((entry) => entry.group === "Plugins"),
-    folders: [...group("Instruments"), ...group("Drums"), ...(synths.length > 0 ? [{ label: "Synth sounds", folders: synths }] : [])]
+    folders: INSTRUMENT_GROUPS.filter((name) => name !== "Plugins").flatMap((name) => {
+      const entries = available.filter((entry) => entry.group === name);
+      return entries.length === 0 ? [] : [{ label: name, entries }];
+    })
   };
 }

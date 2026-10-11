@@ -35,7 +35,9 @@ export type Phase =
   | "offline"
   | "error"
   | "excluded"
-  | "unsaved";
+  | "unsaved"
+  /** Kept on this device only: not chosen for the cloud (yet). */
+  | "local";
 
 export interface StatusPatch {
   phase?: Phase;
@@ -75,7 +77,15 @@ export interface EngineOptions {
   now?: () => number;
   onStatus?: (patch: StatusPatch) => void;
   onNotice?: (message: string) => void;
+  /**
+   * Only projects the person chose for the cloud go up. Without it every saved project syncs. A project that is
+   * already in the cloud (linked) keeps syncing either way.
+   */
+  optIn?: boolean;
 }
+
+/** Where a project on this device stands with the cloud. */
+export type CloudState = "synced" | "pending" | "off" | "local";
 
 export type SyncOutcome = "pushed" | "applied" | "behind" | "current" | "skipped" | "retry";
 
@@ -98,6 +108,9 @@ const QUOTA_TEXT =
 
 export function createSyncEngine(options: EngineOptions) {
   const { backend, userId, state, persist, adapter, device } = options;
+  const optIn = options.optIn ?? false;
+  // Older stored state has no list of wanted projects.
+  state.wanted ??= {};
   const uuid = options.uuid ?? (() => crypto.randomUUID());
   const now = options.now ?? Date.now;
   const status = (patch: StatusPatch) => options.onStatus?.(patch);
@@ -122,8 +135,8 @@ export function createSyncEngine(options: EngineOptions) {
     return unpack(await backend.download(row.object_path));
   }
 
-  /** Upload `text` as a project that isn't in the cloud yet. Returns its id. */
-  async function createProject(name: string, text: string): Promise<string> {
+  /** Upload `text` as a project that isn't in the cloud yet. Returns its id and revision. */
+  async function createProject(name: string, text: string): Promise<{ id: string; revision: number }> {
     const id = uuid();
     const blob = await pack(text);
     if (blob.size > MAX_PROJECT_BYTES) {
@@ -145,7 +158,7 @@ export function createSyncEngine(options: EngineOptions) {
             : "The cloud didn't accept that project."
       );
     }
-    return id;
+    return { id, revision: result.revision };
   }
 
   /**
@@ -170,6 +183,10 @@ export function createSyncEngine(options: EngineOptions) {
     }
     if (state.excluded[key]) {
       status({ phase: "excluded", message: "", behind: null });
+      return "skipped";
+    }
+    if (optIn && !state.links[key] && !state.wanted[key]) {
+      status({ phase: "local", message: "", behind: null });
       return "skipped";
     }
     if (adapter.busy()) return "retry";
@@ -205,6 +222,7 @@ export function createSyncEngine(options: EngineOptions) {
       });
 
       if (result.ok) {
+        delete state.wanted[key];
         setLink(key, {
           cloudId: link.cloudId,
           base: result.revision,
@@ -247,6 +265,18 @@ export function createSyncEngine(options: EngineOptions) {
     }
 
     throw new CloudError("other", "Couldn't finish syncing this project. It will try again.");
+  }
+
+  /** Syncing on or off for a project. In opt-in mode, switching it on asks for it to go up. */
+  function setEnabledFor(key: string, enabled: boolean): void {
+    if (enabled) {
+      delete state.excluded[key];
+      if (!state.links[key]) state.wanted[key] = true;
+    } else {
+      state.excluded[key] = true;
+      delete state.wanted[key];
+    }
+    persist();
   }
 
   /** Replace the open project with the cloud's version. */
@@ -351,7 +381,8 @@ export function createSyncEngine(options: EngineOptions) {
       const key = adapter.key();
       if (!key || state.excluded[key]) return false;
       const link = state.links[key];
-      return !link || link.pending || adapter.isDirty();
+      if (!link) return !optIn || Boolean(state.wanted[key]);
+      return link.pending || adapter.isDirty();
     },
 
     /** Is everything in the open project already in the cloud? */
@@ -391,15 +422,50 @@ export function createSyncEngine(options: EngineOptions) {
         if (other !== key && existing.cloudId === link.cloudId) delete state.links[other];
       }
       delete state.excluded[key];
+      delete state.wanted[key];
       setLink(key, link);
     },
 
     /** Turn syncing on or off for the open project. */
     setEnabled(enabled: boolean): void {
       const key = adapter.key();
-      if (!key) return;
-      if (enabled) delete state.excluded[key];
-      else state.excluded[key] = true;
+      if (key) setEnabledFor(key, enabled);
+    },
+
+    /** Turn syncing on or off for any project on this device, open or not. */
+    setEnabledFor,
+
+    /** Where a project on this device stands with the cloud. */
+    stateOf(key: string): CloudState {
+      if (state.excluded[key]) return "off";
+      const link = state.links[key];
+      if (link) return link.pending ? "pending" : "synced";
+      if (state.wanted[key]) return "pending";
+      return optIn ? "local" : "pending";
+    },
+
+    /**
+     * Put a project that isn't open into the cloud, from its file: the cloud gets it now, and it syncs from then
+     * on. One that is already there just starts syncing again.
+     */
+    uploadFile: (key: string, path: string, name: string, text: string) =>
+      serial(async (): Promise<"uploaded" | "linked"> => {
+        delete state.excluded[key];
+        if (state.links[key]) {
+          persist();
+          return "linked";
+        }
+        const created = await createProject(name.trim() || "Untitled", text);
+        delete state.wanted[key];
+        setLink(key, { cloudId: created.id, base: created.revision, pending: false, path });
+        return "uploaded";
+      }),
+
+    /** Forget a project that is gone from this device (deleted). Its copy in the cloud stays. */
+    forget(key: string): void {
+      delete state.links[key];
+      delete state.excluded[key];
+      delete state.wanted[key];
       persist();
     },
 

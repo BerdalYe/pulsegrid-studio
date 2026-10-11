@@ -143,6 +143,21 @@ ipcMain.on("window:title", (_event, title) => {
   if (typeof title === "string") mainWindow?.setTitle(title.slice(0, 200));
 });
 
+// What the app is using of the computer, for the performance readout in the top bar: CPU as a share of one
+// core (100 = one core fully busy, the way most music software counts it), and memory in megabytes, summed
+// over every process the app runs.
+ipcMain.handle("app:metrics", () => {
+  const metrics = app.getAppMetrics();
+  const cores = Math.max(1, require("node:os").cpus().length);
+  let cpu = 0;
+  let memoryKB = 0;
+  for (const entry of metrics) {
+    cpu += entry.cpu?.percentCPUUsage ?? 0;
+    memoryKB += entry.memory?.workingSetSize ?? 0;
+  }
+  return { cpu: Math.min(cores * 100, cpu), memoryMB: Math.round(memoryKB / 1024), cores };
+});
+
 ipcMain.handle("window:ask-save", async (_event, name) => {
   const { response } = await dialog.showMessageBox(mainWindow, {
     type: "question",

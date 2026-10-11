@@ -279,6 +279,25 @@ function registerFileHandlers(getWindow) {
 
   ipcMain.handle("project:backup", (_event, file, contents) => backupProject(file, String(contents)));
 
+  // Delete a project from the save folder: it goes to the Recycle Bin (or the Mac's Bin), so it can be got back.
+  // Only .pulsegrid files inside the save folder, the ones the studio lists.
+  ipcMain.handle("project:delete", async (_event, file) => {
+    const target = assertProjectPath(file);
+    if (path.extname(target).toLowerCase() !== EXTENSION) throw new Error("Only PulseGrid projects can be deleted here.");
+    const folder = path.resolve(loadSettings().saveFolder).toLowerCase();
+    const parent = path.dirname(path.resolve(target)).toLowerCase();
+    if (parent !== folder) throw new Error("Only projects in the save folder can be deleted here.");
+    if (!fs.existsSync(target)) return false;
+
+    await shell.trashItem(target);
+
+    const current = loadSettings();
+    current.recent = current.recent.filter((entry) => entry.toLowerCase() !== target.toLowerCase());
+    if (current.lastProject && current.lastProject.toLowerCase() === target.toLowerCase()) current.lastProject = null;
+    saveSettings();
+    return true;
+  });
+
   ipcMain.handle("project:reveal", (_event, file) => {
     shell.showItemInFolder(assertProjectPath(file));
   });

@@ -975,17 +975,17 @@ export const synthPresets: SynthPresetDef[] = [...classicSynthPresets, ...waveta
 
 export const INSTRUMENT_GROUPS = [
   "Plugins",
-  "Instruments",
   "Drums",
   "Keys",
-  "Strings",
-  "Winds & Voice",
-  "Mallets",
+  "Mallets & Bells",
+  "Guitars",
   "Bass",
-  "Leads & Plucks",
+  "Strings",
+  "Brass & Winds",
+  "Voices",
+  "Synths",
   "Pads",
-  "Wavetable sounds",
-  "Other"
+  "FX"
 ] as const;
 
 export type InstrumentGroup = (typeof INSTRUMENT_GROUPS)[number];
@@ -1002,13 +1002,15 @@ export interface InstrumentMenuEntry {
   soundfont?: { bank: number; program: number };
   /** Sends its notes out of a MIDI port, to another program, instead of making sound here. */
   midiOut?: boolean;
+  /** A sample channel, starting on this built-in sample. */
+  sample?: string;
 }
 
-/** A sampled instrument: General MIDI program numbers (0 is the first, the piano), or bank 128 for a drum kit. */
-const recorded = (label: string, program: number, bank = 0): InstrumentMenuEntry => ({
+/** A recorded instrument: General MIDI program numbers (0 is the first, the piano), or bank 128 for a drum kit. */
+const sampled = (label: string, group: InstrumentGroup, program: number, bank = 0): InstrumentMenuEntry => ({
   label,
   type: "synth",
-  group: "Instruments",
+  group,
   soundfont: { bank, program }
 });
 
@@ -1019,53 +1021,34 @@ const synth = (label: string, preset: string, group: InstrumentGroup): Instrumen
   group
 });
 
+const fx = (label: string, sample: string): InstrumentMenuEntry => ({ label, type: "sample", group: "FX", sample });
+
 /**
- * Everything you can add as a channel, mirroring FL's channel-creation menu.
- * Shared by the ADD menu and the channel rack, so the two can never drift.
+ * Everything you can add as a channel, sorted by what it is rather than how it is made. Real instruments come
+ * from the recorded set; the synthesized sounds kept here are the ones that are synths by nature (808s, leads,
+ * plucks, pads, wavetable sounds). The synthesized imitations of acoustic instruments are left out of the list
+ * (projects that use them still play), because the recordings sound better. Shared by the Add menu, the browser
+ * and the channel rack, so they can never drift apart.
  */
-const MENU_ENTRIES: InstrumentMenuEntry[] = [
+export const INSTRUMENT_MENU: InstrumentMenuEntry[] = [
   { label: "Wavetable Synth", type: "synth", preset: "wt-init", group: "Plugins", plugin: true },
   // Opens a panel with every instrument in the SoundFont, and lets you add your own SoundFont files.
   { label: "Instrument Browser", type: "synth", group: "Plugins", plugin: true, soundfont: { bank: 0, program: 0 } },
   // For instruments that live in another program (the Akai Studio Instrument Collection, a hardware synth).
   { label: "MIDI Out (external instrument)", type: "synth", group: "Plugins", plugin: true, midiOut: true },
+  { label: "Sampler", type: "sample", group: "Plugins" },
 
-  recorded("Grand Piano", 0),
-  recorded("Bright Piano", 1),
-  recorded("Electric Piano", 4),
-  recorded("Harpsichord", 6),
-  recorded("Vibraphone", 11),
-  recorded("Marimba", 12),
-  recorded("Church Organ", 19),
-  recorded("Accordion", 21),
-  recorded("Nylon Guitar", 24),
-  recorded("Steel Guitar", 25),
-  recorded("Clean Electric Guitar", 27),
-  recorded("Overdriven Guitar", 29),
-  recorded("Fingered Bass", 33),
-  recorded("Slap Bass", 36),
-  recorded("Violin", 40),
-  recorded("Cello", 42),
-  recorded("String Ensemble", 48),
-  recorded("Harp", 46),
-  recorded("Choir Aahs", 52),
-  recorded("Trumpet", 56),
-  recorded("Trombone", 57),
-  recorded("French Horn", 60),
-  recorded("Brass Section", 61),
-  recorded("Alto Sax", 65),
-  recorded("Clarinet", 71),
-  recorded("Flute", 73),
-  recorded("Square Lead", 80),
-  recorded("Saw Lead", 81),
-  recorded("Warm Pad", 89),
-  recorded("Sitar", 104),
-  recorded("Steel Drums", 114),
-  recorded("Drum Kit", 0, 128),
-  recorded("Room Drum Kit", 8, 128),
-  recorded("Power Drum Kit", 16, 128),
-  recorded("Electronic Drum Kit", 24, 128),
-
+  // ── drums: recorded kits, then the drum machine's one-shots ──
+  sampled("Standard Kit", "Drums", 0, 128),
+  sampled("Room Kit", "Drums", 8, 128),
+  sampled("Power Kit", "Drums", 16, 128),
+  sampled("Electronic Kit", "Drums", 24, 128),
+  sampled("808/909 Kit", "Drums", 25, 128),
+  sampled("Dance Kit", "Drums", 26, 128),
+  sampled("Jazz Kit", "Drums", 32, 128),
+  sampled("Brush Kit", "Drums", 40, 128),
+  sampled("Orchestral Percussion", "Drums", 48, 128),
+  sampled("Taiko Drum", "Drums", 116),
   { label: "Kick", type: "kick", group: "Drums" },
   { label: "Snare", type: "snare", group: "Drums" },
   { label: "Clap", type: "clap", group: "Drums" },
@@ -1076,90 +1059,163 @@ const MENU_ENTRIES: InstrumentMenuEntry[] = [
   { label: "Crash Cymbal", type: "cymbal", group: "Drums" },
   { label: "Cowbell", type: "cowbell", group: "Drums" },
 
-  synth("Grand Piano", "grand-piano", "Keys"),
-  synth("Electric Piano", "electric-piano", "Keys"),
-  synth("FM E-Piano", "fm-epiano", "Keys"),
-  synth("Drawbar Organ", "drawbar-organ", "Keys"),
-  synth("Pipe Organ", "pipe-organ", "Keys"),
-  synth("Harpsichord", "harpsichord", "Keys"),
-  synth("Clavinet", "clavinet", "Keys"),
-  synth("Accordion", "accordion", "Keys"),
+  // ── keys ──
+  sampled("Grand Piano", "Keys", 0),
+  sampled("Bright Piano", "Keys", 1),
+  sampled("Electric Grand", "Keys", 2),
+  sampled("Honky-Tonk Piano", "Keys", 3),
+  sampled("Electric Piano", "Keys", 4),
+  sampled("FM Electric Piano", "Keys", 5),
+  sampled("Harpsichord", "Keys", 6),
+  sampled("Clavinet", "Keys", 7),
+  sampled("Tonewheel Organ", "Keys", 16),
+  sampled("Percussive Organ", "Keys", 17),
+  sampled("Rock Organ", "Keys", 18),
+  sampled("Church Organ", "Keys", 19),
+  sampled("Accordion", "Keys", 21),
+  sampled("Harmonica", "Keys", 22),
 
-  synth("String Ensemble", "string-ensemble", "Strings"),
-  synth("Solo Violin", "solo-violin", "Strings"),
-  synth("Cello", "cello", "Strings"),
-  synth("Pizzicato Strings", "pizzicato", "Strings"),
-  synth("Harp", "harp", "Strings"),
-  synth("Nylon Guitar", "nylon-guitar", "Strings"),
-  synth("Steel Guitar", "steel-guitar", "Strings"),
+  // ── mallets and bells ──
+  sampled("Celesta", "Mallets & Bells", 8),
+  sampled("Glockenspiel", "Mallets & Bells", 9),
+  sampled("Music Box", "Mallets & Bells", 10),
+  sampled("Vibraphone", "Mallets & Bells", 11),
+  sampled("Marimba", "Mallets & Bells", 12),
+  sampled("Xylophone", "Mallets & Bells", 13),
+  sampled("Tubular Bells", "Mallets & Bells", 14),
+  sampled("Kalimba", "Mallets & Bells", 108),
+  sampled("Steel Drums", "Mallets & Bells", 114),
+  synth("Glass Bell", "glass-bell", "Mallets & Bells"),
+  synth("WT Digital Bell", "wt-digital-bell", "Mallets & Bells"),
 
-  synth("Brass Section", "brass-section", "Winds & Voice"),
-  synth("Trumpet", "trumpet", "Winds & Voice"),
-  synth("Saxophone", "saxophone", "Winds & Voice"),
-  synth("Clarinet", "clarinet", "Winds & Voice"),
-  synth("Flute", "flute", "Winds & Voice"),
-  synth("Pan Flute", "pan-flute", "Winds & Voice"),
-  synth("Choir Aah", "choir-aah", "Winds & Voice"),
+  // ── guitars ──
+  sampled("Nylon Guitar", "Guitars", 24),
+  sampled("Steel Guitar", "Guitars", 25),
+  sampled("Jazz Guitar", "Guitars", 26),
+  sampled("Clean Electric Guitar", "Guitars", 27),
+  sampled("Muted Guitar", "Guitars", 28),
+  sampled("Overdriven Guitar", "Guitars", 29),
+  sampled("Distortion Guitar", "Guitars", 30),
+  sampled("Banjo", "Guitars", 105),
+  sampled("Sitar", "Guitars", 104),
+  sampled("Koto", "Guitars", 107),
 
-  synth("Marimba", "marimba", "Mallets"),
-  synth("Vibraphone", "vibraphone", "Mallets"),
-  synth("Celesta", "celesta", "Mallets"),
-  synth("Music Box", "music-box", "Mallets"),
-  synth("Glass Bell", "glass-bell", "Mallets"),
-  synth("Kalimba", "kalimba", "Mallets"),
-  synth("Steel Drum", "steel-drum", "Mallets"),
-
+  // ── bass ──
   synth("808 Sub Bass", "808-sub", "Bass"),
   synth("808 Boom", "808-boom", "Bass"),
+  sampled("Upright Bass", "Bass", 32),
+  sampled("Finger Bass", "Bass", 33),
+  sampled("Pick Bass", "Bass", 34),
+  sampled("Fretless Bass", "Bass", 35),
+  sampled("Slap Bass", "Bass", 36),
+  sampled("Synth Bass", "Bass", 38),
+  sampled("Synth Bass 2", "Bass", 39),
   synth("Reese Bass", "reese-bass", "Bass"),
   synth("Acid Bass", "acid-bass", "Bass"),
   synth("FM Bass", "fm-bass", "Bass"),
   synth("Wobble Bass", "wobble-bass", "Bass"),
   synth("Analog Bass", "analog-bass", "Bass"),
-  synth("Upright Bass", "upright-bass", "Bass"),
+  synth("WT Reese Growl", "wt-reese", "Bass"),
+  synth("WT Wobble Bass", "wt-wobble", "Bass"),
 
-  synth("Supersaw", "supersaw", "Leads & Plucks"),
-  synth("Cyber Saw Lead", "cyber-saw", "Leads & Plucks"),
-  synth("Square Lead", "square-lead", "Leads & Plucks"),
-  synth("Chiptune Square", "chiptune-sq", "Leads & Plucks"),
-  synth("Synth Brass", "synth-brass", "Leads & Plucks"),
-  synth("Hyper Pluck", "hyper-pluck", "Leads & Plucks"),
-  synth("Future Pluck", "future-pluck", "Leads & Plucks"),
+  // ── strings ──
+  sampled("Violin", "Strings", 40),
+  sampled("Viola", "Strings", 41),
+  sampled("Cello", "Strings", 42),
+  sampled("Double Bass", "Strings", 43),
+  sampled("String Ensemble", "Strings", 48),
+  sampled("Slow Strings", "Strings", 49),
+  sampled("Tremolo Strings", "Strings", 44),
+  sampled("Pizzicato Strings", "Strings", 45),
+  sampled("Synth Strings", "Strings", 50),
+  sampled("Harp", "Strings", 46),
+  sampled("Timpani", "Strings", 47),
+  synth("WT PWM Strings", "wt-pwm-strings", "Strings"),
 
-  synth("Warm Pad", "warm-pad", "Pads"),
+  // ── brass and winds ──
+  sampled("Trumpet", "Brass & Winds", 56),
+  sampled("Muted Trumpet", "Brass & Winds", 59),
+  sampled("Trombone", "Brass & Winds", 57),
+  sampled("Tuba", "Brass & Winds", 58),
+  sampled("French Horn", "Brass & Winds", 60),
+  sampled("Brass Section", "Brass & Winds", 61),
+  sampled("Synth Brass", "Brass & Winds", 62),
+  sampled("Soprano Sax", "Brass & Winds", 64),
+  sampled("Alto Sax", "Brass & Winds", 65),
+  sampled("Tenor Sax", "Brass & Winds", 66),
+  sampled("Baritone Sax", "Brass & Winds", 67),
+  sampled("Oboe", "Brass & Winds", 68),
+  sampled("Bassoon", "Brass & Winds", 70),
+  sampled("Clarinet", "Brass & Winds", 71),
+  sampled("Piccolo", "Brass & Winds", 72),
+  sampled("Flute", "Brass & Winds", 73),
+  sampled("Pan Flute", "Brass & Winds", 75),
+  sampled("Shakuhachi", "Brass & Winds", 77),
+  synth("WT Analog Brass", "wt-analog-brass", "Brass & Winds"),
+
+  // ── voices ──
+  sampled("Choir", "Voices", 52),
+  sampled("Voice Oohs", "Voices", 53),
+  sampled("Synth Voice", "Voices", 54),
+  sampled("Solo Vox", "Voices", 85),
+  sampled("Space Voice", "Voices", 91),
+  synth("WT Vowel Lead", "wt-vowel-lead", "Voices"),
+
+  // ── synths: leads and plucks ──
+  synth("Supersaw", "supersaw", "Synths"),
+  synth("WT Supersaw", "wt-supersaw", "Synths"),
+  synth("Cyber Saw Lead", "cyber-saw", "Synths"),
+  sampled("Saw Lead", "Synths", 81),
+  sampled("Square Lead", "Synths", 80),
+  sampled("Fifth Saw Lead", "Synths", 86),
+  sampled("Bass & Lead", "Synths", 87),
+  sampled("Charang", "Synths", 84),
+  sampled("Polysynth", "Synths", 90),
+  synth("Chiptune Square", "chiptune-sq", "Synths"),
+  synth("WT Sync Lead", "wt-sync-lead", "Synths"),
+  synth("Hyper Pluck", "hyper-pluck", "Synths"),
+  synth("Future Pluck", "future-pluck", "Synths"),
+  synth("WT FM Pluck", "wt-fm-pluck", "Synths"),
+  synth("WT Bright Pluck", "wt-bright-pluck", "Synths"),
+  synth("WT Organ Morph", "wt-organ-morph", "Synths"),
+
+  // ── pads ──
+  sampled("Warm Pad", "Pads", 89),
+  sampled("Fantasia Pad", "Pads", 88),
+  sampled("Halo Pad", "Pads", 94),
+  sampled("Sweep Pad", "Pads", 95),
+  sampled("Bowed Glass", "Pads", 92),
+  sampled("Metal Pad", "Pads", 93),
   synth("Bright Pad", "bright-pad", "Pads"),
   synth("Dark Evolving Pad", "dark-pad", "Pads"),
+  synth("WT Glass Pad", "wt-glass-pad", "Pads"),
 
-  synth("WT Init", "wt-init", "Wavetable sounds"),
-  synth("WT Supersaw", "wt-supersaw", "Wavetable sounds"),
-  synth("WT Reese Growl", "wt-reese", "Wavetable sounds"),
-  synth("WT Wobble Bass", "wt-wobble", "Wavetable sounds"),
-  synth("WT Vowel Lead", "wt-vowel-lead", "Wavetable sounds"),
-  synth("WT FM Pluck", "wt-fm-pluck", "Wavetable sounds"),
-  synth("WT Glass Pad", "wt-glass-pad", "Wavetable sounds"),
-  synth("WT PWM Strings", "wt-pwm-strings", "Wavetable sounds"),
-  synth("WT Sync Lead", "wt-sync-lead", "Wavetable sounds"),
-  synth("WT Digital Bell", "wt-digital-bell", "Wavetable sounds"),
-  synth("WT Organ Morph", "wt-organ-morph", "Wavetable sounds"),
-  synth("WT Analog Brass", "wt-analog-brass", "Wavetable sounds"),
-  synth("WT Bright Pluck", "wt-bright-pluck", "Wavetable sounds"),
-
-  { label: "Sampler", type: "sample", group: "Other" }
+  // ── FX: transitions for drops and builds, then atmospheres ──
+  fx("Noise Riser", "sample-fx-noise-riser"),
+  fx("Atmospheric Riser", "sample-sweep-riser"),
+  fx("Downlifter", "sample-fx-downlifter"),
+  fx("Impact", "sample-fx-impact"),
+  fx("Sub Drop", "sample-fx-sub-drop"),
+  fx("Reverse Crash", "sample-fx-reverse-crash"),
+  fx("White Noise Sweep", "sample-fx-noise-sweep"),
+  sampled("Reverse Cymbal", "FX", 119),
+  sampled("Orchestra Hit", "FX", 55),
+  sampled("Atmosphere", "FX", 99),
+  sampled("Crystal", "FX", 98),
+  sampled("Ice Rain", "FX", 96),
+  sampled("Echo Drops", "FX", 102),
+  sampled("Soundtrack", "FX", 97),
+  sampled("Star Theme", "FX", 103)
 ];
 
-/** A synthesized sound that shares its name with a sampled instrument says so, so no two entries read the same. */
-const sampledNames = new Set(MENU_ENTRIES.filter((entry) => entry.group === "Instruments").map((entry) => entry.label));
-
-export const INSTRUMENT_MENU: InstrumentMenuEntry[] = MENU_ENTRIES.map((entry) =>
-  entry.group !== "Instruments" && !entry.soundfont && sampledNames.has(entry.label) ? { ...entry, label: `${entry.label} (synth)` } : entry
-);
 /**
  * The instruments to offer. Where the built-in recorded set doesn't exist (the web studio),
- * its entries are left out rather than adding silent channels.
+ * its entries are left out rather than adding silent channels; the Instrument Browser plugin stays,
+ * since it can load a SoundFont of your own.
  */
 export function availableInstruments(builtinAvailable: boolean | null): InstrumentMenuEntry[] {
   if (builtinAvailable !== false) return INSTRUMENT_MENU;
-  return INSTRUMENT_MENU.filter((entry) => entry.group !== "Instruments");
+  return INSTRUMENT_MENU.filter((entry) => !entry.soundfont || entry.plugin);
 }
 
 const synthPresetsById = new Map(synthPresets.map((preset) => [preset.id, preset]));

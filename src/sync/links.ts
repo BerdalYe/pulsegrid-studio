@@ -21,6 +21,8 @@ export interface LocalSyncState {
   links: Record<string, Link>;
   /** Projects the user switched syncing off for. */
   excluded: Record<string, true>;
+  /** Projects the user chose to keep in the cloud, that haven't gone up yet. */
+  wanted: Record<string, true>;
 }
 
 export type KeyValueStore = Pick<Storage, "getItem" | "setItem">;
@@ -28,7 +30,7 @@ export type KeyValueStore = Pick<Storage, "getItem" | "setItem">;
 const keyFor = (userId: string) => `pulsegrid:sync:${userId}`;
 
 export function emptyState(): LocalSyncState {
-  return { links: {}, excluded: {} };
+  return { links: {}, excluded: {}, wanted: {} };
 }
 
 export function loadSyncState(userId: string, storage: KeyValueStore | null): LocalSyncState {
@@ -57,8 +59,10 @@ export function loadSyncState(userId: string, storage: KeyValueStore | null): Lo
 
     const excluded: Record<string, true> = {};
     for (const key of Object.keys(parsed.excluded ?? {})) excluded[key] = true;
+    const wanted: Record<string, true> = {};
+    for (const key of Object.keys(parsed.wanted ?? {})) wanted[key] = true;
 
-    return { links, excluded };
+    return { links, excluded, wanted };
   } catch {
     return emptyState();
   }

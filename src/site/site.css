@@ -919,6 +919,39 @@ h3 {
   gap: 16px;
 }
 
+/* The oldest release notes, folded away under one line. */
+.release-archive {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.release-archive > summary {
+  padding: 18px 28px;
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.release-archive > summary:hover {
+  color: var(--text);
+}
+
+.release-archive[open] > summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.release-archive > .release {
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+
+.release-archive > .release:last-child {
+  border-bottom: 0;
+}
+
 .release {
   padding: 26px 28px;
   border: 1px solid var(--line);

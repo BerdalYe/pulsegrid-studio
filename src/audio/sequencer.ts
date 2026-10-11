@@ -22,7 +22,7 @@ export interface SequencerContext {
  */
 export class Sequencer {
   private readonly graph: RenderGraph;
-  private voices: Array<{ voice: Voice; endsAfter: number }> = [];
+  private voices: Array<{ voice: Voice; endsAfter: number; startsAt: number }> = [];
   private startedAudioClips = new Set<string>();
   private firstStepDone = false;
 
@@ -50,10 +50,17 @@ export class Sequencer {
     this.voices = [];
   }
 
-  private track(voice: Voice | null, endsAfter: number): void {
+  /** How many notes are sounding at `now`: started, and not past their end (with a little release). */
+  activeVoices(now: number): number {
+    let count = 0;
+    for (const entry of this.voices) if (entry.startsAt <= now && now < entry.endsAfter - 1.6) count += 1;
+    return count;
+  }
+
+  private track(voice: Voice | null, endsAfter: number, startsAt = 0): void {
     if (!voice) return;
 
-    this.voices.push({ voice, endsAfter });
+    this.voices.push({ voice, endsAfter, startsAt });
 
     // Keep the list from growing without bound during long sessions.
     if (this.voices.length > 512) {
@@ -117,7 +124,8 @@ export class Sequencer {
             pitch: note.pitch,
             duration: note.length * stepDuration
           }),
-          time + note.length * stepDuration + 2
+          time + note.length * stepDuration + 2,
+          time
         );
       }
 
@@ -131,7 +139,8 @@ export class Sequencer {
           pitch: 60,
           duration: stepDuration
         }),
-        time + stepDuration + 2
+        time + stepDuration + 2,
+        time
       );
     }
   }

@@ -13,7 +13,7 @@ import { useSynthEditor } from "../components/SynthEditor";
  */
 export function addInstrument(entry: InstrumentMenuEntry): string {
   const project = useProjectStore.getState();
-  const id = project.addChannel(entry.type, entry.label, undefined, entry.preset);
+  const id = project.addChannel(entry.type, entry.label, entry.sample, entry.preset);
 
   if (entry.soundfont) {
     project.updateChannelSoundFont(id, {

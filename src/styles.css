@@ -4024,7 +4024,8 @@ svg.ui-icon .ghost {
   display: none;
 }
 
-@media (min-width: 1530px) {
+/* The window buttons' words only where there is room to spare: the master monitor comes first. */
+@media (min-width: 1700px) {
   .fl-window-label {
     display: inline;
   }
@@ -5043,5 +5044,389 @@ svg.ui-icon .ghost {
   }
   .settings-control {
     justify-content: flex-start;
+  }
+}
+
+/* ── dropping from the browser onto the channel rack ── */
+
+.channel-rack {
+  position: relative;
+}
+
+.channel-rack.drop-target::after {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--accent);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--text);
+  content: "Drop to add it to the channel rack";
+  font-size: 13px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+/* The instrument being heard in the browser. */
+.tree-leaf.playing .tree-label {
+  color: var(--accent-2);
+}
+
+.tree-leaf[draggable="true"] {
+  cursor: grab;
+}
+
+/* ─────────────── the master monitor in the top bar (FL style) ─────────────── */
+
+.fl-panel-monitor,
+.fl-panel-perf {
+  gap: 6px;
+  padding: 2px 5px;
+  background: #0c0b12;
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.7),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+.fl-scope {
+  width: 112px;
+  height: 28px;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.fl-meter-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.fl-meter {
+  width: 92px;
+  height: 22px;
+}
+
+.fl-meter-scale {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 16px;
+  color: var(--muted);
+  font-size: 7px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.fl-clip {
+  width: 8px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  border-radius: 2px;
+  background: #3a1416;
+}
+
+.fl-clip.on {
+  background: #ef4444;
+  box-shadow: 0 0 6px #ef4444;
+}
+
+.fl-perf-load {
+  position: relative;
+  width: 86px;
+  height: 28px;
+}
+
+.fl-perf-graph {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.fl-perf-cpu {
+  position: absolute;
+  top: 1px;
+  left: 3px;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  color: var(--text);
+  font-family: "JetBrains Mono", "Cascadia Mono", Consolas, monospace;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  text-shadow: 0 1px 2px #000;
+}
+
+.fl-perf-cpu em,
+.fl-perf-figures em {
+  color: var(--muted);
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.fl-perf-figures {
+  display: flex;
+  min-width: 62px;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 1px;
+  padding-left: 6px;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: "JetBrains Mono", "Cascadia Mono", Consolas, monospace;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+.fl-perf-figures span {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.fl-perf-figures strong {
+  color: var(--accent-2);
+  font-weight: 700;
+}
+
+/* The monitor gives way first on narrower screens, so nothing in the top row scrolls out of reach:
+   it loses the performance box, then the oscilloscope, then goes. On a wide screen the scope grows. */
+@media (min-width: 1800px) {
+  .fl-scope {
+    width: 150px;
+  }
+}
+
+@media (max-width: 1620px) {
+  .fl-panel-perf {
+    display: none;
+  }
+}
+
+@media (max-width: 1400px) {
+  .fl-panel-monitor .fl-scope {
+    display: none;
+  }
+}
+
+@media (max-width: 1300px) {
+  .fl-panel-monitor {
+    display: none;
+  }
+}
+
+/* A small window: the menus and the actions pack closer, and Export keeps only its icon. */
+@media (max-width: 1150px) {
+  .fl-menus button {
+    padding: 0 4px;
+    font-size: 12px;
+  }
+  .fl-app-mark {
+    display: none;
+  }
+  .fl-export-label {
+    display: none;
+  }
+}
+
+/* ── the projects list: open, save to cloud, delete ── */
+
+.project-row {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+}
+
+.project-row .project-item {
+  min-width: 0;
+  flex: 1;
+}
+
+.project-action {
+  display: inline-flex;
+  width: 24px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+}
+
+.project-action svg.ui-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.project-action:hover {
+  background: var(--panel-3);
+  color: var(--text);
+}
+
+/* Deleting only shows on the row you point at, so it isn't clicked by accident. */
+.project-delete {
+  opacity: 0;
+}
+
+.project-row:hover .project-delete,
+.project-delete:focus-visible {
+  opacity: 1;
+}
+
+.project-delete:hover {
+  color: var(--danger);
+}
+
+.project-cloud.cloud-synced {
+  color: var(--accent-2);
+}
+
+.project-cloud.cloud-pending {
+  color: var(--accent-2);
+  opacity: 0.7;
+}
+
+.project-cloud.cloud-local,
+.project-cloud.cloud-off {
+  opacity: 0.45;
+}
+
+.project-row:hover .project-cloud {
+  opacity: 1;
+}
+
+.fl-perf-figures .fl-perf-drops strong {
+  color: #ef4444;
+}
+
+.fl-perf-figures:has(.fl-perf-drops) {
+  font-size: 9.5px;
+  line-height: 1;
+}
+
+/* ─────────────── the header, laid out like FL Studio's ───────────────
+   Row 1: menus · pattern/song · transport · tempo · time · toggles · master monitor · undo/save/export.
+   Row 2: the hint panel (project name and hints) · windows · snap · pattern · master knobs. */
+
+.fl-menu-bar {
+  display: flex;
+  overflow-x: auto;
+  align-items: center;
+  gap: 4px;
+  height: 46px;
+  padding: 0 6px;
+  scrollbar-width: none;
+}
+
+.fl-menu-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.fl-menu-bar > .fl-panel {
+  height: 36px;
+  flex: 0 0 auto;
+}
+
+.fl-menus {
+  flex: 0 0 auto;
+  margin-right: 4px;
+}
+
+/* FL's menu names: upper case, close together. */
+.fl-menus button {
+  height: 26px;
+  padding: 0 6px;
+  font-size: 13px;
+  font-stretch: condensed;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.fl-header-actions {
+  flex: 0 0 auto;
+}
+
+.fl-toolbar-row {
+  height: 46px;
+  border-top: 1px solid rgba(0, 0, 0, 0.35);
+}
+
+.fl-toolbar-row > .fl-panel {
+  height: 38px;
+}
+
+/* The hint panel: the project's name on top, the hint for whatever the pointer is over below it. */
+.fl-hint-panel {
+  min-width: 250px;
+  max-width: 460px;
+  flex: 1 1 380px !important;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 1px;
+  padding: 2px 8px;
+  background: #0f0f14;
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.7),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+.fl-hint-top .fl-project-title {
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+.fl-hint-top .fl-project-name {
+  height: 18px;
+  max-width: 220px;
+  padding: 0 3px;
+  font-size: 11.5px;
+  text-align: left;
+}
+
+.fl-hint-line {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.fl-hint-panel .status-info {
+  font-size: 10px;
+}
+
+/* In the hint panel only what the keys play; the sample count and version have their places elsewhere. */
+.fl-hint-panel .status-info > span:not(:first-child) {
+  display: none;
+}
+
+.fl-hint-panel .status-info > span {
+  padding: 0 0 0 8px;
+}
+
+.fl-panel-snap select {
+  width: 86px;
+}
+
+@media (max-width: 1060px) {
+  .fl-menus button {
+    padding: 0 3px;
+  }
+  .fl-menu-bar .fl-panel-clock {
+    min-width: 96px;
+  }
+  .fl-menu-bar .fl-clock-value {
+    font-size: 18px;
   }
 }

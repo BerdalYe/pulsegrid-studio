@@ -114,7 +114,7 @@ const contentOf = (text: string) => (JSON.parse(text) as { content: string }).co
 /** One PC with one open project. */
 const last = <T,>(items: T[]): T | undefined => items[items.length - 1];
 
-function device(cloud: FakeCloud, label: string, key: string | null = "song") {
+function device(cloud: FakeCloud, label: string, key: string | null = "song", optIn = false) {
   const project = {
     key,
     name: "Song",
@@ -153,7 +153,8 @@ function device(cloud: FakeCloud, label: string, key: string | null = "song") {
     device: label,
     uuid: nextId,
     onStatus: (patch) => statuses.push(patch),
-    onNotice: (message) => notices.push(message)
+    onNotice: (message) => notices.push(message),
+    optIn
   });
 
   return {
@@ -542,5 +543,95 @@ describe("helpers", () => {
       JSON.stringify({ links: { ok: { cloudId: "c", base: 1, pending: false }, bad: { base: "x" } } })
     );
     expect(Object.keys(loadSyncState("user-1", storage).links)).toEqual(["ok"]);
+  });
+});
+
+describe("choosing which projects go to the cloud", () => {
+  it("keeps a new project on this PC until it is chosen for the cloud", async () => {
+    const cloud = new FakeCloud();
+    const pc = device(cloud, "PC 1", "song", true);
+
+    expect(pc.engine.needsPush()).toBe(false);
+    expect(await pc.engine.push()).toBe("skipped");
+    expect(await pc.engine.reconcile(true)).toBe("skipped");
+    expect(cloud.rows.size).toBe(0);
+    expect(pc.lastPhase()).toBe("local");
+    expect(pc.engine.stateOf("song")).toBe("local");
+  });
+
+  it("uploads it once it is chosen, and keeps syncing it after that", async () => {
+    const cloud = new FakeCloud();
+    const pc = device(cloud, "PC 1", "song", true);
+
+    pc.engine.setEnabled(true);
+    expect(pc.engine.stateOf("song")).toBe("pending");
+    expect(pc.engine.needsPush()).toBe(true);
+    expect(await pc.engine.push()).toBe("pushed");
+    expect(cloud.rows.size).toBe(1);
+    expect(pc.engine.stateOf("song")).toBe("synced");
+    expect(pc.state.wanted.song).toBeUndefined();
+
+    pc.save("second");
+    expect(pc.engine.stateOf("song")).toBe("pending");
+    expect(await pc.engine.push()).toBe("pushed");
+    const [row] = await cloud.list();
+    expect(await cloudContent(cloud, row.id)).toBe("second");
+  });
+
+  it("can stop syncing a project, which leaves the cloud copy alone", async () => {
+    const cloud = new FakeCloud();
+    const pc = device(cloud, "PC 1", "song", true);
+    pc.engine.setEnabled(true);
+    await pc.engine.push();
+
+    pc.engine.setEnabledFor("song", false);
+    expect(pc.engine.stateOf("song")).toBe("off");
+    pc.save("not going up");
+    expect(await pc.engine.push()).toBe("skipped");
+    const [row] = await cloud.list();
+    expect(await cloudContent(cloud, row.id)).toBe("start");
+  });
+
+  it("puts a project that isn't open into the cloud from its file", async () => {
+    const cloud = new FakeCloud();
+    const pc = device(cloud, "PC 1", "song", true);
+
+    expect(await pc.engine.uploadFile("c:/music/beat.pulsegrid", "C:/Music/Beat.pulsegrid", "Beat", fileText("beat", "Beat"))).toBe("uploaded");
+    const [row] = await cloud.list();
+    expect(row.name).toBe("Beat");
+    expect(await cloudContent(cloud, row.id)).toBe("beat");
+    expect(pc.engine.stateOf("c:/music/beat.pulsegrid")).toBe("synced");
+    expect(pc.state.links["c:/music/beat.pulsegrid"]).toMatchObject({ cloudId: row.id, base: 1, pending: false, path: "C:/Music/Beat.pulsegrid" });
+
+    // Asking again doesn't make a second copy.
+    expect(await pc.engine.uploadFile("c:/music/beat.pulsegrid", "C:/Music/Beat.pulsegrid", "Beat", fileText("beat", "Beat"))).toBe("linked");
+    expect(cloud.rows.size).toBe(1);
+  });
+
+  it("forgets a deleted project but leaves its cloud copy", async () => {
+    const cloud = new FakeCloud();
+    const pc = device(cloud, "PC 1", "song", true);
+    await pc.engine.uploadFile("c:/x.pulsegrid", "C:/x.pulsegrid", "X", fileText("x", "X"));
+
+    pc.engine.forget("c:/x.pulsegrid");
+    expect(pc.engine.stateOf("c:/x.pulsegrid")).toBe("local");
+    expect(cloud.rows.size).toBe(1);
+  });
+
+  it("without opt-in, every saved project still syncs as before", async () => {
+    const cloud = new FakeCloud();
+    const pc = device(cloud, "PC 1");
+    expect(pc.engine.stateOf("song")).toBe("pending");
+    expect(await pc.engine.push()).toBe("pushed");
+  });
+
+  it("reads older stored state that has no list of wanted projects", () => {
+    const store = new Map<string, string>();
+    const storage = { getItem: (key: string) => store.get(key) ?? null, setItem: (key: string, value: string) => void store.set(key, value) };
+    storage.setItem(`pulsegrid:sync:${USER}`, JSON.stringify({ links: {}, excluded: { a: true } }));
+    const loaded = loadSyncState(USER, storage);
+    expect(loaded.wanted).toEqual({});
+    expect(loaded.excluded).toEqual({ a: true });
+    saveSyncState(USER, loaded, storage);
   });
 });

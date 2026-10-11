@@ -51,6 +51,8 @@ const WINDOW_BUTTONS: Array<{
 ];
 
 interface TopBarProps {
+  /** Which half: the transport (top row, beside the menus) or the tools (second row). */
+  part: "transport" | "tools";
   showBrowser: boolean;
   onToggleBrowser: () => void;
 }
@@ -60,7 +62,9 @@ interface TopBarProps {
  * play controls and time, then the pattern being edited, then the master
  * section and the windows.
  */
-export function TopBar({ showBrowser, onToggleBrowser }: TopBarProps) {
+export function TopBar({ part, showBrowser, onToggleBrowser }: TopBarProps) {
+  const snapSteps = useSessionStore((state) => state.snapSteps);
+  const setSnapSteps = useSessionStore((state) => state.setSnapSteps);
   const bpm = useProjectStore((state) => state.bpm);
   const swing = useProjectStore((state) => state.swing);
   const masterVolume = useProjectStore((state) => state.masterVolume);
@@ -140,7 +144,8 @@ export function TopBar({ showBrowser, onToggleBrowser }: TopBarProps) {
   };
 
   return (
-    <div className="fl-toolbar-row">
+    part === "transport" ? (
+      <>
       {/* ── play ── */}
       <div className="fl-panel fl-panel-mode" role="group" aria-label="Playback mode">
         <button
@@ -179,6 +184,8 @@ export function TopBar({ showBrowser, onToggleBrowser }: TopBarProps) {
         />
         <span className="fl-tempo-unit">BPM</span>
       </div>
+
+      <PositionClock />
 
       <div className="fl-panel fl-panel-toggles">
         <button
@@ -235,9 +242,54 @@ export function TopBar({ showBrowser, onToggleBrowser }: TopBarProps) {
         </button>
       </div>
 
-      <PositionClock />
+      </>
+    ) : (
+      <>
+      <div className="fl-panel fl-panel-windows" role="group" aria-label="Windows">
+        <button
+          className={`fl-window-button${showBrowser ? " on" : ""}`}
+          aria-pressed={showBrowser}
+          title={`Browser: projects, cloud, samples and MIDI (${shortcutLabel("toggleBrowser")})`}
+          onClick={onToggleBrowser}
+        >
+          <IconBrowser />
+        </button>
 
-      <span className="fl-group-gap" />
+        <span className="fl-divider" />
+
+        {WINDOW_BUTTONS.map((entry) => {
+          const open = windows[entry.id].open;
+          return (
+            <button
+              key={entry.id}
+              className={`fl-window-button${open ? " on" : ""}${open && view === entry.id ? " front" : ""}`}
+              aria-pressed={open}
+              title={`${entry.label} (${entry.shortcut})`}
+              onClick={() => toggleWindow(entry.id)}
+            >
+              {entry.icon}
+              <span className="fl-window-label">{entry.short}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── the grid notes and clips snap to, like FL's main snap ── */}
+      <div className="fl-panel fl-panel-snap" title="Snap: the grid clips move along in the playlist">
+        <span className="fl-caption">Snap</span>
+        <select
+          className="fl-snap-select"
+          value={snapSteps}
+          aria-label="Playlist snap"
+          onChange={(event) => setSnapSteps(Number(event.target.value))}
+        >
+          <option value={1}>Step</option>
+          <option value={2}>1/2 beat</option>
+          <option value={4}>Beat</option>
+          <option value={8}>1/2 bar</option>
+          <option value={16}>Bar</option>
+        </select>
+      </div>
 
       {/* ── the pattern being edited ── */}
       <div className="fl-panel fl-panel-pattern">
@@ -362,8 +414,6 @@ export function TopBar({ showBrowser, onToggleBrowser }: TopBarProps) {
         </button>
       </div>
 
-      <span className="fl-flex" />
-
       {/* ── master section and windows ── */}
       <div className="fl-panel fl-panel-knobs">
         <Knob
@@ -395,36 +445,8 @@ export function TopBar({ showBrowser, onToggleBrowser }: TopBarProps) {
           onCommitEnd={endEdit}
         />
       </div>
-
-      <div className="fl-panel fl-panel-windows" role="group" aria-label="Windows">
-        <button
-          className={`fl-window-button${showBrowser ? " on" : ""}`}
-          aria-pressed={showBrowser}
-          title={`Browser: projects, cloud, samples and MIDI (${shortcutLabel("toggleBrowser")})`}
-          onClick={onToggleBrowser}
-        >
-          <IconBrowser />
-        </button>
-
-        <span className="fl-divider" />
-
-        {WINDOW_BUTTONS.map((entry) => {
-          const open = windows[entry.id].open;
-          return (
-            <button
-              key={entry.id}
-              className={`fl-window-button${open ? " on" : ""}${open && view === entry.id ? " front" : ""}`}
-              aria-pressed={open}
-              title={`${entry.label} (${entry.shortcut})`}
-              onClick={() => toggleWindow(entry.id)}
-            >
-              {entry.icon}
-              <span className="fl-window-label">{entry.short}</span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
+      </>
+    )
   );
 }
 
@@ -606,7 +628,7 @@ export function HeaderActions({ onStatus, onExport }: HeaderActionsProps) {
           <path d="M4.8 6.6 8 9.8l3.2-3.2" fill="none" strokeWidth="1.6" />
           <path d="M2.6 11.4v2.4h10.8v-2.4" fill="none" strokeWidth="1.6" />
         </svg>
-        Export
+        <span className="fl-export-label">Export</span>
       </button>
     </div>
   );

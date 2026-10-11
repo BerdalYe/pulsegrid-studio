@@ -10,6 +10,7 @@ import { useSamples, useSelectedPattern, useUnmount } from "../hooks/useStudio";
 import { auditionChannel } from "../audio/engine";
 import { INSTRUMENT_GROUPS, availableInstruments, synthPresets } from "../presets/presets";
 import { addInstrument } from "../lib/addInstrument";
+import { DRAG_TYPE, carriesDragItem, decodeDragItem, type DragItem } from "../lib/dragData";
 import { useSoundFontStore } from "../audio/soundfont/registry";
 import { IconSynth } from "./icons";
 import { useSynthEditor } from "./SynthEditor";
@@ -67,6 +68,27 @@ export function ChannelRack() {
     return () => observer.disconnect();
   });
 
+  // The browser's instruments and samples are added by dragging them here.
+  const updateChannelSample = useProjectStore((state) => state.updateChannelSample);
+  const [dropping, setDropping] = useState(false);
+  const dragDepth = useRef(0);
+
+  const dropItem = (item: DragItem, onto: string | null) => {
+    if (item.kind === "instrument") {
+      const entry = instruments.find((candidate) => candidate.label === item.label);
+      if (entry) addInstrument(entry);
+      return;
+    }
+    // A sample dropped on a sample channel replaces its sound; anywhere else it becomes a channel of its own.
+    const target = onto ? channels.find((channel) => channel.id === onto) : undefined;
+    if (target?.type === "sample") {
+      updateChannelSample(target.id, { sampleId: item.id });
+      selectChannel(target.id);
+    } else {
+      selectChannel(addChannel("sample", item.name, item.id));
+    }
+  };
+
   if (!pattern) return <div className="empty-note">No pattern selected.</div>;
 
   const stepPitch = Math.max(
@@ -75,7 +97,33 @@ export function ChannelRack() {
   );
 
   return (
-    <section className="channel-rack">
+    <section
+      className={`channel-rack${dropping ? " drop-target" : ""}`}
+      onDragEnter={(event) => {
+        if (!carriesDragItem(event.dataTransfer.types)) return;
+        event.preventDefault();
+        dragDepth.current += 1;
+        setDropping(true);
+      }}
+      onDragOver={(event) => {
+        if (!carriesDragItem(event.dataTransfer.types)) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "copy";
+      }}
+      onDragLeave={(event) => {
+        if (!carriesDragItem(event.dataTransfer.types)) return;
+        dragDepth.current = Math.max(0, dragDepth.current - 1);
+        if (dragDepth.current === 0) setDropping(false);
+      }}
+      onDrop={(event) => {
+        dragDepth.current = 0;
+        setDropping(false);
+        const item = decodeDragItem(event.dataTransfer.getData(DRAG_TYPE));
+        if (!item) return;
+        event.preventDefault();
+        dropItem(item, (event.target as HTMLElement).closest("[data-channel-id]")?.getAttribute("data-channel-id") ?? null);
+      }}
+    >
       <div className="toolbar">
         <label>
           Add
@@ -324,7 +372,7 @@ const ChannelRow = memo(function ChannelRow({
   const showSteps = true;
 
   return (
-    <div className={`channel${selected ? " selected" : ""}${channel.mute ? " muted" : ""}`}>
+    <div className={`channel${selected ? " selected" : ""}${channel.mute ? " muted" : ""}`} data-channel-id={channel.id}>
       <div className="channel-main">
       <div
         className="channel-head"

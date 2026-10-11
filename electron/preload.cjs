@@ -27,6 +27,7 @@ contextBridge.exposeInMainWorld("pulsegridDesktop", {
   readProject: (path) => ipcRenderer.invoke("project:read", path),
   backupProject: (path, contents) => ipcRenderer.invoke("project:backup", path, contents),
   revealProject: (path) => ipcRenderer.invoke("project:reveal", path),
+  deleteProject: (path) => ipcRenderer.invoke("project:delete", path),
   takeLaunchFile: () => ipcRenderer.invoke("project:take-launch-file"),
 
   openExternal: (url) => ipcRenderer.invoke("auth:open-external", url),
@@ -45,6 +46,8 @@ contextBridge.exposeInMainWorld("pulsegridDesktop", {
   setZoom: (factor) => {
     if (typeof factor === "number" && Number.isFinite(factor)) webFrame.setZoomFactor(Math.min(2, Math.max(0.5, factor)));
   },
+
+  getMetrics: () => ipcRenderer.invoke("app:metrics"),
 
   setTitle: (title) => ipcRenderer.send("window:title", title),
   askSaveChanges: (name) => ipcRenderer.invoke("window:ask-save", name),

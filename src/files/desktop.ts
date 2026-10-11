@@ -79,6 +79,8 @@ export interface DesktopBridge {
   readProject(path: string): Promise<DesktopProjectFile>;
   backupProject(path: string, contents: string): Promise<boolean>;
   revealProject(path: string): Promise<void>;
+  /** Move a project in the save folder to the Recycle Bin. False if it was already gone. */
+  deleteProject?(path: string): Promise<boolean>;
   takeLaunchFile(): Promise<DesktopProjectFile | null>;
   /** Open a secure web address (the Discord sign-in page) in the person's own browser. */
   openExternal(url: string): Promise<void>;
@@ -90,6 +92,8 @@ export interface DesktopBridge {
   closeNow(): void;
   /** The size of the whole interface (1 is normal). */
   setZoom?(factor: number): void;
+  /** CPU (as a share of one core: 100 is one core fully busy) and memory the app is using. */
+  getMetrics?(): Promise<{ cpu: number; memoryMB: number; cores: number }>;
   getUpdateStatus(): Promise<UpdateStatus>;
   setCheckUpdates(enabled: boolean): Promise<UpdateStatus>;
   checkForUpdates(): Promise<UpdateStatus>;

@@ -18,6 +18,7 @@ import { useTransportStore } from "./state/transportStore";
 import { useHoverHint } from "./hooks/useStudio";
 
 import { HeaderActions, ProjectTitle, StatusInfo, TopBar } from "./components/TopBar";
+import { HeaderMonitor } from "./components/HeaderMonitor";
 import { ChannelRack } from "./components/ChannelRack";
 import { PianoRoll } from "./components/PianoRoll";
 import { Playlist } from "./components/Playlist";
@@ -747,12 +748,35 @@ function Studio() {
             ))}
           </nav>
 
-          <ProjectTitle onStatus={showStatus} />
+          {/* Row 1, as in FL Studio: the menus, then play controls, tempo and time, then the master monitor. */}
+          <TopBar part="transport" showBrowser={showTools} onToggleBrowser={() => setShowTools((value) => !value)} />
+
+          <span className="fl-flex" />
+
+          <HeaderMonitor />
 
           <HeaderActions onStatus={showStatus} onExport={() => setExportOpen(true)} />
         </div>
 
-        <TopBar showBrowser={showTools} onToggleBrowser={() => setShowTools((value) => !value)} />
+        {/* Row 2: the hint panel with the project's name, the windows, snap, the pattern and the master knobs. */}
+        <div className="fl-toolbar-row">
+          <div className="fl-panel fl-hint-panel" role="group" aria-label="Project and hints">
+            <div className="fl-hint-top">
+              <ProjectTitle onStatus={showStatus} />
+            </div>
+            <div className="fl-hint-line">
+              <span className={`fl-hint-icon${status ? " fl-hint-icon-status" : ""}`} aria-hidden="true">
+                {status ? "" : "i"}
+              </span>
+              <span className={`fl-hint-text${status || (showHints && hint) ? "" : " fl-hint-idle"}`} role="status">
+                {status || (showHints ? hint || platformText("Point at anything for a hint · Space plays · Ctrl+S saves") : "")}
+              </span>
+              <StatusInfo />
+            </div>
+          </div>
+
+          <TopBar part="tools" showBrowser={showTools} onToggleBrowser={() => setShowTools((value) => !value)} />
+        </div>
       </header>
 
       {exportOpen ? (
@@ -819,17 +843,6 @@ function Studio() {
         </div>
       </main>
 
-      {/* The hint line: whatever the pointer is over explains itself here, and
-          the result of the last action shows for a few seconds. */}
-      <footer className="status-bar">
-        <span className={`fl-hint-icon${status ? " fl-hint-icon-status" : ""}`} aria-hidden="true">
-          {status ? "" : "i"}
-        </span>
-        <span className={`fl-hint-text${status || (showHints && hint) ? "" : " fl-hint-idle"}`} role="status">
-          {status || (showHints ? hint || platformText("Point at anything for a hint · Space plays · Ctrl+S saves") : "")}
-        </span>
-        <StatusInfo />
-      </footer>
 
       <CloudToast onStatus={showStatus} />
 

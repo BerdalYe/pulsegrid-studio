@@ -97,6 +97,8 @@ export class RenderGraph {
   /** Metronome clicks, kept out of the master FX chain. */
   readonly metronomeInput: GainNode;
   readonly masterAnalyser: AnalyserNode | null;
+  /** The master output's left and right sides, for the peak meter in the top bar. */
+  readonly masterSides: [AnalyserNode, AnalyserNode] | null;
 
   private masterChain: EffectChain;
   private readonly channels = new Map<string, ChannelStrip>();
@@ -144,8 +146,19 @@ export class RenderGraph {
       this.masterAnalyser = context.createAnalyser();
       this.masterAnalyser.fftSize = 1024;
       this.ceiling.connect(this.masterAnalyser);
+
+      const split = context.createChannelSplitter(2);
+      const left = context.createAnalyser();
+      const right = context.createAnalyser();
+      left.fftSize = 1024;
+      right.fftSize = 1024;
+      this.ceiling.connect(split);
+      split.connect(left, 0);
+      split.connect(right, 1);
+      this.masterSides = [left, right];
     } else {
       this.masterAnalyser = null;
+      this.masterSides = null;
     }
 
     this.sync(project, context.currentTime, false);

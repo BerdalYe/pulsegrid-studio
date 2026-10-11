@@ -91,7 +91,7 @@
           <h3>The desktop app</h3>
           <p>
             Your projects, exports, backups and settings are stored on your own computer — projects in the save
-            folder you choose, settings in your Windows user profile. Nothing about you or your projects is sent
+            folder you choose, settings in your user profile. Nothing about you or your projects is sent
             anywhere unless you sign in to cloud sync (see below).
           </p>
           <p>
@@ -100,8 +100,8 @@
             installer's checksum. When there is a newer version, it downloads that installer from GitHub, where
             PulseGrid's releases are published, and checks it against the checksum. Like any web request, this shows
             this site and GitHub your IP address; it carries no other information about you, your computer or your
-            projects.
-            You can turn it off under <em>Options → Check for updates automatically</em>, and check by hand from
+            projects. The Mac app makes the same check and only tells you when there is a new version.
+            You can turn it off in <em>Settings</em> (<em>F10</em>), and check by hand from
             <em>Help → Check for updates</em>. Apart from that, the app only opens a web page in your browser if you
             click a link.
           </p>
@@ -116,7 +116,7 @@
           <h3>This website</h3>
           <p>
             The site sets no cookies and loads nothing from other companies — its fonts and images are served from
-            here. The Windows installer itself is downloaded from GitHub, which handles that download under its own
+            here. The installers themselves are downloaded from GitHub, which handles those downloads under its own
             privacy statement. Like any web server, the host may keep standard access logs (such as IP address and
             time of request) to run and protect the site.
           </p>
@@ -124,8 +124,8 @@
           <h3>Cloud sync (optional)</h3>
           <p>
             Cloud sync lets you work on the same projects on different computers. It is off until you create an account
-            and sign in. Until then the studio never contacts the cloud, and it works exactly the same without it. If
-            you do sign in:
+            and sign in. Until then the studio never contacts the cloud, and it works exactly the same without it. Even
+            when you are signed in, only the projects you choose go to the cloud. If you do sign in:
           </p>
           <ul>
             <li>
@@ -137,10 +137,11 @@
               privacy policy, and we never see your Discord password.
             </li>
             <li>
-              <strong>Your projects.</strong> Each project you sync, with everything in it (including imported or
-              recorded audio), is uploaded, compressed, to private storage that only your account can read. Stored
-              alongside it are its name, size, the time of its last change and the kind of device that made it
-              (the Windows app, or the web studio and which browser).
+              <strong>Your projects.</strong> Each project you choose to keep in the cloud, with everything in it
+              (including imported or recorded audio), is uploaded, compressed, to private storage that only your
+              account can read. Stored alongside it are its name, size, the time of its last change and the kind of
+              device that made it (the Windows or Mac app, or the web studio and which browser). Projects you haven't
+              chosen are never uploaded.
             </li>
             <li>
               <strong>Who holds it.</strong> This is stored with Supabase (supabase.com), under its own terms and
@@ -189,7 +190,7 @@
           <img src="/icon.png" alt="" width="28" height="28" />
           <span>PulseGrid <strong>Studio</strong></span>
         </a>
-        <p>Free music production for Windows and the web.</p>
+        <p>Free music production for Windows, Mac and the web.</p>
       </div>
 
       <nav class="footer-columns" aria-label="Footer">

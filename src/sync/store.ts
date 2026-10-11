@@ -16,11 +16,14 @@ interface CloudState {
   currentId: string | null;
   /** One-off news ("kept the other version…"), shown once in the status bar. */
   notice: string;
+  /** Goes up whenever which projects sync changes, so lists showing it redraw. */
+  linksVersion: number;
 
   patch(patch: StatusPatch): void;
   setProjects(projects: CloudRow[]): void;
   setCurrentId(id: string | null): void;
   setNotice(notice: string): void;
+  bumpLinks(): void;
   reset(): void;
 }
 
@@ -32,7 +35,8 @@ const initial = {
   projects: [] as CloudRow[],
   projectsLoaded: false,
   currentId: null as string | null,
-  notice: ""
+  notice: "",
+  linksVersion: 0
 };
 
 export const useCloudStore = create<CloudState>()((set) => ({
@@ -41,5 +45,6 @@ export const useCloudStore = create<CloudState>()((set) => ({
   setProjects: (projects) => set({ projects, projectsLoaded: true }),
   setCurrentId: (currentId) => set({ currentId }),
   setNotice: (notice) => set({ notice }),
+  bumpLinks: () => set((state) => ({ linksVersion: state.linksVersion + 1 })),
   reset: () => set({ ...initial })
 }));

@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 
 import { useSoundFontStore } from "../audio/soundfont/registry";
-import { addInstrument } from "../lib/addInstrument";
+import { previewInstrument } from "../audio/preview";
+import { DRAG_TYPE, encodeDragItem } from "../lib/dragData";
 import { instrumentLibrary, type InstrumentFolder } from "../lib/instrumentLibrary";
 import { availableInstruments, type InstrumentMenuEntry } from "../presets/presets";
 import { IconFolder, IconKeys, IconSynth } from "./icons";
@@ -25,8 +26,9 @@ function flatten(folder: InstrumentFolder, trail: string[] = []): Array<{ entry:
 }
 
 /**
- * The instrument library as a tree, like a plugin database: the plugins on top, then folders of instruments.
- * One click adds an instrument as a new channel. A search box looks through all of them.
+ * The instrument library as a tree, like a plugin database: the plugins on top, then a folder per family.
+ * A click plays an instrument so you can hear it; dragging it onto the channel rack adds it. A search box looks
+ * through all of them.
  */
 export function InstrumentTree({ onStatus }: InstrumentTreeProps) {
   const builtinSounds = useSoundFontStore((state) => state.builtinAvailable);
@@ -43,22 +45,32 @@ export function InstrumentTree({ onStatus }: InstrumentTreeProps) {
       return next;
     });
 
-  const add = (entry: InstrumentMenuEntry) => {
-    addInstrument(entry);
-    onStatus(`Added ${entry.label}.`);
+  // A click plays it; adding it to the project is done by dragging it onto the channel rack.
+  const [playing, setPlaying] = useState<string | null>(null);
+  const hear = (entry: InstrumentMenuEntry) => {
+    setPlaying(entry.label);
+    void previewInstrument(entry).then((message) => {
+      onStatus(message ?? `${entry.label} · drag it onto the channel rack to use it.`);
+    });
   };
 
   const leaf = (entry: InstrumentMenuEntry, depth: number, where?: string, parent = "") => (
     <button
       key={`${parent}|${where ?? ""}/${entry.label}`}
       type="button"
-      className="tree-row tree-leaf"
+      className={`tree-row tree-leaf${playing === entry.label ? " playing" : ""}`}
       style={{ paddingLeft: 8 + depth * 14 }}
-      title={`Add ${entry.label} as a new channel`}
-      onClick={() => add(entry)}
+      title={`${entry.label}: click to hear it, drag it onto the channel rack to add it`}
+      draggable
+      onDragStart={(event) => {
+        event.dataTransfer.setData(DRAG_TYPE, encodeDragItem({ kind: "instrument", label: entry.label }));
+        event.dataTransfer.setData("text/plain", entry.label);
+        event.dataTransfer.effectAllowed = "copy";
+      }}
+      onClick={() => hear(entry)}
     >
       <span className="tree-icon" aria-hidden="true">
-        {entry.plugin ? <IconSynth /> : <IconKeys />}
+        {entry.group === "Plugins" ? <IconSynth /> : <IconKeys />}
       </span>
       <span className="tree-label">{entry.label}</span>
       {where ? <span className="tree-where">{where}</span> : null}
