@@ -45,7 +45,10 @@ function registerPluginHandlers() {
     if (!pluginsAvailable()) return;
     const studio = new MessageChannelMain();
     const audio = new MessageChannelMain();
-    startBridge().postMessage({ type: "ports" }, [studio.port1, audio.port1]);
+    // The studio's window, so plugin windows can keep to it (above it while it's in use, hidden while it's minimised).
+    const handle = BrowserWindow.fromWebContents(event.sender)?.getNativeWindowHandle();
+    const studioWindow = handle && handle.length >= 8 ? handle.readBigUInt64LE(0).toString() : "";
+    startBridge().postMessage({ type: "ports", studioWindow }, [studio.port1, audio.port1]);
     event.sender.postMessage("plugins:ports", null, [studio.port2, audio.port2]);
   });
 

@@ -152,6 +152,7 @@ void logLine(const std::string& text) { emitEvent({{"event", "log"}, {"message",
 namespace {
 
 HostApplication gHostApplication;
+HWND gStudioWindow = nullptr;
 double gSampleRate = 48000;
 int gMaxBlock = 512;
 
@@ -217,6 +218,9 @@ json handle(const json& request) {
   if (command == "setup") {
     gSampleRate = request.value("sampleRate", 48000.0);
     gMaxBlock = std::clamp(request.value("maxBlock", 512), 32, 4096);
+    // The studio's window, as a number: plugin windows keep to it (see arrangeEditors).
+    const std::string studio = request.value("studioWindow", "");
+    if (!studio.empty()) gStudioWindow = reinterpret_cast<HWND>(static_cast<uintptr_t>(std::stoull(studio)));
     return json::object();
   }
 
@@ -327,6 +331,10 @@ void drainQueue() {
 }
 
 LRESULT CALLBACK mailboxProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+  if (message == WM_TIMER) {
+    arrangeEditors(gStudioWindow);
+    return 0;
+  }
   if (message == kWakeUp) {
     if (gQuitting) PostQuitMessage(0);
     else drainQueue();
@@ -417,6 +425,14 @@ int wmain(int argc, wchar_t** argv) {
   RegisterClassExW(&mailbox);
   gMailbox = CreateWindowExW(0, mailbox.lpszClassName, L"", 0, 0, 0, 0, 0, HWND_MESSAGE, nullptr, module, nullptr);
 
+  // The studio starts this program hidden, and Windows applies that to the first window it shows, which would be a
+  // plugin's. A throwaway window takes that first "show" instead.
+  if (HWND spare = CreateWindowExW(0, mailbox.lpszClassName, L"", WS_OVERLAPPED, 0, 0, 0, 0, nullptr, nullptr, module, nullptr)) {
+    ShowWindow(spare, SW_HIDE);
+    DestroyWindow(spare);
+  }
+
+  SetTimer(gMailbox, 1, 200, nullptr);
   std::thread reader(readerThread);
   reader.detach();
   emitEvent({{"event", "ready"}});

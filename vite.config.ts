@@ -216,6 +216,10 @@ export default defineConfig({
   worker: {
     format: "es"
   },
+  server: {
+    // The plugin host's C++ build (native/) changes thousands of files Vite has no use for, and locks some.
+    watch: { ignored: ["**/native/**", "**/release/**"] }
+  },
   test: {
     environment: "node",
     include: ["src/**/*.test.ts"]

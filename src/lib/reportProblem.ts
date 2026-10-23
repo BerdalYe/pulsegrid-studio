@@ -21,10 +21,12 @@ export function browserName(userAgent: string): string | null {
 export function reportProblemUrl(options: {
   version: string;
   desktop: boolean;
+  /** "darwin" for the Mac app; anything else is the Windows app. */
+  platform?: string;
   userAgent?: string;
 }): string {
   const where = options.desktop
-    ? "Windows desktop app"
+    ? `${options.platform === "darwin" ? "Mac" : "Windows"} desktop app`
     : `web studio${browserName(options.userAgent ?? "") ? ` in ${browserName(options.userAgent ?? "")}` : ""}`;
 
   const body = [

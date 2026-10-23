@@ -736,7 +736,7 @@ function Studio() {
         label: "Report a problem…",
         run: () =>
           window.open(
-            reportProblemUrl({ version: __APP_VERSION__, desktop, userAgent: navigator.userAgent }),
+            reportProblemUrl({ version: __APP_VERSION__, desktop, platform: getDesktop()?.platform, userAgent: navigator.userAgent }),
             "_blank",
             "noopener"
           )

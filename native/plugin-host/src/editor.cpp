@@ -13,6 +13,7 @@ namespace pulsegrid {
 namespace {
 const wchar_t* kWindowClass = L"PulseGridPluginWindow";
 HINSTANCE gModule = nullptr;
+std::set<struct Editor*> gEditors;
 }  // namespace
 
 // The plugin asks its frame to resize when its editor changes size; the frame is the window around it.
@@ -22,6 +23,8 @@ struct Editor : public IPlugFrame {
   HWND window = nullptr;
   DWORD style = 0;
   bool resizing = false;
+  bool onTop = false;
+  bool hiddenWithStudio = false;
 
   tresult PLUGIN_API resizeView(IPlugView* from, ViewRect* size) override {
     if (!size || from != view || !window) return kInvalidArgument;
@@ -152,6 +155,7 @@ void showEditor(Instance& instance, const std::string& title) {
   }
 
   instance.editor = editor.release();
+  gEditors.insert(instance.editor);
   ShowWindow(window, SW_SHOWNORMAL);
   SetForegroundWindow(window);
 }
@@ -160,6 +164,7 @@ void closeEditor(Instance& instance, bool tell) {
   Editor* editor = instance.editor;
   if (!editor) return;
   instance.editor = nullptr;
+  gEditors.erase(editor);
   if (editor->view) {
     editor->view->setFrame(nullptr);
     editor->view->removed();
@@ -169,6 +174,36 @@ void closeEditor(Instance& instance, bool tell) {
   DestroyWindow(editor->window);
   delete editor;
   if (tell) emitEvent({{"event", "editorClosed"}, {"instance", instance.id}});
+}
+
+void arrangeEditors(HWND studio) {
+  if (!studio || !IsWindow(studio) || gEditors.empty()) return;
+  const bool minimised = IsIconic(studio) != FALSE;
+
+  DWORD studioProcess = 0;
+  GetWindowThreadProcessId(studio, &studioProcess);
+  DWORD activeProcess = 0;
+  GetWindowThreadProcessId(GetForegroundWindow(), &activeProcess);
+  // The studio or one of its plugin windows is the program in use.
+  const bool inUse = activeProcess == studioProcess || activeProcess == GetCurrentProcessId();
+
+  for (Editor* editor : gEditors) {
+    if (minimised && !editor->hiddenWithStudio && IsWindowVisible(editor->window)) {
+      ShowWindow(editor->window, SW_HIDE);
+      editor->hiddenWithStudio = true;
+    } else if (!minimised && editor->hiddenWithStudio) {
+      ShowWindow(editor->window, SW_SHOWNOACTIVATE);
+      editor->hiddenWithStudio = false;
+    }
+    const bool wantOnTop = inUse && !minimised;
+    if (wantOnTop != editor->onTop) {
+      SetWindowPos(editor->window, wantOnTop ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0,
+                   SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+      // Out of "always on top", it goes behind whatever program is in use now.
+      if (!wantOnTop) SetWindowPos(editor->window, GetForegroundWindow(), 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+      editor->onTop = wantOnTop;
+    }
+  }
 }
 
 }  // namespace pulsegrid

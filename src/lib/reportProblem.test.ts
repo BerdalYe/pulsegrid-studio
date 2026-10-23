@@ -28,6 +28,7 @@ describe("reportProblemUrl", () => {
     const desktop = bodyOf(reportProblemUrl({ version: "1.2.3", desktop: true, userAgent: CHROME }));
     expect(desktop).toContain("PulseGrid Studio 1.2.3 · Windows desktop app");
     expect(desktop).not.toContain("Chrome");
+    expect(bodyOf(reportProblemUrl({ version: "1.2.3", desktop: true, platform: "darwin" }))).toContain("PulseGrid Studio 1.2.3 · Mac desktop app");
 
     const web = bodyOf(reportProblemUrl({ version: "1.2.3", desktop: false, userAgent: FIREFOX }));
     expect(web).toContain("PulseGrid Studio 1.2.3 · web studio in Firefox");

@@ -24,6 +24,7 @@
 - **The workflow you know:** patterns in the channel rack, melodies in the piano roll, the song in the playlist, the mix in a 16-channel mixer with sends and 14 effects.
 - **150 instruments, sorted by family:** recorded pianos, guitars, strings, brass, choirs and drum kits (in the desktop apps), the studio's own synths and wavetable synth, a drum machine and FX for builds and drops.
 - **Your keyboard:** MIDI keyboards and pad controllers play the selected channel, and MIDI Out sends a channel to instruments in another program.
+- **VST3 instruments (Windows):** instruments installed as VST3 plugins, such as the Studio Instrument Collection that comes with Akai keyboards, play on a channel like any other, with their own window, through the mixer, and in your exports.
 - **Your music is yours:** use it for anything, commercial releases included. PulseGrid claims no rights to what you make.
 - **Cloud sync, if you want it:** sign in and choose which projects follow you between computers. Without an account nothing leaves your computer.
 - **Export** to WAV and MP3.
@@ -48,9 +49,13 @@ npm test             # the unit tests
 npm run typecheck
 ```
 
+The VST3 plugin host (`native/plugin-host`, C++) needs Microsoft's free [Build Tools for Visual Studio](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022)
+with the "Desktop development with C++" workload. `npm run native` builds it. Without it the studio runs as usual,
+just without VST3 plugins. `native/test-plugin` is a tiny test instrument built alongside it, not shipped.
+
 Installers:
 
-- **Windows:** `npm run release` writes `release/PulseGrid-Studio-Setup-<version>.msi`, and the website with its update feed into `dist/`.
+- **Windows:** `npm run release` builds the plugin host, then writes `release/PulseGrid-Studio-Setup-<version>.msi`, and the website with its update feed into `dist/`.
 - **Mac:** a `.dmg` can only be built on a Mac, so GitHub builds it. In the **Actions** tab choose **Build the Mac app → Run workflow**, and download **PulseGrid-Studio-mac** from the finished run.
 
 ### If you publish your own build
@@ -71,7 +76,8 @@ give to other people, so your builds don't update themselves to the official rel
 | `src/presets` | The instrument list, synth presets and demo songs |
 | `src/sync` | Optional cloud sync with Supabase |
 | `src/site` | The website's script and styles; the pages are `index.html`, `legal.html`, `account.html` |
-| `electron` | The desktop app: window, files, updates, sign-in |
+| `electron` | The desktop app: window, files, updates, sign-in, and the bridge to the plugin host |
+| `native/plugin-host` | The VST3 plugin host (Windows), with the parts of Steinberg's VST3 SDK it uses |
 | `assets/soundfonts` | The recorded instruments (GeneralUser GS) |
 
 ## Contributing

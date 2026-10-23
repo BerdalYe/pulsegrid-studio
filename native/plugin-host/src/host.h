@@ -139,5 +139,8 @@ void registerEditorClass(HINSTANCE module);
 void showEditor(Instance& instance, const std::string& title);
 void closeEditor(Instance& instance, bool tell);
 bool editorOpen(const Instance& instance);
+// Keep the plugin windows with the studio's window: above it while the studio is the program in use, behind other
+// programs otherwise, and hidden while the studio is minimised. Called a few times a second.
+void arrangeEditors(HWND studio);
 
 }  // namespace pulsegrid

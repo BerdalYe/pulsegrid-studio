@@ -28,6 +28,7 @@ let audio = null;
 let host = null;
 let hostSetup = null;
 let sampleRate = 48000;
+let studioWindow = "";
 
 /** slot → { path, uid, state, loaded, editorOpen, lastState } */
 const slots = new Map();
@@ -45,7 +46,7 @@ let transport = { tempo: 120, playing: false, frame: 0, ppq: 0 };
 function ensureHost() {
   if (host && host.alive) return hostSetup;
   host = new PluginHostClient(config.exePath, { onEvent: onHostEvent, onExit: onHostExit });
-  hostSetup = host.call({ cmd: "setup", sampleRate, maxBlock: 512 });
+  hostSetup = host.call({ cmd: "setup", sampleRate, maxBlock: 512, studioWindow });
   return hostSetup;
 }
 
@@ -305,7 +306,7 @@ async function handle(request) {
       if (rate !== sampleRate) {
         sampleRate = rate;
         if (host) {
-          await host.call({ cmd: "setup", sampleRate, maxBlock: 512 });
+          await host.call({ cmd: "setup", sampleRate, maxBlock: 512, studioWindow });
           // The plugins were set up for the old rate: load them again with their settings.
           for (const [id, slot] of slots) if (slot.loaded) await load(id, slot);
         }
@@ -402,6 +403,7 @@ process.parentPort.on("message", (event) => {
     return;
   }
   if (message.type === "ports") {
+    studioWindow = message.studioWindow || studioWindow;
     // A new page (the studio was reloaded): it starts with no plugins, so the old ones go.
     studio?.close();
     audio?.close();
