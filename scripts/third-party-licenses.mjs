@@ -50,8 +50,16 @@ const header = `PulseGrid Studio is free software under the GNU General Public L
 It includes the following packages, each under its own licence, reproduced below. The desktop apps are built on
 Electron, whose licence and Chromium's are in the app's own folder (LICENSE and LICENSES.chromium.html). The
 recorded instruments are GeneralUser GS by S. Christian Collins, under the licence in
-assets/soundfonts/LICENSE-GeneralUser-GS.txt.
+assets/soundfonts/LICENSE-GeneralUser-GS.txt. VST is a trademark of Steinberg Media Technologies GmbH.
 
 `;
-writeFileSync(path.join(root, "public", "THIRD_PARTY_LICENSES.txt"), header + sections.join("\n"), "utf8");
+// The plugin host (native/plugin-host) is C++, not from npm: its two libraries are vendored with their licences.
+const vendored = [
+  ["Steinberg VST 3 SDK 3.8.1 (MIT)", "https://github.com/steinbergmedia/vst3sdk", "native/plugin-host/vst3sdk/LICENSE.txt"],
+  ["nlohmann/json 3.11.3 (MIT)", "https://github.com/nlohmann/json", "native/plugin-host/third_party/nlohmann/LICENSE.MIT"]
+].map(
+  ([title, home, file]) => `${"=".repeat(78)}\n${title}\n${home}\n${"=".repeat(78)}\n\n${readFileSync(path.join(root, file), "utf8").trim()}\n`
+);
+
+writeFileSync(path.join(root, "public", "THIRD_PARTY_LICENSES.txt"), header + [...sections, ...vendored].join("\n"), "utf8");
 console.log(`THIRD_PARTY_LICENSES.txt: ${sections.length} packages (${[...used].sort().join(", ")})`);

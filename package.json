@@ -16,7 +16,8 @@
     "dist:win": "tsc && vite build && electron-builder --win --x64 -c.electronDist=node_modules/electron/dist",
     "build:site": "tsc && vite build",
     "licenses": "node scripts/third-party-licenses.mjs",
-    "release": "npm run licenses && npm run dist:win && npm run build:site",
+    "native": "node scripts/build-plugin-host.mjs",
+    "release": "npm run native && npm run licenses && npm run dist:win && npm run build:site",
     "dist:mac": "tsc && vite build && electron-builder --mac --publish never"
   },
   "devDependencies": {
@@ -84,7 +85,13 @@
         }
       ],
       "icon": "build/icon.png",
-      "signExecutable": false
+      "signExecutable": false,
+      "extraResources": [
+        {
+          "from": "native/plugin-host/bin/pulsegrid-plugin-host.exe",
+          "to": "plugin-host/pulsegrid-plugin-host.exe"
+        }
+      ]
     },
     "msi": {
       "oneClick": true,
