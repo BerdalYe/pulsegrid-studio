@@ -21,6 +21,7 @@ const {
 } = require("./files.cjs");
 const { registerUpdates } = require("./updates.cjs");
 const { registerSoundFontHandlers } = require("./soundfonts.cjs");
+const { registerPluginHandlers } = require("./plugins.cjs");
 const { authUrlFromArgs, deliverAuthUrl, registerAuthHandlers, registerProtocol, setLaunchAuthUrl } = require("./auth.cjs");
 
 // A MIDI keyboard should make sound the moment it's played, before any click
@@ -300,6 +301,7 @@ if (!app.requestSingleInstanceLock()) {
     registerFileHandlers(() => mainWindow);
     registerAuthHandlers();
     registerSoundFontHandlers();
+    registerPluginHandlers();
     registerUpdates({
       getWindow: () => mainWindow,
       getSettings: loadSettings,

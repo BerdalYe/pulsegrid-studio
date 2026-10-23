@@ -3,6 +3,7 @@ import type { ProjectData } from "../types";
 
 import { deliverExport } from "../files/desktop";
 import { RenderGraph } from "./graph";
+import { renderPluginParts } from "./plugins/host";
 import { Sequencer } from "./sequencer";
 import { audioBufferToWavBlob } from "./wav";
 
@@ -93,6 +94,9 @@ export async function renderProject(
       });
     }
   }
+
+  // VST3 plugins play their parts first; the recordings go into their channels' strips.
+  await renderPluginParts(offline, graph, duration, project.bpm, (done) => onProgress?.(2 + done * 20, "Playing the plugins"));
 
   onProgress?.(2, "Rendering");
   const rendered = await offline.startRendering();

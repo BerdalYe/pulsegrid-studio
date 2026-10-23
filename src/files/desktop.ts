@@ -94,6 +94,12 @@ export interface DesktopBridge {
   setZoom?(factor: number): void;
   /** CPU (as a share of one core: 100 is one core fully busy) and memory the app is using. */
   getMetrics?(): Promise<{ cpu: number; memoryMB: number; cores: number }>;
+  /** VST3 plugins (Windows desktop): whether the plugin host is there. */
+  pluginsAvailable?(): Promise<boolean>;
+  /** Ask for the two ports to the plugin bridge; they arrive as a "pulsegrid:plugin-ports" window message. */
+  connectPlugins?(): void;
+  /** A folder picker for plugin folders; null if cancelled. */
+  choosePluginFolder?(): Promise<string | null>;
   getUpdateStatus(): Promise<UpdateStatus>;
   setCheckUpdates(enabled: boolean): Promise<UpdateStatus>;
   checkForUpdates(): Promise<UpdateStatus>;

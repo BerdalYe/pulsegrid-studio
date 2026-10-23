@@ -11,6 +11,7 @@ import { scheduleMetronomeClick, triggerChannel, type Voice } from "./voices";
 import { useProjectStore } from "../state/projectStore";
 import { useSessionStore } from "../state/sessionStore";
 import { useTransportStore } from "../state/transportStore";
+import { disposePlugins, pluginsAllNotesOff, pluginsTransport, syncPlugins, usePluginStore } from "./plugins/host";
 import { getProjectData } from "../state/serialize";
 
 import {
@@ -132,7 +133,10 @@ export function ensureAudio(): AudioContext | null {
 
 export function syncWithState(): void {
   if (!context || !graph) return;
-  graph.sync(getProjectData(useProjectStore.getState()), context.currentTime, true);
+  const project = getProjectData(useProjectStore.getState());
+  graph.sync(project, context.currentTime, true);
+  // VST3 plugins load, unload and stay wired to their channel strips (a no-op without any).
+  void syncPlugins(graph, project).catch((error: unknown) => console.error("PulseGrid: plugins", error));
 }
 
 export function disposeAudio(): void {
@@ -144,6 +148,7 @@ export function disposeAudio(): void {
   sequencer = null;
   scheduler?.dispose();
   scheduler = null;
+  disposePlugins();
   void context?.close();
   context = null;
 }
@@ -200,6 +205,7 @@ export async function startTransport(fromStep?: number): Promise<void> {
   }
 
   sequencer.reset();
+  pluginsTransport(audioContext, useProjectStore.getState().bpm, true, start);
   await scheduler.start(start, countInSeconds);
 
   transport.setPlaying(true);
@@ -219,6 +225,8 @@ export function stopTransport(): void {
 
   heldVoices.clear();
   midiOutPanic();
+  pluginsAllNotesOff(context);
+  pluginsTransport(context, useProjectStore.getState().bpm, false, useTransportStore.getState().startStep);
   stopPlayheadLoop();
   useTransportStore.getState().setPlaying(false);
 
@@ -258,6 +266,7 @@ export function panic(): void {
   for (const voice of heldVoices.values()) voice.kill(now);
   heldVoices.clear();
   midiOutPanic();
+  pluginsAllNotesOff(context);
 }
 
 /* ────────────────────────────── speakers and latency ────────────────────────────── */
@@ -554,6 +563,29 @@ if (import.meta.env.DEV) {
       if (event) midiManager.dispatch(event);
     },
     getSession: () => useSessionStore.getState().toSessionData(),
+    getMasterLevel: () => getMasterLevel(),
+    getPluginStatus: () => usePluginStore.getState(),
+    /** Render the song (or the selected pattern) offline as an export would, and report how loud each half second is. */
+    testRender: async (range: "song" | "pattern" = "pattern") => {
+      const { renderProject, defaultExportOptions } = await import("./exportWav");
+      const session = useSessionStore.getState();
+      const buffer = await renderProject(getProjectData(useProjectStore.getState()), {
+        ...defaultExportOptions,
+        range,
+        selectedPatternId: session.selectedPatternId,
+        sampleRate: 48000
+      });
+      const data = buffer.getChannelData(0);
+      const window = Math.round(buffer.sampleRate / 2);
+      const levels: number[] = [];
+      for (let start = 0; start < data.length; start += window) {
+        let sum = 0;
+        const end = Math.min(data.length, start + window);
+        for (let i = start; i < end; i++) sum += data[i] * data[i];
+        levels.push(Math.round(Math.sqrt(sum / Math.max(1, end - start)) * 1000) / 1000);
+      }
+      return { seconds: buffer.duration, levels };
+    },
     getTransport: () => {
       const { playheadStep, startStep, isPlaying, activeMidiNotes } = useTransportStore.getState();
       return { playheadStep, startStep, isPlaying, activeMidiNotes };

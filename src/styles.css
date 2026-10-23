@@ -5850,3 +5850,68 @@ svg.ui-icon .ghost {
 .overview-view {
   min-width: 14px;
 }
+
+/* A VST3 channel's plugin loading, or unable to play. */
+.plugin-badge {
+  display: inline-grid;
+  width: 16px;
+  height: 16px;
+  flex: none;
+  margin-left: -20px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 800;
+  place-items: center;
+  pointer-events: auto;
+}
+
+.plugin-badge.loading {
+  color: var(--muted);
+}
+
+.plugin-badge.error {
+  background: var(--danger);
+  color: #fff;
+  cursor: help;
+}
+
+/* Settings → Plugins: the plugins found, and the folders looked in. */
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 4px 0 14px;
+  padding: 4px;
+  border: 1px solid var(--line-soft);
+  border-radius: 4px;
+  background: var(--panel);
+}
+
+.settings-list-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+  padding: 3px 8px;
+  border-radius: 3px;
+}
+
+.settings-list-item:hover {
+  background: var(--panel-3);
+}
+
+.settings-list-item span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.settings-list-item button {
+  margin-left: auto;
+}
+
+.settings-path {
+  overflow: hidden;
+  font-family: "Consolas", ui-monospace, monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

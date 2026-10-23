@@ -1005,6 +1005,8 @@ export interface InstrumentMenuEntry {
   folder?: string;
   /** Adds a kit's main drums, one channel each, instead of one channel. */
   drumSet?: boolean;
+  /** A VST3 instrument found on this computer (desktop app on Windows). */
+  vst3?: { path: string; uid: string; name: string; vendor: string };
   /** Sends its notes out of a MIDI port, to another program, instead of making sound here. */
   midiOut?: boolean;
   /** A sample channel, starting on this built-in sample. */

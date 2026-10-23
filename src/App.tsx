@@ -35,6 +35,8 @@ import { SynthEditor, useEditorStacking, useSynthEditor } from "./components/Syn
 import { SoundFontEditor } from "./components/SoundFontEditor";
 import { MenuPanel, prepareItems, type MenuItem } from "./components/MenuPanel";
 import { isFullKit } from "./lib/drumKits";
+import { useVst3Entries } from "./audio/plugins/library";
+import { loadPluginList, showPluginWindow, usePluginStore } from "./audio/plugins/host";
 import { WindowMenuButton } from "./components/WindowMenu";
 import { EDGE_CURSOR, moveRect, resizeRect, type Edge, type Rect } from "./lib/windowGeometry";
 import { MidiOutEditor } from "./components/MidiOutEditor";
@@ -177,6 +179,23 @@ function Studio() {
 
   const showStatus = useCallback((message: string) => setStatus(message), []);
 
+  // VST3 plugins (Windows app): the list of plugins found on this computer, scanned the first time; and anything
+  // the plugins need to say (a plugin that stopped and was started again) shown in the hint panel.
+  useEffect(() => {
+    void loadPluginList().catch((error: unknown) => console.error("PulseGrid: plugin list", error));
+  }, []);
+  // A project with VST3 channels loads its plugins straight away (they take a moment), so the first note plays.
+  const hasPluginChannel = useProjectStore((state) => state.channels.some((channel) => channel.plugin !== undefined));
+  useEffect(() => {
+    if (hasPluginChannel) ensureAudio();
+  }, [hasPluginChannel]);
+  const pluginNotice = usePluginStore((state) => state.notice);
+  useEffect(() => {
+    if (!pluginNotice) return;
+    setStatus(pluginNotice);
+    usePluginStore.setState({ notice: "" });
+  }, [pluginNotice]);
+
   // The size of the interface, from the settings (the desktop app; the web studio uses the browser's zoom).
   useEffect(() => {
     getDesktop()?.setZoom?.(uiScale);
@@ -258,6 +277,7 @@ function Studio() {
   // Recorded instruments: is the built-in set here, which SoundFonts has this person added, and
   // read whatever the open project needs as soon as it is open.
   const builtinSounds = useSoundFontStore((state) => state.builtinAvailable);
+  const vst3Instruments = useVst3Entries();
   useEffect(() => {
     void probeBuiltinSoundFont();
     void refreshSavedFonts();
@@ -456,6 +476,8 @@ function Studio() {
           const editor = useSynthEditor.getState();
           if (channel?.type !== "synth") {
             announce("Select a synth channel first, then press F8 to open its sound editor.");
+          } else if (channel.plugin) {
+            void showPluginWindow(channel.id).catch((error: Error) => announce(error.message));
           } else if (editor.channelId === channel.id && editor.behind) {
             editor.setBehind(false);
           } else if (editor.channelId === channel.id) {
@@ -615,7 +637,7 @@ function Studio() {
     ],
     // The plugins first, then the instruments in flyouts, as in FL's own menus.
     Add: (() => {
-      const library = instrumentLibrary(availableInstruments(builtinSounds));
+      const library = instrumentLibrary(availableInstruments(builtinSounds), vst3Instruments);
       const entryItem = (entry: InstrumentMenuEntry): MenuItem => ({
         label: entry.label,
         run: () => {

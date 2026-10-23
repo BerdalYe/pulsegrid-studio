@@ -1,5 +1,6 @@
 import { sanitizeSynthPatch } from "../audio/synthPatch";
 import { sanitizeMidiOutRef } from "../audio/midiOutRef";
+import { sanitizePluginRef } from "../audio/plugins/ref";
 import { sanitizeSoundFontRef } from "../audio/soundfont/ref";
 import {
   SCHEMA_VERSION,
@@ -238,7 +239,8 @@ function sanitizeChannel(
     synthPreset: typeof source.synthPreset === "string" ? source.synthPreset : undefined,
     synthPatch: sanitizeSynthPatch(source.synthPatch),
     soundfont: type === "synth" ? sanitizeSoundFontRef(source.soundfont) : undefined,
-    midiOut: type === "synth" ? sanitizeMidiOutRef(source.midiOut) : undefined
+    midiOut: type === "synth" ? sanitizeMidiOutRef(source.midiOut) : undefined,
+    plugin: type === "synth" ? sanitizePluginRef(source.plugin) : undefined
   };
 }
 

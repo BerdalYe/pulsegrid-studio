@@ -11,6 +11,11 @@ const listen = (channel, callback) => {
   return () => ipcRenderer.removeListener(channel, handler);
 };
 
+ipcRenderer.on("plugins:ports", (event) => {
+  // To this same window only; the page checks the message came from itself.
+  window.postMessage("pulsegrid:plugin-ports", "*", event.ports);
+});
+
 contextBridge.exposeInMainWorld("pulsegridDesktop", {
   platform: process.platform,
 
@@ -48,6 +53,12 @@ contextBridge.exposeInMainWorld("pulsegridDesktop", {
   },
 
   getMetrics: () => ipcRenderer.invoke("app:metrics"),
+
+  // VST3 plugins (Windows): whether the plugin host is there, and a request for two ports to it. The ports arrive as
+  // a window message, "pulsegrid:plugin-ports", since they can't cross into the page any other way.
+  pluginsAvailable: () => ipcRenderer.invoke("plugins:available"),
+  connectPlugins: () => ipcRenderer.send("plugins:connect"),
+  choosePluginFolder: () => ipcRenderer.invoke("plugins:choose-folder"),
 
   setTitle: (title) => ipcRenderer.send("window:title", title),
   askSaveChanges: (name) => ipcRenderer.invoke("window:ask-save", name),

@@ -2,6 +2,7 @@ import { midiManager } from "../audio/midi";
 import { BUILTIN_ID, BUILTIN_NAME, requestFont } from "../audio/soundfont/registry";
 import type { InstrumentMenuEntry } from "../presets/presets";
 import { DRUM_KITS, DRUM_SET_PIECES, KIT_PIECES, kitPieceColor } from "./drumKits";
+import { showPluginWindow, usePluginStore, type ChannelPluginStatus } from "../audio/plugins/host";
 import { useProjectStore } from "../state/projectStore";
 import { useSessionStore } from "../state/sessionStore";
 import { looksLikeCable } from "../components/MidiOutEditor";
@@ -15,6 +16,7 @@ import { useSynthEditor } from "../components/SynthEditor";
 export function addInstrument(entry: InstrumentMenuEntry): string {
   const project = useProjectStore.getState();
   if (entry.drumSet && entry.soundfont) return addDrumSet(entry.soundfont.program);
+  if (entry.vst3) return addPluginChannel(entry.vst3);
 
   const id = project.addChannel(entry.type, entry.label, entry.sample, entry.preset);
 
@@ -79,4 +81,41 @@ export function addDrumSet(program: number): string {
   requestFont(BUILTIN_ID);
   if (ids[0]) useSessionStore.getState().selectChannel(ids[0]);
   return ids[0] ?? "";
+}
+
+/**
+ * A VST3 instrument as a new channel. The plugin loads in the plugin host, and its window opens once it has, the way
+ * a newly chosen instrument opens in FL.
+ */
+export function addPluginChannel(plugin: { path: string; uid: string; name: string; vendor: string }): string {
+  const project = useProjectStore.getState();
+  project.beginEdit("Add plugin");
+  let id = "";
+  try {
+    id = project.addChannel("synth", plugin.name);
+    project.updateChannelPlugin(id, { format: "vst3", path: plugin.path, uid: plugin.uid, name: plugin.name, vendor: plugin.vendor });
+  } finally {
+    project.endEdit();
+  }
+  useSessionStore.getState().selectChannel(id);
+  openPluginWindowWhenReady(id);
+  return id;
+}
+
+/** Open a plugin channel's window as soon as its plugin has loaded (or give up quietly if it doesn't). */
+export function openPluginWindowWhenReady(channelId: string, timeoutMs = 30000): void {
+  const tryOpen = (status: ChannelPluginStatus | undefined): boolean => {
+    if (status?.kind === "ready") {
+      if (status.hasEditor) void showPluginWindow(channelId).catch(() => undefined);
+      return true;
+    }
+    return status?.kind === "error";
+  };
+  if (tryOpen(usePluginStore.getState().status[channelId])) return;
+  const timer = window.setTimeout(() => unsubscribe(), timeoutMs);
+  const unsubscribe = usePluginStore.subscribe((state) => {
+    if (!tryOpen(state.status[channelId])) return;
+    window.clearTimeout(timer);
+    unsubscribe();
+  });
 }

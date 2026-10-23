@@ -1,3 +1,4 @@
+import { createPluginVoice } from "./plugins/host";
 import type { Channel } from "../types";
 import { clamp, isSampleChannel, midiToFreq } from "../lib/utils";
 import { getReversedBuffer, getSample } from "./sampleRegistry";
@@ -1066,6 +1067,9 @@ export function triggerChannel(
   destination: AudioNode,
   options: TriggerOptions
 ): Voice | null {
+  // A VST3 instrument plays the channel in the plugin host.
+  if (channel.type === "synth" && channel.plugin) return createPluginVoice(context, channel, options);
+
   // A channel set to MIDI out sends its notes to another program, and is silent here unless asked to play too.
   const out = channel.type === "synth" ? channel.midiOut : undefined;
   if (!out) return triggerInternal(context, channel, destination, options);

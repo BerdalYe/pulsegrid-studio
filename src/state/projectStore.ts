@@ -1,3 +1,4 @@
+import { sanitizePluginRef } from "../audio/plugins/ref";
 import { sanitizeMidiOutRef } from "../audio/midiOutRef";
 import { sanitizeSoundFontRef } from "../audio/soundfont/ref";
 import { sanitizeSynthPatch, type SynthPatch } from "../audio/synthPatch";
@@ -12,6 +13,8 @@ import {
   type Channel,
   type ChannelType,
   type MidiOutRef,
+  type PluginRef,
+  type PluginState,
   type SoundFontRef,
   type EffectInstance,
   type EffectType,
@@ -111,6 +114,9 @@ export interface ProjectActions {
   updateChannelSoundFont: (channelId: string, ref: SoundFontRef | null) => void;
   /** Send a synth channel's notes out of a MIDI port, or pass null to stop. */
   updateChannelMidiOut: (channelId: string, ref: MidiOutRef | null) => void;
+  updateChannelPlugin: (channelId: string, ref: PluginRef | null) => void;
+  /** The plugin's own settings changed (in its window): saved with the project, but not an undo step. */
+  setChannelPluginState: (channelId: string, state: PluginState) => void;
 
   setStep: (patternId: string, channelId: string, stepIndex: number, cell: StepCell) => void;
   toggleStep: (patternId: string, channelId: string, stepIndex: number) => void;
@@ -633,6 +639,21 @@ export const useProjectStore = create<ProjectState>()(
           const channel = findChannel(state, channelId);
           if (!channel || channel.type !== "synth") return;
           channel.midiOut = ref ? (sanitizeMidiOutRef(ref) ?? undefined) : undefined;
+        }),
+
+      updateChannelPlugin: (channelId, ref) =>
+        edit("Plugin", (state) => {
+          const channel = findChannel(state, channelId);
+          if (!channel || channel.type !== "synth") return;
+          channel.plugin = ref ? (sanitizePluginRef(ref) ?? undefined) : undefined;
+        }),
+
+      setChannelPluginState: (channelId, pluginState) =>
+        set((state) => {
+          const channel = findChannel(state, channelId);
+          if (!channel?.plugin) return;
+          const clean = sanitizePluginRef({ ...channel.plugin, state: pluginState });
+          if (clean?.state) channel.plugin.state = clean.state;
         }),
 
       updateChannelSynthPatch: (channelId, patch) =>

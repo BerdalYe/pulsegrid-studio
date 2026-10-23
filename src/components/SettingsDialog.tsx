@@ -4,7 +4,8 @@ import { getAudioInfo, playTestClick } from "../audio/engine";
 import { midiManager, type MidiDevice } from "../audio/midi";
 import { useMidiStore } from "../audio/midiMap";
 import { chooseSaveFolder, openSaveFolder, toggleAutosave } from "../files/actions";
-import { isDesktop, useFileStore } from "../files/desktop";
+import { getDesktop, isDesktop, useFileStore } from "../files/desktop";
+import { scanForPlugins, setPluginFolders, usePluginStore } from "../audio/plugins/host";
 import { toggleUpdateChecks, useUpdateStore } from "../files/updates";
 import { THEMES } from "../lib/themes";
 import { SITE_URL } from "../sync/config";
@@ -13,7 +14,7 @@ import { useSessionStore } from "../state/sessionStore";
 import { useConfirm } from "./ConfirmDialog";
 import { REPO_URL } from "../lib/reportProblem";
 
-type PageId = "general" | "interface" | "audio" | "midi" | "files" | "about";
+type PageId = "general" | "interface" | "audio" | "midi" | "plugins" | "files" | "about";
 
 const LATENCY_CHOICES: Array<{ id: LatencyChoice; label: string; note: string }> = [
   { id: "interactive", label: "Lowest delay", note: "Notes sound the moment you play them. Best on a fast computer." },
@@ -392,6 +393,82 @@ function FilesPage({ onStatus }: { onStatus: (message: string) => void }) {
   );
 }
 
+function PluginsPage({ onStatus }: { onStatus: (message: string) => void }) {
+  const plugins = usePluginStore((state) => state.plugins);
+  const failed = usePluginStore((state) => state.failed);
+  const folders = usePluginStore((state) => state.folders);
+  const userFolders = usePluginStore((state) => state.userFolders);
+  const scanning = usePluginStore((state) => state.scanning);
+  const scannedAt = usePluginStore((state) => state.scannedAt);
+  const instruments = plugins.filter((plugin) => plugin.instrument);
+  const effects = plugins.filter((plugin) => !plugin.instrument);
+
+  const rescan = () =>
+    void scanForPlugins()
+      .then(() => onStatus(`Found ${usePluginStore.getState().plugins.filter((plugin) => plugin.instrument).length} VST3 instruments.`))
+      .catch((error: Error) => onStatus(error.message));
+
+  const addFolder = async () => {
+    const folder = await getDesktop()?.choosePluginFolder?.();
+    if (!folder) return;
+    await setPluginFolders([...userFolders, folder]);
+    rescan();
+  };
+
+  return (
+    <>
+      <Row
+        label="VST3 instruments"
+        hint="Instruments installed on this computer as VST3 plugins, such as the Studio Instrument Collection that comes with Akai keyboards. They're in the browser under Instruments → VST3 plugins: drag one onto the channel rack."
+      >
+        <button type="button" onClick={rescan} disabled={scanning !== null}>
+          {scanning ? (scanning.total ? `Looking… ${scanning.done + 1} of ${scanning.total}` : "Looking…") : "Look for plugins again"}
+        </button>
+      </Row>
+      <div className="settings-list" role="list" aria-label="Plugins found">
+        {instruments.length === 0 ? <p className="settings-note">{scannedAt ? "No VST3 instruments found yet." : "Not looked yet."}</p> : null}
+        {instruments.map((plugin) => (
+          <div key={`${plugin.path}|${plugin.uid}`} className="settings-list-item" role="listitem" title={plugin.path}>
+            <strong>{plugin.name}</strong>
+            <span>{plugin.vendor}</span>
+          </div>
+        ))}
+      </div>
+      {effects.length > 0 ? (
+        <p className="settings-note">
+          Also found {effects.length} effect plugin{effects.length === 1 ? "" : "s"} ({effects.map((plugin) => plugin.name).join(", ")}). Effects
+          in the mixer come in a later version.
+        </p>
+      ) : null}
+      {failed.length > 0 ? (
+        <p className="settings-note">
+          Couldn't open: {failed.map((entry) => `${entry.path.split(/[\/]/).pop()} (${entry.error})`).join("; ")}
+        </p>
+      ) : null}
+      <Row label="Folders" hint="Where PulseGrid looks. The usual VST3 folders are always included.">
+        <button type="button" onClick={() => void addFolder()}>
+          Add a folder…
+        </button>
+      </Row>
+      <div className="settings-list" role="list" aria-label="Plugin folders">
+        {folders.map((folder) => {
+          const own = userFolders.includes(folder);
+          return (
+            <div key={folder} className="settings-list-item" role="listitem">
+              <span className="settings-path">{folder}</span>
+              {own ? (
+                <button type="button" onClick={() => void setPluginFolders(userFolders.filter((entry) => entry !== folder)).then(rescan)}>
+                  Remove
+                </button>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
 function AboutPage({ onShowShortcuts }: { onShowShortcuts: () => void }) {
   const settings = useAppSettings();
   const confirm = useConfirm();
@@ -456,11 +533,13 @@ interface SettingsDialogProps {
  */
 export function SettingsDialog({ onClose, onStatus, onShowShortcuts }: SettingsDialogProps) {
   const desktop = isDesktop();
+  const pluginsHere = usePluginStore((state) => state.available) === true;
   const pages: Array<{ id: PageId; label: string }> = [
     { id: "general", label: "General" },
     { id: "interface", label: "Interface" },
     { id: "audio", label: "Audio" },
     { id: "midi", label: "MIDI" },
+    ...(pluginsHere ? [{ id: "plugins" as const, label: "Plugins" }] : []),
     ...(desktop ? [{ id: "files" as const, label: "Files" }] : []),
     { id: "about", label: "About" }
   ];
@@ -540,6 +619,7 @@ export function SettingsDialog({ onClose, onStatus, onShowShortcuts }: SettingsD
             {current.id === "interface" ? <InterfacePage /> : null}
             {current.id === "audio" ? <AudioPage /> : null}
             {current.id === "midi" ? <MidiPage onStatus={onStatus} /> : null}
+            {current.id === "plugins" ? <PluginsPage onStatus={onStatus} /> : null}
             {current.id === "files" ? <FilesPage onStatus={onStatus} /> : null}
             {current.id === "about" ? <AboutPage onShowShortcuts={onShowShortcuts} /> : null}
           </div>

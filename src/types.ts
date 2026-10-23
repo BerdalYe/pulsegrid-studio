@@ -71,6 +71,26 @@ export interface Channel {
   soundfont?: SoundFontRef;
   /** Sends this channel's notes out of a MIDI port to another program, instead of (or as well as) playing them here. */
   midiOut?: MidiOutRef;
+  /** A VST3 instrument plays this channel (desktop app on Windows), in place of the studio's own sound. */
+  plugin?: PluginRef;
+}
+
+/** Which VST3 instrument a channel plays, and its settings as the plugin saved them. */
+export interface PluginRef {
+  format: "vst3";
+  /** The plugin file (or bundle folder) on this computer. */
+  path: string;
+  /** The plugin's class id: one file can hold several plugins. */
+  uid: string;
+  name: string;
+  vendor: string;
+  /** The plugin's own saved settings, base64, as it handed them over. */
+  state?: PluginState;
+}
+
+export interface PluginState {
+  component?: string;
+  controller?: string;
 }
 
 /** Where a channel's notes go: a MIDI output port (a virtual cable, or a hardware synth) and a MIDI channel on it. */

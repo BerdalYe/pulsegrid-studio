@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { addInstrument } from "../lib/addInstrument";
+import { currentVst3Entries } from "../audio/plugins/library";
 import { instrumentLibrary, type InstrumentFolder } from "../lib/instrumentLibrary";
 import { availableInstruments, type InstrumentMenuEntry } from "../presets/presets";
 import { useSoundFontStore } from "../audio/soundfont/registry";
@@ -61,7 +62,7 @@ export function windowMenuItems(id: WindowId, builtinSounds: boolean | null, onS
   }
 
   if (id === "rack") {
-    const library = instrumentLibrary(availableInstruments(builtinSounds));
+    const library = instrumentLibrary(availableInstruments(builtinSounds), currentVst3Entries());
     const add = (entry: InstrumentMenuEntry) => {
       addInstrument(entry);
       onStatus(`Added ${entry.label}.`);

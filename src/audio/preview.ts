@@ -109,6 +109,7 @@ export function previewNotesFor(entry: InstrumentMenuEntry): PreviewNote[] {
  */
 export async function previewInstrument(entry: InstrumentMenuEntry): Promise<string | null> {
   if (entry.midiOut) return "MIDI Out plays through another program. Drag it onto the channel rack to set it up.";
+  if (entry.vst3) return `${entry.vst3.name} is a VST3 plugin: drag it onto the channel rack to play it.`;
   if (entry.type === "sample" && !entry.sample) return "The Sampler plays a sound you give it. Drag it onto the channel rack, then load a sample.";
 
   // A recorded instrument needs its sounds in memory first; the first preview waits for them.

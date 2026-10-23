@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useSoundFontStore } from "../audio/soundfont/registry";
 import { previewInstrument } from "../audio/preview";
 import { DRAG_TYPE, encodeDragItem } from "../lib/dragData";
+import { useVst3Entries } from "../audio/plugins/library";
 import { instrumentLibrary, type InstrumentFolder } from "../lib/instrumentLibrary";
 import { availableInstruments, type InstrumentMenuEntry } from "../presets/presets";
 import { IconFolder, IconKeys, IconSynth } from "./icons";
@@ -32,7 +33,8 @@ function flatten(folder: InstrumentFolder, trail: string[] = []): Array<{ entry:
  */
 export function InstrumentTree({ onStatus }: InstrumentTreeProps) {
   const builtinSounds = useSoundFontStore((state) => state.builtinAvailable);
-  const library = useMemo(() => instrumentLibrary(availableInstruments(builtinSounds)), [builtinSounds]);
+  const vst3 = useVst3Entries();
+  const library = useMemo(() => instrumentLibrary(availableInstruments(builtinSounds), vst3), [builtinSounds, vst3]);
 
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState<Set<string>>(() => new Set());
@@ -63,7 +65,10 @@ export function InstrumentTree({ onStatus }: InstrumentTreeProps) {
       title={`${entry.label}: click to hear it, drag it onto the channel rack to add it`}
       draggable
       onDragStart={(event) => {
-        event.dataTransfer.setData(DRAG_TYPE, encodeDragItem({ kind: "instrument", label: entry.label }));
+        event.dataTransfer.setData(
+          DRAG_TYPE,
+          encodeDragItem(entry.vst3 ? { kind: "vst3", ...entry.vst3 } : { kind: "instrument", label: entry.label })
+        );
         event.dataTransfer.setData("text/plain", entry.label);
         event.dataTransfer.effectAllowed = "copy";
       }}

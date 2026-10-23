@@ -10,11 +10,12 @@ import { useSamples, useSelectedPattern, useUnmount } from "../hooks/useStudio";
 import { auditionChannel } from "../audio/engine";
 import { stepPitchOf } from "../lib/drumKits";
 import { INSTRUMENT_GROUPS, availableInstruments, synthPresets } from "../presets/presets";
-import { addInstrument } from "../lib/addInstrument";
+import { addInstrument, addPluginChannel } from "../lib/addInstrument";
 import { DRAG_TYPE, carriesDragItem, decodeDragItem, type DragItem } from "../lib/dragData";
 import { useSoundFontStore } from "../audio/soundfont/registry";
 import { IconSynth } from "./icons";
 import { useSynthEditor } from "./SynthEditor";
+import { showPluginWindow, usePluginStore } from "../audio/plugins/host";
 
 /** The picker entry shown while a channel plays a sound its owner built. */
 const CUSTOM_SOUND = "__custom";
@@ -78,6 +79,10 @@ export function ChannelRack() {
     if (item.kind === "instrument") {
       const entry = instruments.find((candidate) => candidate.label === item.label);
       if (entry) addInstrument(entry);
+      return;
+    }
+    if (item.kind === "vst3") {
+      addPluginChannel(item);
       return;
     }
     // A sample dropped on a sample channel replaces its sound; anywhere else it becomes a channel of its own.
@@ -402,6 +407,7 @@ const ChannelRow = memo(function ChannelRow({
             }
           }}
         />
+        {channel.plugin ? <PluginBadge channelId={channel.id} /> : null}
 
         <div className="channel-controls">
           <button
@@ -483,13 +489,22 @@ const ChannelRow = memo(function ChannelRow({
               aria-pressed={editingSound}
               onClick={() => {
                 selectChannel(channel.id);
+                // A VST3 instrument has a window of its own, opened by the plugin host.
+                if (channel.plugin) {
+                  void showPluginWindow(channel.id).catch((error: Error) => usePluginStore.setState({ notice: error.message }));
+                  return;
+                }
                 const editor = useSynthEditor.getState();
                 // Open but behind a window: bring it to the front rather than close it.
                 if (editingSound && editor.behind) editor.setBehind(false);
                 else if (editingSound) editor.close();
                 else editor.open(channel.id);
               }}
-              title={`Open ${channel.midiOut ? "the MIDI out settings" : channel.soundfont ? "the instrument picker" : channel.synthPatch?.wt ? "the Wavetable Synth" : "the sound editor"} for this channel (F8)`}
+              title={
+                channel.plugin
+                  ? `Open ${channel.plugin.name}'s window (F8)`
+                  : `Open ${channel.midiOut ? "the MIDI out settings" : channel.soundfont ? "the instrument picker" : channel.synthPatch?.wt ? "the Wavetable Synth" : "the sound editor"} for this channel (F8)`
+              }
             >
               <IconSynth />
             </button>
@@ -774,5 +789,23 @@ function ChannelSettings({
         </div>
       ) : null}
     </div>
+  );
+}
+
+/** Beside a VST3 channel's name while its plugin loads, or when it can't play (the plugin isn't on this computer). */
+function PluginBadge({ channelId }: { channelId: string }) {
+  const status = usePluginStore((state) => state.status[channelId]);
+  if (!status || status.kind === "ready") return null;
+  if (status.kind === "loading") {
+    return (
+      <span className="plugin-badge loading" title="The plugin is loading">
+        …
+      </span>
+    );
+  }
+  return (
+    <span className="plugin-badge error" title={status.message} role="img" aria-label={status.message}>
+      !
+    </span>
   );
 }
