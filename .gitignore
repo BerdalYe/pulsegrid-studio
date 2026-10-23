@@ -8,3 +8,7 @@ release/
 .claude/
 .DS_Store
 *.log
+
+# The plugin host's build output (npm run native)
+native/plugin-host/build/
+native/plugin-host/bin/
