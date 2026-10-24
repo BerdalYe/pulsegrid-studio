@@ -24,7 +24,7 @@
 - **The workflow you know:** patterns in the channel rack, melodies in the piano roll, the song in the playlist, the mix in a 16-channel mixer with sends and 14 effects.
 - **150 instruments, sorted by family:** recorded pianos, guitars, strings, brass, choirs and drum kits (in the desktop apps), the studio's own synths and wavetable synth, a drum machine and FX for builds and drops.
 - **Your keyboard:** MIDI keyboards and pad controllers play the selected channel, and MIDI Out sends a channel to instruments in another program.
-- **VST3 instruments (Windows):** instruments installed as VST3 plugins, such as the Studio Instrument Collection that comes with Akai keyboards, play on a channel like any other, with their own window, through the mixer, and in your exports.
+- **VST3 instruments (Windows):** instruments installed as VST3 plugins play on a channel like any other, with their own window, through the mixer, and in your exports.
 - **Your music is yours:** use it for anything, commercial releases included. PulseGrid claims no rights to what you make.
 - **Cloud sync, if you want it:** sign in and choose which projects follow you between computers. Without an account nothing leaves your computer.
 - **Export** to WAV and MP3.
@@ -96,4 +96,4 @@ under its own licence (`assets/soundfonts/LICENSE-GeneralUser-GS.txt`), which al
 The other packages it is built from are listed with their licences in `public/THIRD_PARTY_LICENSES.txt`
 (`npm run licenses` regenerates it).
 
-PulseGrid Studio is an independent project, not affiliated with or endorsed by Image-Line (FL Studio) or Akai Professional.
+PulseGrid Studio is an independent project, not affiliated with or endorsed by Image-Line (FL Studio).

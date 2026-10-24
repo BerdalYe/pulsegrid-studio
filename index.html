@@ -33,7 +33,7 @@
       <span class="announce-badge">1.6</span>
       <p class="announce-text">
         <strong>PulseGrid Studio 1.6 plays VST3 instruments.</strong>
-        <span>On Windows, the plugin instruments you already own, such as the Akai Studio Instrument Collection, play right inside the studio.</span>
+        <span>On Windows, the plugin instruments you already own play right inside the studio.</span>
       </p>
       <a class="announce-link" href="#whats-new">See what's new</a>
       <button class="announce-close" id="announce-close" type="button" aria-label="Dismiss announcement">
@@ -225,7 +225,7 @@
               <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2" /><path d="M6 7v6M10 7v6M14 7v6M18 7v6" /></svg>
             </div>
             <h3>Plug in a MIDI keyboard</h3>
-            <p>Keys play with velocity, pads hit your drums, knobs control the mix. Works with the Akai MPK mini IV and other USB keyboards, and MIDI Out plays instruments in other programs.</p>
+            <p>Keys play with velocity, pads hit your drums, knobs control the mix. Works with USB MIDI keyboards, and MIDI Out plays instruments in other programs.</p>
           </article>
 
           <article class="feature reveal">
@@ -453,7 +453,7 @@ npm run app:dev</code></pre>
             </header>
             <p class="release-lead">VST3 instruments play inside PulseGrid (Windows).</p>
             <ul>
-              <li><strong>VST3 instruments.</strong> PulseGrid finds the VST3 instruments installed on your PC and lists them under <em>VST3 plugins</em> in the browser and the <em>Add</em> menu. Add one and it gets a channel like any other: play it from the computer keyboard or a MIDI keyboard, write notes for it in the piano roll, and mix it in the mixer. The Akai Studio Instrument Collection that comes with the MPK mini IV works this way, with no MIDI cable or second program.</li>
+              <li><strong>VST3 instruments.</strong> PulseGrid finds the VST3 instruments installed on your PC and lists them under <em>VST3 plugins</em> in the browser and the <em>Add</em> menu. Add one and it gets a channel like any other: play it from the computer keyboard or a MIDI keyboard, write notes for it in the piano roll, and mix it in the mixer. No MIDI cable or second program needed.</li>
               <li><strong>The plugin's own window.</strong> Click the channel's synth button, or press <em>F8</em>, to open the plugin's window. It stays above the studio while you use it and hides when you minimise the studio.</li>
               <li><strong>Saved with your project and in your exports.</strong> The sound you pick in a plugin is saved with the project and comes back when you open it. Exported WAV and MP3 files include plugin channels.</li>
               <li><strong>Plugins run on their own.</strong> Plugins run in a separate program, so a plugin that crashes can't take the studio down with it: PulseGrid tells you and starts the plugins again.</li>
@@ -482,8 +482,8 @@ npm run app:dev</code></pre>
               <li><strong>Choose what goes to the cloud, and delete projects.</strong> Only the projects you choose go to your cloud now: the cloud button beside a project in the Projects tab saves it there, open or not. The bin button deletes a project to the Recycle Bin, so you can get it back.</li>
               <li><strong>A Settings window.</strong> Press <em>F10</em> or choose <em>Options → Settings</em>: the audio output and latency, metronome volume, how hard the computer keyboard plays, the MIDI port and drum-pad channel, the theme and the size of the whole interface (desktop), and more.</li>
               <li><strong>Panels that behave.</strong> Leave a panel partly out of view, or bring it near a side and it locks there. Resize from any edge or corner, double-click a title bar to maximise, and use the ▾ on each title bar for that panel's own menu. The channel rack's steps stretch to fill their panel, and its playhead now sits exactly over the playing step.</li>
-              <li><strong>Plugins: Wavetable Synth, MIDI Out and Sampler.</strong> A recorded instrument's panel lists the instruments by family, so you can swap to another one, and loads .sf2 SoundFont files of your own. MIDI Out sends a channel's notes to another program, for example the Akai Studio Instrument Collection that comes with the MPK mini IV, through a virtual MIDI cable such as loopMIDI.</li>
-              <li><strong>Better MIDI keyboard support.</strong> Keyboards with several ports, like the MPK mini IV, play without stray notes from their control ports, and a live MIDI monitor shows what each key, pad and knob sends.</li>
+              <li><strong>Plugins: Wavetable Synth, MIDI Out and Sampler.</strong> A recorded instrument's panel lists the instruments by family, so you can swap to another one, and loads .sf2 SoundFont files of your own. MIDI Out sends a channel's notes to another program, for example a plugin instrument in another app, through a virtual MIDI cable.</li>
+              <li><strong>Better MIDI keyboard support.</strong> Keyboards with several ports play without stray notes from their control ports, and a live MIDI monitor shows what each key, pad and knob sends.</li>
               <li><strong>Menus like a desktop program</strong>, with shortcuts in their own column and flyouts, opening just under the menu bar, and <strong>staying signed in</strong> when you close the app.</li>
               <li>The mixer no longer writes "C" under every pan knob: a knob at the centre shows nothing, and one turned to a side shows how far (L20, R35).</li>
             </ul>
@@ -524,7 +524,7 @@ npm run app:dev</code></pre>
             </header>
             <p class="release-lead">A wavetable synthesizer, a new logo, and a new installer.</p>
             <ul>
-              <li><strong>A wavetable synth, in the style of Serum.</strong> In a synth channel's <em>Edit sound…</em>, switch the oscillators to <em>Wavetable</em>. Two wavetable oscillators (nine tables, from Basic Shapes and Pulse Width to Vowels, FM Sweep and Digital) with a live picture of the wave: drag across it, or turn <em>Position</em>, to morph the sound. Unison with detune and stereo width, a sub oscillator and noise, a filter with its own envelope and key tracking, and an extra modulation envelope (<em>Env 2</em>) and two LFOs.</li>
+              <li><strong>A wavetable synth.</strong> In a synth channel's <em>Edit sound…</em>, switch the oscillators to <em>Wavetable</em>. Two wavetable oscillators (nine tables, from Basic Shapes and Pulse Width to Vowels, FM Sweep and Digital) with a live picture of the wave: drag across it, or turn <em>Position</em>, to morph the sound. Unison with detune and stereo width, a sub oscillator and noise, a filter with its own envelope and key tracking, and an extra modulation envelope (<em>Env 2</em>) and two LFOs.</li>
               <li><strong>Drag a source onto a knob.</strong> Take <em>Env 2</em>, <em>LFO 1</em>, <em>LFO 2</em>, <em>Velocity</em> or <em>Key</em> from the bar at the top and drop it on any knob with a small dot, such as the wavetable position, cutoff, resonance, levels or volume. A ring on the knob shows how far it moves, and a list at the bottom lets you set how much, or take a link away. Up to eight links per sound. You can also click a source, then click a knob.</li>
               <li><strong>Thirteen new wavetable sounds</strong> in a new <em>Wavetable</em> group of the instrument menu: supersaw, reese, wobble bass, vowel lead, FM pluck, glass pad, PWM strings, sync lead, digital bell, organ, brass and more. Open any of them in the editor and change it.</li>
               <li><strong>A new logo.</strong> A new app icon, installer icon and website icon: a pulse rising to a peak over a faint step grid.</li>
@@ -859,7 +859,7 @@ npm run app:dev</code></pre>
           <details>
             <summary>Does my MIDI keyboard work?</summary>
             <p>
-              Any class-compliant USB MIDI keyboard works, including the Akai MPK mini IV. Keys play the selected
+              Any class-compliant USB MIDI keyboard works. Keys play the selected
               instrument, pads play your drum channels (on MIDI channel 10, or the one you set in <em>Settings → MIDI</em>),
               and the joystick handles pitch bend and modulation. If a knob doesn't do what you expect, right-click any
               knob on screen and turn the one on your keyboard to link them. The MIDI monitor in the browser's
@@ -903,9 +903,9 @@ npm run app:dev</code></pre>
             </p>
           </details>
           <details>
-            <summary>Can I use the instruments that came with my keyboard?</summary>
+            <summary>Can I use my plugin instruments?</summary>
             <p>
-              On Windows, yes: VST3 instruments, such as the Akai Studio Instrument Collection, play inside PulseGrid.
+              On Windows, yes: VST3 instruments play inside PulseGrid.
               Install them as usual, then find them under <em>VST3 plugins</em> in the browser or the <em>Add</em>
               menu. Some plugins must be activated in their maker's app first, or they stay silent. On a Mac, add
               <em>MIDI Out</em>, pick a virtual MIDI cable (the IAC Driver), and play the instrument in a program that
@@ -961,8 +961,8 @@ npm run app:dev</code></pre>
         <span>Version %VITE_APP_VERSION%</span>
       </div>
       <p class="footer-note">
-        PulseGrid Studio is an independent project, not affiliated with or endorsed by Image-Line (FL Studio) or Akai
-        Professional. Their names are used only to describe what PulseGrid works with or resembles.
+        PulseGrid Studio is an independent project, not affiliated with or endorsed by Image-Line (FL Studio). The
+        name is used only to describe what PulseGrid resembles.
       </p>
     </footer>
 
