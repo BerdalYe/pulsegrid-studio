@@ -329,7 +329,11 @@ void renderInstance(Instance& instance, std::vector<NoteEvent>& events, int fram
                     ProcessContext::kContTimeValid | (playing ? ProcessContext::kPlaying : 0);
 
     instance.data.numSamples = block;
-    const bool made = instance.processor->process(instance.data) == kResultOk;
+    instance.eventsSent += instance.events.getEventCount();
+    const tresult result = instance.processor->process(instance.data);
+    instance.lastResult = result;
+    instance.lastSilence = instance.data.outputs[instance.outputBus].silenceFlags;
+    const bool made = result == kResultOk;
 
     const auto& bus = instance.data.outputs[instance.outputBus];
     if (made && bus.numChannels >= 1 && bus.channelBuffers32) {

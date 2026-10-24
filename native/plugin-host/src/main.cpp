@@ -21,6 +21,7 @@
 #include <shared_mutex>
 #include <stdexcept>
 #include <thread>
+#include <tuple>
 
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
 #include "public.sdk/source/vst/hosting/hostclasses.h"
@@ -143,7 +144,7 @@ void writeFrame(FrameKind kind, const json& message, const void* binary, size_t 
   if (binaryBytes) writeExact(binary, binaryBytes);
 }
 
-void emitEvent(const json& event) { writeFrame(kEvent, event); }
+void emitEvent(const json& event) { writeFrame(kFrameEvent, event); }
 
 void logLine(const std::string& text) { emitEvent({{"event", "log"}, {"message", text}}); }
 
@@ -205,7 +206,7 @@ void render(const json& request) {
     if (auto instance = findInstance(ids[i]))
       renderInstance(*instance, events[ids[i]], frames, tempo, playing, ppq, start, left, right);
   }
-  writeFrame(kResponse, {{"id", request.value("id", 0)}, {"ok", true}, {"frames", frames}}, audio.data(),
+  writeFrame(kFrameResponse, {{"id", request.value("id", 0)}, {"ok", true}, {"frames", frames}}, audio.data(),
              audio.size() * sizeof(float));
 }
 
@@ -263,6 +264,36 @@ json handle(const json& request) {
     return json::object();
   }
   if (command == "getState") return {{"state", instanceState(*instance)}, {"editorOpen", editorOpen(*instance)}};
+  if (command == "info") {
+    json buses = json::array();
+    struct Kind {
+      MediaType type;
+      BusDirection dir;
+      const char* label;
+    };
+    const Kind kinds[] = {{kAudio, kOutput, "audio out"}, {kAudio, kInput, "audio in"}, {kEvent, kInput, "events in"}};
+    for (const auto& [type, dir, label] : kinds) {
+      const int32 count = instance->component->getBusCount(type, dir);
+      for (int32 i = 0; i < count; ++i) {
+        BusInfo info{};
+        instance->component->getBusInfo(type, dir, i, info);
+        SpeakerArrangement arrangement = 0;
+        if (type == kAudio) instance->processor->getBusArrangement(dir, i, arrangement);
+        buses.push_back({{"kind", label}, {"index", i}, {"channels", info.channelCount}, {"main", info.busType == kMain},
+                         {"defaultActive", (info.flags & BusInfo::kDefaultActive) != 0}, {"arrangement", arrangement},
+                         {"name", utf8(std::wstring(reinterpret_cast<const wchar_t*>(info.name)))}});
+      }
+    }
+    json counts = {{"audioIn", instance->component->getBusCount(kAudio, kInput)},
+                   {"audioOut", instance->component->getBusCount(kAudio, kOutput)},
+                   {"eventIn", instance->component->getBusCount(kEvent, kInput)},
+                   {"eventOut", instance->component->getBusCount(kEvent, kOutput)}};
+    return {{"counts", counts}, {"buses", buses}, {"outputBus", instance->outputBus}, {"lastResult", instance->lastResult},
+            {"lastSilence", instance->lastSilence}, {"eventsSent", instance->eventsSent},
+            {"latency", instance->processor->getLatencySamples()},
+            {"preparedOutputs", instance->data.numOutputs},
+            {"outputChannels", instance->data.numOutputs > instance->outputBus ? instance->data.outputs[instance->outputBus].numChannels : -1}};
+  }
   if (command == "parameters") {
     json list = json::array();
     if (instance->controller) {
@@ -326,7 +357,7 @@ void drainQueue() {
       reply = {{"ok", false}, {"error", "The plugin stopped with an error."}};
     }
     reply["id"] = request.value("id", 0);
-    writeFrame(kResponse, reply);
+    writeFrame(kFrameResponse, reply);
   }
 }
 
@@ -379,6 +410,10 @@ int scan(const std::string& path) {
   if (!module) {
     result["error"] = error.empty() ? "Couldn't open the file." : error;
   } else {
+    result["classes"] = json::array();
+    for (const auto& info : module->getFactory().classInfos())
+      result["classes"].push_back({{"name", info.name()}, {"category", info.category()}, {"subCategories", info.subCategoriesString()},
+                                   {"uid", info.ID().toString()}, {"flags", info.classFlags()}});
     for (const auto& info : module->getFactory().classInfos()) {
       if (info.category() != kVstAudioEffectClass) continue;
       const std::string sub = info.subCategoriesString();

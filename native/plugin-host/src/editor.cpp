@@ -50,6 +50,17 @@ struct Editor : public IPlugFrame {
   uint32 PLUGIN_API addRef() override { return 1000; }
   uint32 PLUGIN_API release() override { return 1000; }
 
+  // Make the window's inside exactly the size the plugin says it is.
+  void fitToView() {
+    ViewRect size{};
+    if (!view || view->getSize(&size) != kResultTrue || size.getWidth() <= 0 || size.getHeight() <= 0) return;
+    RECT outer{0, 0, size.getWidth(), size.getHeight()};
+    AdjustWindowRectExForDpi(&outer, style, FALSE, 0, GetDpiForWindow(window));
+    resizing = true;
+    SetWindowPos(window, nullptr, 0, 0, outer.right - outer.left, outer.bottom - outer.top, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+    resizing = false;
+  }
+
   void setScale() {
     if (auto scale = U::cast<IPlugViewContentScaleSupport>(view))
       scale->setContentScaleFactor(static_cast<float>(GetDpiForWindow(window)) / 96.f);
@@ -129,30 +140,29 @@ void showEditor(Instance& instance, const std::string& title) {
   if (view->isPlatformTypeSupported(kPlatformTypeHWND) != kResultTrue)
     throw std::runtime_error("This plugin's window can't open on Windows.");
 
-  ViewRect size{};
-  if (view->getSize(&size) != kResultTrue || size.getWidth() <= 0 || size.getHeight() <= 0) size = ViewRect{0, 0, 640, 400};
-
   auto editor = std::make_unique<Editor>();
   editor->instance = &instance;
   editor->view = view;
   const bool resizable = view->canResize() == kResultTrue;
   editor->style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | (resizable ? WS_THICKFRAME | WS_MAXIMIZEBOX : 0);
 
-  RECT outer{0, 0, size.getWidth(), size.getHeight()};
-  AdjustWindowRectExForDpi(&outer, editor->style, FALSE, 0, GetDpiForSystem());
-  HWND window = CreateWindowExW(0, kWindowClass, wide(title).c_str(), editor->style, CW_USEDEFAULT, CW_USEDEFAULT,
-                                outer.right - outer.left, outer.bottom - outer.top, nullptr, nullptr, gModule,
-                                editor.get());
+  // Made hidden first, so it is on a monitor whose scaling can be told to the plugin before asking its size: a
+  // plugin works its size out from that, and asked the other way round it is out by the display scaling.
+  HWND window = CreateWindowExW(0, kWindowClass, wide(title).c_str(), editor->style, CW_USEDEFAULT, CW_USEDEFAULT, 640, 400,
+                                nullptr, nullptr, gModule, editor.get());
   if (!window) throw std::runtime_error("The plugin's window couldn't be made.");
   editor->window = window;
+  editor->setScale();
+  editor->fitToView();
 
   view->setFrame(editor.get());
-  editor->setScale();
   if (view->attached(window, kPlatformTypeHWND) != kResultTrue) {
     view->setFrame(nullptr);
     DestroyWindow(window);
     throw std::runtime_error("The plugin's window failed to open.");
   }
+  // Some plugins settle on their size only once they are in the window.
+  editor->fitToView();
 
   instance.editor = editor.release();
   gEditors.insert(instance.editor);

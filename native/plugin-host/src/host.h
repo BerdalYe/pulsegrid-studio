@@ -34,9 +34,9 @@ namespace pulsegrid {
 // Every message, either way, is a frame: its kind, the length of its JSON, the length of its binary part, then the
 // JSON and the binary bytes. Little-endian 32-bit lengths.
 enum FrameKind : uint32_t {
-  kRequest = 1,   // studio → host: { id, cmd, ... }
-  kResponse = 2,  // host → studio: { id, ok, error?, ... } (+ audio for "render")
-  kEvent = 3      // host → studio, unasked: { event, ... }
+  kFrameRequest = 1,   // studio → host: { id, cmd, ... }
+  kFrameResponse = 2,  // host → studio: { id, ok, error?, ... } (+ audio for "render")
+  kFrameEvent = 3      // host → studio, unasked: { event, ... }
 };
 
 void writeFrame(FrameKind kind, const json& message, const void* binary = nullptr, size_t binaryBytes = 0);
@@ -98,6 +98,10 @@ struct Instance {
   Steinberg::Vst::ProcessContext context{};
   int outputBus = -1;
   int maxBlock = 512;
+  // For "info": what the last block of audio came back with.
+  int lastResult = 0;
+  uint64_t lastSilence = 0;
+  int eventsSent = 0;
   double sampleRate = 48000;
   bool processing = false;
 
