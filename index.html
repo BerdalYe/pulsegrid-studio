@@ -30,10 +30,10 @@
 
     <!-- The release announcement. Dismissing it is remembered in this browser (see site.ts). -->
     <div class="announce" id="announce" role="region" aria-label="Announcement">
-      <span class="announce-badge">1.5</span>
+      <span class="announce-badge">1.6</span>
       <p class="announce-text">
-        <strong>PulseGrid Studio 1.5 is here, and it's open source.</strong>
-        <span>Drum kits you can build a beat from, a new playlist, 150 instruments, and the source code on GitHub.</span>
+        <strong>PulseGrid Studio 1.6 plays VST3 instruments.</strong>
+        <span>On Windows, the plugin instruments you already own, such as the Akai Studio Instrument Collection, play right inside the studio.</span>
       </p>
       <a class="announce-link" href="#whats-new">See what's new</a>
       <button class="announce-close" id="announce-close" type="button" aria-label="Dismiss announcement">
@@ -450,6 +450,22 @@ npm run app:dev</code></pre>
               <h3>Version %VITE_APP_VERSION%</h3>
               <span class="release-badge">Latest</span>
               <time>%VITE_RELEASE_DATE%</time>
+            </header>
+            <p class="release-lead">VST3 instruments play inside PulseGrid (Windows).</p>
+            <ul>
+              <li><strong>VST3 instruments.</strong> PulseGrid finds the VST3 instruments installed on your PC and lists them under <em>VST3 plugins</em> in the browser and the <em>Add</em> menu. Add one and it gets a channel like any other: play it from the computer keyboard or a MIDI keyboard, write notes for it in the piano roll, and mix it in the mixer. The Akai Studio Instrument Collection that comes with the MPK mini IV works this way, with no MIDI cable or second program.</li>
+              <li><strong>The plugin's own window.</strong> Click the channel's synth button, or press <em>F8</em>, to open the plugin's window. It stays above the studio while you use it and hides when you minimise the studio.</li>
+              <li><strong>Saved with your project and in your exports.</strong> The sound you pick in a plugin is saved with the project and comes back when you open it. Exported WAV and MP3 files include plugin channels.</li>
+              <li><strong>Plugins run on their own.</strong> Plugins run in a separate program, so a plugin that crashes can't take the studio down with it: PulseGrid tells you and starts the plugins again.</li>
+              <li><strong>Settings → Plugins</strong> lists the plugins found, lets you add folders to search, and searches again after you install something new.</li>
+              <li>VST3 plugins are for Windows for now, and only instruments; effect plugins in the mixer come later.</li>
+            </ul>
+          </article>
+
+          <article class="release reveal">
+            <header>
+              <h3>Version 1.5.0</h3>
+              <time>11 October 2026</time>
             </header>
             <p class="release-lead">PulseGrid Studio is now open source. Also: 150 instruments with drum kits you can build a beat from, a new playlist, a browser and master monitor in the style of FL Studio, a Settings window, and MIDI out for the instruments that came with your keyboard.</p>
             <ul>
@@ -889,11 +905,11 @@ npm run app:dev</code></pre>
           <details>
             <summary>Can I use the instruments that came with my keyboard?</summary>
             <p>
-              Plugin instruments, such as the Akai Studio Instrument Collection, run in a program that can host
-              plugins. PulseGrid can play them from there: add <em>MIDI Out</em>, pick a virtual MIDI cable (loopMIDI
-              on Windows, the IAC Driver on a Mac), and set the other program to listen to the same cable. Your
-              keyboard and the notes you write then play that instrument. Its sound comes from the other program, so
-              it isn't part of a PulseGrid export.
+              On Windows, yes: VST3 instruments, such as the Akai Studio Instrument Collection, play inside PulseGrid.
+              Install them as usual, then find them under <em>VST3 plugins</em> in the browser or the <em>Add</em>
+              menu. Some plugins must be activated in their maker's app first, or they stay silent. On a Mac, add
+              <em>MIDI Out</em>, pick a virtual MIDI cable (the IAC Driver), and play the instrument in a program that
+              hosts plugins; its sound then comes from that program, so it isn't part of a PulseGrid export.
             </p>
           </details>
           <details>
